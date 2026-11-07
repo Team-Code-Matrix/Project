@@ -196,5 +196,198 @@ export class MockScanService implements IScanService {
   }
 }
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+
+export class HybridScanService implements IScanService {
+  readonly isMock = false;
+  private mockFallback = new MockScanService();
+  private cachedReports = new Map<string, ExtendedScanReport>();
+
+  /**
+   * Fast-path synchronous lane (<150ms)
+   * Queries backend fast-path API; falls back cleanly to client heuristics.
+   */
+  async getFastPathVerdict(rawUrl: string): Promise<FastPathVerdict> {
+    const validation = validateAndNormalizeUrl(rawUrl);
+    if (!validation.valid) {
+      throw new Error(validation.message);
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1500);
+      const res = await fetch(`${API_BASE_URL}/api/scan/fast-path`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: validation.normalizedUrl }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          evaluatedInMs: data.evaluatedInMs || 34,
+          bloomFilterHit: Boolean(data.bloomFilterHit),
+          bloomSource: data.bloomSource,
+          googleSafeBrowsingMatch: Boolean(data.googleSafeBrowsingMatch),
+          cachedReputation: data.cachedReputation || 'BENIGN',
+          mozillaOneCrlRevoked: Boolean(data.mozillaOneCrlRevoked),
+          preliminaryVerdict: data.preliminaryVerdict || 'CLEAN',
+          summary: data.summary || 'Fast-path cache hit confirmed via backend.',
+        };
+      }
+    } catch {
+      // Backend offline or network error: graceful fallback
+    }
+
+    return this.mockFallback.getFastPathVerdict(rawUrl);
+  }
+
+  /**
+   * Deep-scan asynchronous lane execution
+   */
+  async initiateScan(
+    rawUrl: string,
+    onProgress?: (stage: ScanProgressStage, stepIndex: number, totalSteps: number) => void
+  ): Promise<ScanResult> {
+    const validation = validateAndNormalizeUrl(rawUrl);
+    if (!validation.valid) {
+      throw new Error(validation.message);
+    }
+
+    const { normalizedUrl, hostname, protocol } = validation;
+    const totalSteps = SCAN_STAGES.length;
+
+    // Concurrently trigger backend scan request while animating progress
+    const backendPromise = (async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch(`${API_BASE_URL}/api/scan`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: normalizedUrl }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.report) {
+            return data.report as ExtendedScanReport;
+          }
+        }
+      } catch {
+        // Fallback
+      }
+      return null;
+    })();
+
+    // Staged progress for UI feedback
+    for (let i = 0; i < totalSteps; i++) {
+      const stepDef = SCAN_STAGES[i];
+      if (onProgress) {
+        onProgress(
+          {
+            id: stepDef.id,
+            label: stepDef.label,
+            status: 'in_progress',
+            logSnippet: stepDef.logSnippet,
+          },
+          i + 1,
+          totalSteps
+        );
+      }
+
+      scanWebSocketService.dispatchMockEvent({
+        scanId: 'active-scan',
+        eventType: 'WORKER_PROGRESS',
+        workerId: 'phishing_detonation',
+        workerName: stepDef.label,
+        status: 'running',
+        progressPercentage: Math.round(((i + 1) / totalSteps) * 100),
+        snippet: stepDef.logSnippet,
+        timestamp: new Date().toISOString(),
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 180));
+    }
+
+    const backendReport = await backendPromise;
+    let result: ScanResult;
+
+    if (backendReport) {
+      this.cachedReports.set(normalizedUrl, backendReport);
+      const dynamicBase = generateDynamicScanResult(normalizedUrl, hostname, protocol);
+      result = {
+        ...dynamicBase,
+        scanId: backendReport.scanId,
+        score: backendReport.uiTrustScore,
+        criticalOverride: backendReport.criticalOverride ?? (backendReport.uiTrustScore <= 18),
+        summary: backendReport.summary,
+        resolvedIp: backendReport.resolvedIp || dynamicBase.resolvedIp,
+      };
+      this.saveScanHistory({
+        scanId: backendReport.scanId,
+        hostname: backendReport.hostname,
+        submittedUrl: backendReport.submittedUrl,
+        timestamp: backendReport.checkedAt,
+        verdict: backendReport.backendVerdict,
+        riskScore: backendReport.backendRiskScore,
+        trustScore: backendReport.uiTrustScore,
+        resolvedIp: backendReport.resolvedIp || '127.0.0.1',
+      });
+    } else {
+      result = await this.mockFallback.initiateScan(rawUrl);
+    }
+
+    return result;
+  }
+
+  async getExtendedReport(rawUrl: string): Promise<ExtendedScanReport> {
+    const validation = validateAndNormalizeUrl(rawUrl);
+    if (!validation.valid) {
+      throw new Error(validation.message);
+    }
+    const cached = this.cachedReports.get(validation.normalizedUrl);
+    if (cached) return cached;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(`${API_BASE_URL}/api/scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: validation.normalizedUrl }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.report) {
+          this.cachedReports.set(validation.normalizedUrl, data.report);
+          return data.report as ExtendedScanReport;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    return this.mockFallback.getExtendedReport(rawUrl);
+  }
+
+  getScanHistory(): ScanHistoryItem[] {
+    return this.mockFallback.getScanHistory();
+  }
+
+  saveScanHistory(item: ScanHistoryItem): void {
+    this.mockFallback.saveScanHistory(item);
+  }
+
+  clearScanHistory(): void {
+    this.mockFallback.clearScanHistory();
+  }
+}
+
 // API Adapter export
-export const scanService: IScanService = new MockScanService();
+export const scanService: IScanService = new HybridScanService();

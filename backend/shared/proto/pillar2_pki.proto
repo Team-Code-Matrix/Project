@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package trustshield.pillar2;
+
+import "common.proto";
+
+option go_package = "github.com/trustshield/backend/shared/proto/pillar2";
+
+message CertificateItem {
+  string type = 1; // "leaf", "intermediate", "root"
+  string subject_common_name = 2;
+  string subject_org = 3;
+  string issuer_common_name = 4;
+  string issuer_org = 5;
+  string serial_number = 6;
+  string valid_from = 7;
+  string valid_until = 8;
+  int32 days_remaining = 9;
+  bool is_expired = 10;
+  string signature_algorithm = 11;
+  string public_key_algorithm = 12;
+  int32 key_size_bits = 13;
+  string sha256_fingerprint = 14;
+  string raw_pem = 15;
+}
+
+message TrustStoreCompatibility {
+  bool mozilla_nss = 1;
+  bool chrome_root = 2;
+  bool apple = 3;
+  bool microsoft = 4;
+  bool oracle_java = 5;
+}
+
+message CertificateTransparency {
+  int32 scts_delivered_count = 1;
+  repeated string sct_sources = 2; // "X.509 Extension", "TLS Extension", "OCSP Stapling"
+  string merkle_inclusion_proof_status = 3; // "PROVEN", "PENDING", "INVALID"
+  string signed_tree_head_timestamp = 4;
+  bool unexpected_issuance_alert = 5;
+}
+
+message RevocationHealth {
+  string ocsp_status = 1; // "GOOD", "REVOKED", "UNKNOWN", "UNRESPONSIVE"
+  bool ocsp_stapled = 2;
+  bool must_staple_compliant = 3;
+  bool crl_signature_valid = 4;
+  bool crl_next_update_expired = 5;
+  bool one_crl_included = 6;
+  bool chrome_crl_set_included = 7;
+}
+
+message DnsCaaPolicy {
+  bool caa_records_present = 1;
+  repeated string allowed_issuers = 2;
+  string actual_issuer = 3;
+  bool policy_mismatch = 4;
+}
+
+message Pillar2Telemetry {
+  string scan_id = 1;
+  trustshield.common.WorkerStatusState status = 2;
+  int64 duration_ms = 3;
+  
+  // Key Entropy & ROCA / Fermat Factors
+  string key_entropy_verdict = 4; // "VALID", "WEAK_ENTROPY", "SMALL_SUBGROUP", "ROCA_VULNERABLE"
+  bool fermat_factorization_passed = 5;
+  bool small_prime_gcd_passed = 6;
+  bool curve_point_valid = 7;
+  bool key_ceremony_anomaly_flag = 8;
+  string key_ceremony_notes = 9;
+
+  // RFC 5280 Multi-Store Validation
+  string chain_validation_status = 10; // "VERIFIED", "REVOKED", "UNTRUSTED_ROOT", "CROSS_SIGN_SUSPECT"
+  TrustStoreCompatibility trust_store_compatibility = 11;
+  bool path_len_constraint_valid = 12;
+  bool cross_signed_bypass_detected = 13;
+
+  CertificateTransparency certificate_transparency = 14;
+  RevocationHealth revocation_health = 15;
+  DnsCaaPolicy dns_caa_policy = 16;
+  repeated CertificateItem chain = 17;
+  repeated trustshield.common.Finding findings = 18;
+  string summary = 19;
+}
+

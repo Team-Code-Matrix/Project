@@ -1,0 +1,29 @@
+services:
+  # Backend API Server (Python Gateway + ML Engine)
+  - type: web
+    name: trustshield-api
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt && python backend/ml/train_model.py
+    startCommand: python backend/server.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGINS
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+  # Frontend Static Site (Vite Single Page Application)
+  - type: static_site
+    name: trustshield-frontend
+    buildCommand: npm --prefix frontend install && npm --prefix frontend run build
+    publishPath: frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false

@@ -24,6 +24,8 @@ import { SecurityModuleView } from './components/modules/SecurityModuleView';
 import { InteractiveHeroPanel } from './components/layout/InteractiveHeroPanel';
 import { useScan } from './hooks/useScan';
 import { INITIAL_THREAT_FEED, THREAT_FEED_METRICS } from './data/threatIntelData';
+import { fetchLiveThreatsAndMetrics } from './services/threatIntelService';
+import type { ThreatReport, ThreatFeedMetrics } from './types/threatIntel';
 import {
   Shield,
   AlertTriangle,
@@ -65,6 +67,17 @@ export function App() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [reportInitialUrl, setReportInitialUrl] = useState('');
+
+  // Live Threat Intelligence Feed state
+  const [threats, setThreats] = useState<ThreatReport[]>(INITIAL_THREAT_FEED);
+  const [threatMetrics, setThreatMetrics] = useState<ThreatFeedMetrics>(THREAT_FEED_METRICS);
+
+  useEffect(() => {
+    fetchLiveThreatsAndMetrics().then(({ threats: tList, metrics: mData }) => {
+      if (tList && tList.length > 0) setThreats(tList);
+      if (mData) setThreatMetrics(mData);
+    });
+  }, []);
 
   const scannerRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -382,10 +395,10 @@ export function App() {
               </p>
             </div>
 
-            <ThreatMetrics metrics={THREAT_FEED_METRICS} />
+            <ThreatMetrics metrics={threatMetrics} />
 
             <ThreatFeedTable
-              threats={INITIAL_THREAT_FEED}
+              threats={threats}
               onScanDomain={(dom) => {
                 startScan(dom);
                 handleScrollToScanner();
@@ -404,6 +417,8 @@ export function App() {
           extendedReport={extendedReport}
           history={history}
           isScanning={isScanning}
+          threats={threats}
+          threatMetrics={threatMetrics}
           onBackToOverview={() => handleSelectModule('overview')}
           onStartScan={(url) => startScan(url)}
           onSelectScanHistory={(item) => loadHistoryItem(item)}

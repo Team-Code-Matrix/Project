@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package trustshield.results;
+
+import "common.proto";
+import "pillar1_phishing.proto";
+import "pillar2_pki.proto";
+import "pillar3_websec.proto";
+import "pillar4_cti.proto";
+
+option go_package = "github.com/trustshield/backend/shared/proto/results";
+
+message FastPathResult {
+  int32 evaluated_in_ms = 1;
+  bool bloom_filter_hit = 2;
+  string bloom_source = 3;
+  bool google_safe_browsing_match = 4;
+  string gsb_threat_type = 5;
+  string cached_reputation = 6;
+  bool mozilla_onecrl_revoked = 7;
+  trustshield.common.BackendVerdict preliminary_verdict = 8;
+  string summary = 9;
+}
+
+message HarEntry {
+  string method = 1;
+  string url = 2;
+  int32 status = 3;
+  string mime_type = 4;
+  int64 size_bytes = 5;
+  int64 duration_ms = 6;
+}
+
+message HarTraceSummary {
+  int32 total_requests = 1;
+  int64 total_bytes_transferred = 2;
+  repeated string external_domains_contacted = 3;
+  int32 suspicious_requests_count = 4;
+  repeated HarEntry entries = 5;
+}
+
+message ForensicArtifacts {
+  string target_url_defanged = 1;
+  string screenshot_full_page_url = 2;
+  string screenshot_timestamp = 3;
+  string dom_snapshot_defanged_html = 4;
+  HarTraceSummary har_trace_summary = 5;
+  string raw_certificate_pem_chain = 6;
+}
+
+message ExtendedScanReport {
+  string scan_id = 1;
+  string submitted_url = 2;
+  string hostname = 3;
+  string canonical_url = 4;
+  string checked_at = 5;
+  trustshield.common.BackendVerdict backend_verdict = 6;
+  int32 backend_risk_score = 7; // 0 - 100
+  int32 ui_trust_score = 8;     // 100 - 0
+  string summary = 9;
+  repeated string analyst_reason_codes = 10;
+  
+  FastPathResult fast_path = 11;
+  repeated trustshield.common.WorkerStatus worker_pools = 12;
+  
+  trustshield.pillar1.Pillar1Telemetry phishing_detonation = 13;
+  trustshield.pillar2.Pillar2Telemetry pki_intelligence = 14;
+  trustshield.pillar3.Pillar3Telemetry web_security_audit = 15;
+  trustshield.pillar4.Pillar4Telemetry threat_intelligence = 16;
+  
+  ForensicArtifacts forensics = 17;
+  repeated trustshield.common.Finding findings = 18;
+}
+

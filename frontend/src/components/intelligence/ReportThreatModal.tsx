@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ThreatCategory } from '../../types/threatIntel';
 import { validateAndNormalizeUrl } from '../../utils/urlValidator';
+import { submitCommunityThreatReport } from '../../services/threatIntelService';
 import { X, ShieldAlert, CheckCircle2, Lock, AlertCircle, Send } from 'lucide-react';
 
 interface ReportThreatModalProps {
@@ -25,7 +26,7 @@ export const ReportThreatModal: React.FC<ReportThreatModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
@@ -36,12 +37,20 @@ export const ReportThreatModal: React.FC<ReportThreatModalProps> = ({
     }
 
     setIsSubmitting(true);
-
-    setTimeout(() => {
+    try {
+      const res = await submitCommunityThreatReport({
+        url: validation.normalizedUrl,
+        category,
+        targetBrand: targetBrand.trim() || undefined,
+        notes: notes.trim() || undefined,
+        hasInteracted,
+      });
+      setSubmittedTicket(res.reportId);
+    } catch {
+      setErrorMsg('Failed to transmit threat report. Please verify connection.');
+    } finally {
       setIsSubmitting(false);
-      const ticketId = `TS-REP-${Math.floor(100000 + Math.random() * 900000)}`;
-      setSubmittedTicket(ticketId);
-    }, 800);
+    }
   };
 
   const handleResetAndClose = () => {

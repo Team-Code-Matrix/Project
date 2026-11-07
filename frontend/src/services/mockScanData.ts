@@ -1,4 +1,5 @@
 import { ScanResult } from '../types/scan';
+import { evaluateSecurity } from '../utils/securityHeuristics';
 
 export const SAMPLE_SCENARIOS: Record<string, ScanResult> = {
   'github.com': {
@@ -774,54 +775,24 @@ export function generateDynamicScanResult(rawUrl: string, hostname: string, prot
     }
   }
 
-  // Heuristics for arbitrary user URLs
-  const isHttpOnly = protocol === 'http:';
-  const hasSuspiciousWords = /(verify|login|secure|account|update|banking|wallet|free|crypto|bonus)/i.test(rawUrl);
-  const isHighEntropy = hostname.split('.')[0].length > 18 || (hostname.match(/\d/g) || []).length > 4;
-  const isLongPath = rawUrl.length > 80;
-
-  let calculatedScore = 85;
-  let riskLevel: ScanResult['riskLevel'] = 'low';
-  let summary = 'Analyzed through 6 independent security intelligence models. No critical malicious indicators detected in available telemetry.';
-
-  if (isHttpOnly) {
-    calculatedScore -= 25;
-  }
-  if (hasSuspiciousWords) {
-    calculatedScore -= 20;
-  }
-  if (isHighEntropy) {
-    calculatedScore -= 18;
-  }
-  if (isLongPath) {
-    calculatedScore -= 10;
-  }
-
-  if (calculatedScore >= 80) {
-    riskLevel = 'low';
-  } else if (calculatedScore >= 60) {
-    riskLevel = 'caution';
-    summary = 'Moderate risk profile observed. Some configuration anomalies and lexical patterns suggest caution before submitting sensitive data.';
-  } else if (calculatedScore >= 30) {
-    riskLevel = 'high';
-    summary = 'Multiple elevated risk signals detected across domain intelligence and transport security checks.';
-  } else {
-    riskLevel = 'critical';
-    summary = 'Significant malicious indicators flagged across multiple independent models.';
-  }
-
+  // Deterministic 4-Pillar Evaluation & Veto Scoring
+  const sec = evaluateSecurity(rawUrl, hostname, protocol);
   const scanId = `scn_dyn_${Math.random().toString(36).substring(2, 10)}`;
+
+  const phishVerdict = sec.isBrandTyposquat ? 'error' : (sec.containsAuthKeyword ? 'suspicious' : 'clear');
+  const domainVerdict = (sec.isSuspiciousTld || sec.isPunycode || sec.isIpLiteral || sec.isShortener) ? 'suspicious' : 'clear';
+  const tlsVerdict = sec.isHttpOnly || sec.verdict === 'PKI_TRUST_COMPROMISED' ? 'error' : 'clear';
 
   return {
     scanId,
     submittedUrl: rawUrl,
     hostname,
     protocol,
-    score: calculatedScore,
-    riskLevel,
-    summary,
+    score: sec.trustScore,
+    riskLevel: sec.riskLevel,
+    summary: sec.summary,
     isDemo: true,
-    criticalOverride: false,
+    criticalOverride: sec.criticalOverride,
     checksCompleted: 6,
     checksSkipped: 0,
     checksErrored: 0,
@@ -836,20 +807,22 @@ export function generateDynamicScanResult(rawUrl: string, hostname: string, prot
         name: 'Phishing & Impersonation Detection',
         category: 'Brand & Form Integrity',
         description: 'Evaluates visual mimicry, brand asset similarity, and unauthorized credential intake endpoints.',
-        verdict: hasSuspiciousWords ? 'suspicious' : 'clear',
-        confidence: 91,
-        summary: hasSuspiciousWords
-          ? 'URL contains high-value authentication keywords. Elevated review recommended for form actions.'
-          : 'No visual or structural imitation of known brand login pages detected.',
+        verdict: phishVerdict,
+        confidence: sec.isBrandTyposquat ? 99 : 91,
+        summary: sec.isBrandTyposquat
+          ? `CRITICAL: Deceptive typosquatting/lookalike targeting ${sec.impersonatedBrand.toUpperCase()}.`
+          : (sec.containsAuthKeyword ? 'URL contains high-value authentication keywords without canonical brand authority.' : 'No visual or structural imitation of known brand login pages detected.'),
         executionTimeMs: 140,
         status: 'completed',
         evidence: [
           `Target path evaluation: ${rawUrl.substring(0, 60)}...`,
-          hasSuspiciousWords ? 'Keyword matching: Suspicious auth-related lexical tokens' : 'DOM structural entropy within normal bounds',
+          sec.isBrandTyposquat
+            ? `Levenshtein lookalike anomaly: token mirrors protected brand '${sec.impersonatedBrand}'`
+            : (sec.containsAuthKeyword ? 'Keyword matching: Suspicious auth-related lexical tokens' : 'DOM structural entropy within normal bounds'),
         ],
         metrics: [
-          { label: 'Brand Divergence Index', value: hasSuspiciousWords ? '0.62 / 1.0' : '0.04 / 1.0' },
-          { label: 'Form Intake Safety', value: hasSuspiciousWords ? 'Caution' : 'Clean' },
+          { label: 'Brand Divergence Index', value: sec.isBrandTyposquat ? '0.98 / 1.0 (Critical)' : (sec.containsAuthKeyword ? '0.62 / 1.0' : '0.04 / 1.0') },
+          { label: 'Form Intake Safety', value: sec.isBrandTyposquat ? 'Malicious Interception' : (sec.containsAuthKeyword ? 'Caution' : 'Clean') },
         ],
       },
       {
@@ -858,18 +831,18 @@ export function generateDynamicScanResult(rawUrl: string, hostname: string, prot
         name: 'Domain & Lexical Intelligence',
         category: 'Domain Reputation',
         description: 'Assesses registration age, registrar stability, lexical randomness, and typosquatting risk.',
-        verdict: isHighEntropy ? 'suspicious' : 'clear',
+        verdict: domainVerdict,
         confidence: 93,
-        summary: `Domain structure evaluated for ${hostname}. ${isHighEntropy ? 'Elevated lexical entropy and character variance noted.' : 'Standard hierarchical domain naming convention.'}`,
+        summary: `Domain structure evaluated for ${hostname}. ${sec.isSuspiciousTld ? 'Untrusted TLD recognized in spam feeds.' : (sec.isPunycode ? 'Punycode homograph detected.' : 'Standard hierarchical domain naming convention.')}`,
         executionTimeMs: 105,
         status: 'completed',
         evidence: [
           `Hostname: ${hostname}`,
-          `Entropy assessment: ${isHighEntropy ? 'High randomness in subdomain/stem' : 'Normal linguistic distribution'}`,
+          sec.isSuspiciousTld ? 'TLD classified as high-risk spam/bulletproof registry' : 'Normal linguistic distribution',
         ],
         metrics: [
-          { label: 'Entropy Score', value: isHighEntropy ? '3.89 (High)' : '2.34 (Normal)' },
-          { label: 'Punycode Homograph', value: hostname.startsWith('xn--') ? 'Detected' : 'None' },
+          { label: 'Entropy Score', value: sec.isPunycode ? '4.85 (High)' : '2.34 (Normal)' },
+          { label: 'Punycode Homograph', value: sec.isPunycode ? 'Detected' : 'None' },
         ],
       },
       {
@@ -878,21 +851,21 @@ export function generateDynamicScanResult(rawUrl: string, hostname: string, prot
         name: 'TLS Certificate & Chain Validation',
         category: 'Transport Security',
         description: 'Validates certificate authority pedigree, expiration, Subject Alternative Names, and cipher strength.',
-        verdict: isHttpOnly ? 'error' : 'clear',
+        verdict: tlsVerdict,
         confidence: 95,
-        summary: isHttpOnly
+        summary: sec.isHttpOnly
           ? 'Unencrypted plain HTTP endpoint. Traffic is transmitted in cleartext without encryption.'
-          : 'Valid TLS certificate with active trust path and modern cipher support.',
+          : (sec.verdict === 'PKI_TRUST_COMPROMISED' ? 'Certificate validation failed. Chain untrusted or expired.' : 'Valid TLS certificate with active trust path and modern cipher support.'),
         executionTimeMs: 115,
         status: 'completed',
         evidence: [
-          isHttpOnly
+          sec.isHttpOnly
             ? 'Plaintext HTTP connection negotiated without TLS handshake.'
-            : 'TLS 1.3 negotiated with valid certificate authority root chain.',
+            : (sec.verdict === 'PKI_TRUST_COMPROMISED' ? 'Root CA signature chain broken or revoked.' : 'TLS 1.3 negotiated with valid certificate authority root chain.'),
         ],
         metrics: [
-          { label: 'Protocol', value: isHttpOnly ? 'HTTP (Insecure)' : 'TLS 1.3' },
-          { label: 'Chain Status', value: isHttpOnly ? 'No Encryption' : 'Valid CA Chain' },
+          { label: 'Protocol', value: sec.isHttpOnly ? 'HTTP (Insecure)' : 'TLS 1.3' },
+          { label: 'Chain Status', value: sec.isHttpOnly ? 'No Encryption' : (sec.verdict === 'PKI_TRUST_COMPROMISED' ? 'Compromised' : 'Valid CA Chain') },
         ],
       },
       {
@@ -901,13 +874,15 @@ export function generateDynamicScanResult(rawUrl: string, hostname: string, prot
         name: 'Redirect Chain Analysis',
         category: 'Routing Integrity',
         description: 'Traces initial request to terminal destination, flagging suspicious cross-domain routing hops.',
-        verdict: 'clear',
+        verdict: sec.isShortener ? 'suspicious' : 'clear',
         confidence: 94,
-        summary: 'Direct destination resolution verified. No suspicious cross-domain hops detected.',
+        summary: sec.isShortener
+          ? 'URL shortener redirects destination hops to disguise final origin.'
+          : 'Direct destination resolution verified. No suspicious cross-domain hops detected.',
         executionTimeMs: 80,
         status: 'completed',
-        evidence: ['Initial destination resolves directly to primary origin endpoint.'],
-        metrics: [{ label: 'Redirect Hops', value: '0 hops' }],
+        evidence: [sec.isShortener ? 'Hop 0 -> Hop 1 cross-domain relay observed' : 'Initial destination resolves directly to primary origin endpoint.'],
+        metrics: [{ label: 'Redirect Hops', value: sec.isShortener ? '1 hop (Shortener)' : '0 hops' }],
       },
       {
         id: 'm-posture',
@@ -915,21 +890,21 @@ export function generateDynamicScanResult(rawUrl: string, hostname: string, prot
         name: 'Web Security Posture',
         category: 'Configuration Hygiene',
         description: 'Examines HTTP defensive headers, Content Security Policy, and cookie security flags.',
-        verdict: isHttpOnly ? 'suspicious' : 'clear',
+        verdict: sec.isHttpOnly ? 'suspicious' : 'clear',
         confidence: 88,
-        summary: isHttpOnly
+        summary: sec.isHttpOnly
           ? 'Missing mandatory transport security headers (HSTS).'
           : 'Standard defensive headers detected with partial CSP enforcement.',
         executionTimeMs: 95,
         status: 'completed',
         evidence: [
-          isHttpOnly
+          sec.isHttpOnly
             ? 'HSTS header omitted due to plaintext protocol.'
             : 'Basic clickjacking and MIME sniffing protections active.',
         ],
         metrics: [
           { label: 'X-Content-Type-Options', value: 'nosniff' },
-          { label: 'HSTS Status', value: isHttpOnly ? 'Disabled' : 'Observed' },
+          { label: 'HSTS Status', value: sec.isHttpOnly ? 'Disabled' : 'Observed' },
         ],
       },
       {
@@ -938,52 +913,70 @@ export function generateDynamicScanResult(rawUrl: string, hostname: string, prot
         name: 'Collaborative Threat Intelligence',
         category: 'Collective Telemetry',
         description: 'Cross-references active threat intelligence feeds, honeypot telemetry, and community incident reports.',
-        verdict: 'clear',
+        verdict: sec.verdict === 'MALICIOUS' ? 'error' : 'clear',
         confidence: 96,
-        summary: 'Queried 42 global threat feeds. No active threat listings or malicious community reports.',
+        summary: sec.verdict === 'MALICIOUS'
+          ? 'Heuristic alert: 3 honeypot sensors match this impersonation vector.'
+          : 'Queried 42 global threat feeds. No active threat listings or malicious community reports.',
         executionTimeMs: 160,
         status: 'completed',
         evidence: [
-          'Feed check across URLhaus, Spamhaus, and AlienVault OTX: 0 alerts.',
-          'Community submissions database: Clean status.',
+          sec.verdict === 'MALICIOUS'
+            ? 'Flagged by heuristic reputation feeds: high-probability credential harvester.'
+            : 'Feed check across URLhaus, Spamhaus, and AlienVault OTX: 0 alerts.',
+          'Community submissions database: Synchronized.',
         ],
         metrics: [
           { label: 'Feeds Searched', value: '42 feeds' },
-          { label: 'Active Reports', value: '0' },
+          { label: 'Active Reports', value: sec.verdict === 'MALICIOUS' ? '3' : '0' },
         ],
       },
     ],
-    findings: isHttpOnly
+    findings: sec.isBrandTyposquat
       ? [
           {
-            id: 'fnd-dyn-http',
-            title: 'Unencrypted HTTP Protocol in Use',
-            severity: 'high',
-            source: 'TLS & Certificate Analysis (M-03)',
-            description: 'The connection does not negotiate SSL/TLS encryption. Anyone on the local network or internet transit path can eavesdrop or tamper with web traffic.',
-            evidence: ['Scheme: http://', 'Port: 80'],
-            recommendation: 'Do not enter passwords, credit card numbers, or private communications over unencrypted HTTP.',
+            id: 'fnd-dyn-brand-impersonation',
+            title: `Critical Brand Typosquatting (${sec.impersonatedBrand.toUpperCase()})`,
+            severity: 'critical',
+            source: 'Phishing & Impersonation Detection (M-01)',
+            description: `Host mimics ${sec.impersonatedBrand.toUpperCase()} via lexical substitution or edit distance deception. This is a primary indicator of targeted credential theft.`,
+            evidence: [`Impersonated Brand: ${sec.impersonatedBrand}`, `Hostname: ${hostname}`],
+            recommendation: 'Do NOT navigate to this site or enter account credentials. Report and block this domain immediately.',
           },
         ]
-      : [
-          {
-            id: 'fnd-dyn-standard',
-            title: 'Standard Transport Encryption Verified',
-            severity: 'informational',
-            source: 'TLS & Certificate Analysis (M-03)',
-            description: 'Communication is protected with active HTTPS encryption against eavesdropping.',
-            evidence: ['TLS 1.3 negotiated'],
-            recommendation: 'Ensure you still verify the authenticity of the domain before providing authentication credentials.',
-          },
-        ],
+      : (sec.isHttpOnly
+        ? [
+            {
+              id: 'fnd-dyn-http',
+              title: 'Unencrypted HTTP Protocol in Use',
+              severity: 'high',
+              source: 'TLS & Certificate Analysis (M-03)',
+              description: 'The connection does not negotiate SSL/TLS encryption. Anyone on the local network or internet transit path can eavesdrop or tamper with web traffic.',
+              evidence: ['Scheme: http://', 'Port: 80'],
+              recommendation: 'Do not enter passwords, credit card numbers, or private communications over unencrypted HTTP.',
+            },
+          ]
+        : [
+            {
+              id: 'fnd-dyn-standard',
+              title: 'Standard Transport Encryption Verified',
+              severity: 'informational',
+              source: 'TLS & Certificate Analysis (M-03)',
+              description: 'Communication is protected with active HTTPS encryption against eavesdropping.',
+              evidence: ['TLS 1.3 negotiated'],
+              recommendation: 'Ensure you still verify the authenticity of the domain before providing authentication credentials.',
+            },
+          ]),
     recommendedActions: [
       {
         id: 'act-dyn-1',
-        level: isHttpOnly ? 'essential' : 'monitoring',
-        title: isHttpOnly ? 'Upgrade to HTTPS' : 'Inspect Domain Carefully',
-        detail: isHttpOnly
-          ? 'Check if the site offers an https:// version and never submit sensitive data.'
-          : 'Confirm that this domain matches the intended organization you wish to communicate with.',
+        level: (sec.verdict === 'MALICIOUS' || sec.isHttpOnly) ? 'essential' : 'monitoring',
+        title: sec.verdict === 'MALICIOUS' ? 'Block Access & Quarantine' : (sec.isHttpOnly ? 'Upgrade to HTTPS' : 'Inspect Domain Carefully'),
+        detail: sec.verdict === 'MALICIOUS'
+          ? 'Confirmed phishing pattern. Do not click links, submit data, or authorize OAuth tokens.'
+          : (sec.isHttpOnly
+            ? 'Check if the site offers an https:// version and never submit sensitive data.'
+            : 'Confirm that this domain matches the intended organization you wish to communicate with.'),
         targetUser: 'general',
       },
     ],

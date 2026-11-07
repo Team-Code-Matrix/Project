@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package trustshield.common;
+
+option go_package = "github.com/trustshield/backend/shared/proto/common";
+
+enum BackendVerdict {
+  VERDICT_UNSPECIFIED = 0;
+  CLEAN = 1;
+  SUSPICIOUS = 2;
+  MALICIOUS = 3;
+  PKI_TRUST_COMPROMISED = 4;
+}
+
+enum FindingSeverity {
+  SEVERITY_UNSPECIFIED = 0;
+  CRITICAL = 1;
+  HIGH = 2;
+  MEDIUM = 3;
+  LOW = 4;
+  INFO = 5;
+}
+
+enum FindingCategory {
+  CATEGORY_UNSPECIFIED = 0;
+  PHISHING = 1;
+  PKI = 2;
+  WEB_SEC = 3;
+  CTI = 4;
+}
+
+enum WorkerPoolId {
+  POOL_UNSPECIFIED = 0;
+  PHISHING_DETONATION = 1;
+  PKI_CT_VALIDATION = 2;
+  APP_SEC_AUDITING = 3;
+  CTI_GRAPH_CORRELATION = 4;
+}
+
+enum WorkerStatusState {
+  STATE_UNSPECIFIED = 0;
+  PENDING = 1;
+  QUEUED = 2;
+  RUNNING = 3;
+  COMPLETED = 4;
+  FAILED = 5;
+  SKIPPED = 6;
+  TIMED_OUT = 7;
+}
+
+enum TlpMarking {
+  TLP_UNSPECIFIED = 0;
+  TLP_WHITE = 1;
+  TLP_GREEN = 2;
+  TLP_AMBER = 3;
+  TLP_RED = 4;
+}
+
+message WorkerStatus {
+  WorkerPoolId id = 1;
+  string name = 2;
+  WorkerStatusState status = 3;
+  int64 duration_ms = 4;
+  string summary_snippet = 5;
+}
+
+message Finding {
+  string id = 1;
+  string title = 2;
+  FindingSeverity severity = 3;
+  FindingCategory category = 4;
+  string description = 5;
+  string source = 6;
+  repeated string evidence = 7;
+  string recommendation = 8;
+  string cve_reference = 9;
+}
+

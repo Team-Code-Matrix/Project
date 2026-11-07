@@ -28,6 +28,7 @@ import {
 
 import type { ScanResult } from '../../types/scan';
 import type { ExtendedScanReport, ScanHistoryItem } from '../../types/backend';
+import type { ThreatReport, ThreatFeedMetrics } from '../../types/threatIntel';
 import { ModuleShell } from './ModuleShell';
 
 // Module Components
@@ -67,6 +68,8 @@ export interface SecurityModuleViewProps {
   extendedReport: ExtendedScanReport | null;
   history: ScanHistoryItem[];
   isScanning: boolean;
+  threats?: ThreatReport[];
+  threatMetrics?: ThreatFeedMetrics;
   onBackToOverview: () => void;
   onStartScan: (url: string) => void;
   onSelectScanHistory: (item: ScanHistoryItem) => void;
@@ -82,6 +85,8 @@ export const SecurityModuleView: React.FC<SecurityModuleViewProps> = ({
   extendedReport,
   history,
   isScanning,
+  threats,
+  threatMetrics,
   onBackToOverview,
   onStartScan,
   onSelectScanHistory,
@@ -368,9 +373,9 @@ export const SecurityModuleView: React.FC<SecurityModuleViewProps> = ({
           {...commonShellProps}
         >
           <div className="space-y-6">
-            <ThreatMetrics metrics={THREAT_FEED_METRICS} />
+            <ThreatMetrics metrics={threatMetrics || THREAT_FEED_METRICS} />
             <ThreatFeedTable
-              threats={INITIAL_THREAT_FEED}
+              threats={threats || INITIAL_THREAT_FEED}
               onScanDomain={(dom) => onStartScan(dom)}
               onOpenReportModal={() => onOpenReportModal && onOpenReportModal()}
             />

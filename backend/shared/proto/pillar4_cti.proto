@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package trustshield.pillar4;
+
+import "common.proto";
+
+option go_package = "github.com/trustshield/backend/shared/proto/pillar4";
+
+message StixExternalReference {
+  string source_name = 1;
+  string url = 2;
+  string external_id = 3;
+}
+
+message ReputationDecay {
+  string first_seen = 1;
+  string last_seen = 2;
+  int32 decay_half_life_days = 3;
+  float current_weight = 4; // 0.0 - 1.0
+}
+
+message StixThreatIndicator {
+  string id = 1; // "indicator--uuid"
+  string type = 2; // "indicator"
+  string spec_version = 3; // "2.1"
+  string name = 4;
+  string description = 5;
+  repeated string indicator_types = 6;
+  string pattern = 7;
+  string pattern_type = 8; // "stix"
+  string valid_from = 9;
+  string valid_until = 10;
+  trustshield.common.TlpMarking tlp_marking = 11;
+  int32 confidence_score = 12; // 0 - 100
+  string source_attribution = 13;
+  repeated StixExternalReference external_references = 14;
+  ReputationDecay reputation_decay = 15;
+  int32 community_sightings_count = 16;
+  int32 reporter_reliability_score = 17;
+}
+
+message ThreatGraphNode {
+  string id = 1;
+  string type = 2; // "domain", "ip", "asn", "certificate", "ja4", "threat_actor"
+  string label = 3;
+  string sub_label = 4;
+  string risk_state = 5; // "clean", "suspicious", "malicious", "pki_compromised"
+  map<string, string> details = 6;
+}
+
+message ThreatGraphEdge {
+  string id = 1;
+  string source = 2;
+  string target = 3;
+  string label = 4;
+  string relationship_type = 5; // "RESOLVES_TO", "ANNOUNCED_BY", "SECURED_BY", "FINGERPRINTED_AS", "ATTRIBUTED_TO"
+}
+
+message ThreatGraphData {
+  repeated ThreatGraphNode nodes = 1;
+  repeated ThreatGraphEdge edges = 2;
+}
+
+message Pillar4Telemetry {
+  string scan_id = 1;
+  trustshield.common.WorkerStatusState status = 2;
+  int64 duration_ms = 3;
+  repeated StixThreatIndicator stix_indicators = 4;
+  ThreatGraphData graph_data = 5;
+  string misp_sync_status = 6; // "SYNCED", "PENDING", "OFFLINE"
+  repeated trustshield.common.Finding findings = 7;
+  string summary = 8;
+}
+

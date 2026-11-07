@@ -1,0 +1,48 @@
+version: '3.8'
+
+# ==============================================================================
+# INTELLIGENT PHISHING, WEB SECURITY, PKI VALIDATION & CTI PLATFORM
+# Pillar 1 Hardened Sandboxed MicroVM Profile (gVisor runsc)
+# Usage: docker compose -f docker-compose.yml -f docker-compose.sandbox.yml up
+# ==============================================================================
+
+services:
+  worker-pillar1-phishing:
+    # 1. Switch to gVisor user-space kernel sandbox
+    runtime: runsc
+    
+    # 2. Immutable, Read-Only Root Filesystem
+    read_only: true
+    
+    # 3. Drop all Linux kernel capabilities & prevent privilege escalation
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:unconfined # runsc manages its own internal seccomp-bpf filter
+
+    # 4. Volatile Memory-Backed Temporary Filesystems for Playwright/Chromium
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
+      - /dev/shm:rw,noexec,nosuid,size=512m
+      - /app/.cache:rw,noexec,nosuid,size=256m
+
+    # 5. Resource Boundaries & Hard Timeout Watchdog
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+          pids: 150 # Prevents fork bombs
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # 6. Hard Stop Timeout (Immediately destroys container after 15 seconds)
+    stop_grace_period: 15s
+
+    # 7. Isolated Network Routing
+    networks:
+      - trustshield-backend-net
+      - trustshield-isolated-egress
+

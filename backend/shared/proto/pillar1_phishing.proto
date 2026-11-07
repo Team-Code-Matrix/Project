@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package trustshield.pillar1;
+
+import "common.proto";
+
+option go_package = "github.com/trustshield/backend/shared/proto/pillar1";
+
+message RedirectHop {
+  int32 hop = 1;
+  string url = 2;
+  string type = 3; // e.g. "HTTP 301", "HTTP 302", "Meta Refresh", "window.location", "Direct"
+  int32 status_code = 4;
+  string destination_ip = 5;
+  string asn = 6;
+}
+
+message DomHeuristics {
+  int32 password_inputs_count = 1;
+  int32 payment_fields_count = 2;
+  int32 otp_fields_count = 3;
+  string cross_origin_submission_target = 4;
+  bool browser_in_the_browser_detected = 5;
+  int32 hidden_iframes_count = 6;
+  bool devtools_blocker_detected = 7;
+}
+
+message ComputerVisionTelemetry {
+  string targeted_brand = 1;
+  float visual_similarity_score = 2; // 0.0 - 100.0
+  string phash_hex = 3;
+  string dhash_hex = 4;
+  string favicon_murmurhash3 = 5;
+  bool is_impersonation = 6;
+}
+
+message Pillar1Telemetry {
+  string scan_id = 1;
+  trustshield.common.WorkerStatusState status = 2;
+  int64 duration_ms = 3;
+  string detonation_sandbox = 4; // "Firecracker microVM", "gVisor sandbox"
+  bool anti_bot_cloaking_defeated = 5;
+  repeated RedirectHop redirect_chain = 6;
+  DomHeuristics dom_heuristics = 7;
+  repeated string yara_rules_matched = 8;
+  ComputerVisionTelemetry computer_vision = 9;
+  string screenshot_s3_key = 10;
+  repeated trustshield.common.Finding findings = 11;
+  string summary = 12;
+}
+

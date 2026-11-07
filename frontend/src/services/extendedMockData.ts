@@ -1,5 +1,6 @@
 import type { ExtendedScanReport } from '../types/backend';
 import { RiskScoreAdapter } from '../utils/riskScoreAdapter';
+import { evaluateSecurity } from '../utils/securityHeuristics';
 
 export const EXTENDED_SCENARIOS: Record<string, ExtendedScanReport> = {
   'github.com': {
@@ -725,31 +726,12 @@ export function generateDynamicExtendedReport(rawUrl: string, hostname: string, 
     }
   }
 
-  const isHttpOnly = protocol === 'http:';
-  const hasAuthKeywords = /(login|verify|account|banking|secure|wallet|portal|update)/i.test(rawUrl);
-  const isHighEntropy = hostname.split('.')[0].length > 18;
-
-  let backendRisk = 18;
-  let verdict: ExtendedScanReport['backendVerdict'] = 'CLEAN';
-
-  if (isHttpOnly) {
-    backendRisk += 35;
-    verdict = 'SUSPICIOUS';
-  }
-  if (hasAuthKeywords) {
-    backendRisk += 25;
-    verdict = 'SUSPICIOUS';
-  }
-  if (isHighEntropy) {
-    backendRisk += 30;
-    verdict = 'SUSPICIOUS';
-  }
-
-  if (backendRisk >= 75) {
-    verdict = 'MALICIOUS';
-  }
-
-  const uiTrust = RiskScoreAdapter.backendRiskToUiTrustScore(backendRisk);
+  // Deterministic 4-Pillar Evaluation & Veto Scoring
+  const sec = evaluateSecurity(rawUrl, hostname, protocol);
+  const isHttpOnly = sec.isHttpOnly;
+  const backendRisk = sec.riskScore;
+  const verdict = sec.verdict;
+  const uiTrust = sec.trustScore;
   const scanId = `scn_dyn_${Math.random().toString(36).substring(2, 10)}`;
 
   return {
@@ -761,18 +743,20 @@ export function generateDynamicExtendedReport(rawUrl: string, hostname: string, 
     backendVerdict: verdict,
     backendRiskScore: backendRisk,
     uiTrustScore: uiTrust,
-    summary: verdict === 'CLEAN'
-      ? 'Multi-pillar inspection completed across Phishing, PKI, Web Security, and Threat Intelligence. No active malicious indicators observed.'
-      : 'Anomalies detected across transport security or lexical parameters. Scrutinize form destinations before entering sensitive information.',
-    analystReasonCodes: verdict === 'CLEAN' ? ['BENIGN_RFC5280', 'OWASP_PASS'] : ['ANOMALOUS_PARAMETERS', 'HTTP_DOWNGRADE'],
+    summary: sec.summary,
+    analystReasonCodes: verdict === 'CLEAN'
+      ? ['BENIGN_RFC5280', 'OWASP_PASS']
+      : (verdict === 'MALICIOUS' ? ['BRAND_IMPERSONATION_VETO', 'CREDENTIAL_HARVEST_HEURISTIC'] : ['ANOMALOUS_PARAMETERS', 'TRANSPORT_RISK']),
     fastPath: {
       evaluatedInMs: 44,
-      bloomFilterHit: false,
-      googleSafeBrowsingMatch: false,
-      cachedReputation: 'BENIGN',
-      mozillaOneCrlRevoked: false,
+      bloomFilterHit: verdict === 'MALICIOUS',
+      googleSafeBrowsingMatch: verdict === 'MALICIOUS',
+      cachedReputation: verdict === 'CLEAN' ? 'BENIGN' : 'MALICIOUS',
+      mozillaOneCrlRevoked: verdict === 'PKI_TRUST_COMPROMISED',
       preliminaryVerdict: verdict,
-      summary: 'Fast-path cache check: 0 matches in Bloom filters; Mozilla OneCRL valid.',
+      summary: verdict === 'MALICIOUS'
+        ? 'Fast-path heuristic match: high-confidence phishing pattern identified in pre-execution filter.'
+        : 'Fast-path cache check: 0 matches in Bloom filters; Mozilla OneCRL valid.',
     },
     workerPools: [
       { id: 'phishing_detonation', name: 'Phishing & DOM Detonation', status: 'completed', durationMs: 140 },
@@ -785,18 +769,18 @@ export function generateDynamicExtendedReport(rawUrl: string, hostname: string, 
       antiBotCloakingDefeated: false,
       redirectChain: [{ hop: 0, url: rawUrl, type: 'Direct', statusCode: 200, destinationIp: '104.21.48.182', asn: 'AS13335' }],
       domHeuristics: {
-        passwordInputsCount: hasAuthKeywords ? 1 : 0,
+        passwordInputsCount: (sec.containsAuthKeyword || sec.isBrandTyposquat) ? 1 : 0,
         paymentFieldsCount: 0,
         otpFieldsCount: 0,
         browserInTheBrowserDetected: false,
         hiddenIframesCount: 0,
         devToolsBlockerDetected: false,
       },
-      yaraRulesMatched: [],
+      yaraRulesMatched: sec.isBrandTyposquat ? ['credential_intake_form', 'lookalike_brand_heuristic'] : [],
       computerVision: {
-        targetedBrand: 'Generic Web Application',
-        visualSimilarityScore: hasAuthKeywords ? 65 : 10,
-        isImpersonation: false,
+        targetedBrand: sec.isBrandTyposquat ? sec.impersonatedBrand.toUpperCase() : 'Generic Web Application',
+        visualSimilarityScore: sec.isBrandTyposquat ? 98 : (sec.containsAuthKeyword ? 65 : 10),
+        isImpersonation: sec.isBrandTyposquat,
       },
     },
     pkiIntelligence: {
@@ -953,29 +937,41 @@ export function generateDynamicExtendedReport(rawUrl: string, hostname: string, 
         ],
       },
     },
-    findings: isHttpOnly
+    findings: sec.isBrandTyposquat
       ? [
           {
-            id: 'fnd-unencrypted-http',
-            title: 'Unencrypted Plaintext HTTP Protocol In Use',
-            severity: 'high',
-            category: 'WEB_SEC',
-            source: 'Application Security Auditing',
-            description: 'Connection communicates without TLS encryption, exposing payloads to transit eavesdropping.',
-            recommendation: 'Upgrade to HTTPS with active TLS 1.3.',
+            id: 'fnd-brand-impersonation',
+            title: `Critical Brand Typosquatting (${sec.impersonatedBrand.toUpperCase()})`,
+            severity: 'critical',
+            category: 'PHISHING',
+            source: 'Phishing & DOM Detonation',
+            description: `Domain mimics legitimate authority ${sec.impersonatedBrand.toUpperCase()} via lexical or typographical deception to execute credential interception.`,
+            recommendation: 'Do NOT proceed or submit authentication credentials.',
           },
         ]
-      : [
-          {
-            id: 'fnd-clean-baseline',
-            title: 'Standard Transport Encryption & Certificate Verified',
-            severity: 'informational',
-            category: 'PKI',
-            source: 'PKI & CT Log Validation',
-            description: 'Domain negotiates modern TLS encryption with verified certificate path.',
-            recommendation: 'Inspect recipient domain identity before submitting credentials.',
-          },
-        ],
+      : (isHttpOnly
+        ? [
+            {
+              id: 'fnd-unencrypted-http',
+              title: 'Unencrypted Plaintext HTTP Protocol In Use',
+              severity: 'high',
+              category: 'WEB_SEC',
+              source: 'Application Security Auditing',
+              description: 'Connection communicates without TLS encryption, exposing payloads to transit eavesdropping.',
+              recommendation: 'Upgrade to HTTPS with active TLS 1.3.',
+            },
+          ]
+        : [
+            {
+              id: 'fnd-clean-baseline',
+              title: 'Standard Transport Encryption & Certificate Verified',
+              severity: 'informational',
+              category: 'PKI',
+              source: 'PKI & CT Log Validation',
+              description: 'Domain negotiates modern TLS encryption with verified certificate path.',
+              recommendation: 'Inspect recipient domain identity before submitting credentials.',
+            },
+          ]),
   };
 }
 

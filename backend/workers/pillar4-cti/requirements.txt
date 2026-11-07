@@ -1,0 +1,8 @@
+confluent-kafka>=2.3.0
+protobuf>=4.25.3
+stix2>=3.0.1
+taxii2-client>=2.3.0
+neo4j>=5.20.0
+pydantic>=2.7.1
+requests>=2.31.0
+

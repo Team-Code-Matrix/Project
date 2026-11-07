@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package trustshield.telemetry;
+
+import "common.proto";
+
+option go_package = "github.com/trustshield/backend/shared/proto/telemetry";
+
+enum ScanEventType {
+  EVENT_UNSPECIFIED = 0;
+  WORKER_STARTED = 1;
+  WORKER_PROGRESS = 2;
+  WORKER_COMPLETED = 3;
+  WORKER_FAILED = 4;
+  SCAN_COMPLETED = 5;
+}
+
+// Emitted across WebSockets and Kafka telemetry topics
+message ScanProgressEvent {
+  string scan_id = 1;
+  ScanEventType event_type = 2;
+  trustshield.common.WorkerPoolId worker_id = 3;
+  string worker_name = 4;
+  trustshield.common.WorkerStatusState status = 5;
+  int32 progress_percentage = 6;
+  string snippet = 7;
+  string timestamp = 8;
+}
+

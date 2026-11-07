@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package trustshield.tasks;
+
+option go_package = "github.com/trustshield/backend/shared/proto/tasks";
+
+// Message published to Kafka topics:
+// - trustshield.scan.tasks
+// - trustshield.pillar1.phishing
+// - trustshield.pillar2.pki
+// - trustshield.pillar3.websec
+// - trustshield.pillar4.cti
+message ScanTask {
+  string scan_id = 1;
+  string tenant_id = 2;
+  string submitted_url = 3;
+  string canonical_url = 4;
+  string hostname = 5;
+  string target_url_defanged = 6;
+  bool is_private = 7;
+  
+  // Strict Security Caps & Limits enforced by the Orchestration Agent
+  int32 timeout_seconds = 8;     // 15-second hard limit
+  int32 max_redirect_hops = 9;   // 5 hops limit
+  int64 max_body_bytes = 10;     // 10 MB body limit
+  int64 max_cert_chain_bytes = 11; // 64 KB cert chain limit
+  
+  string created_at = 12;        // ISO 8601
+  map<string, string> metadata = 13;
+}
+

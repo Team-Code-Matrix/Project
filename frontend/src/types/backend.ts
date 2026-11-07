@@ -321,6 +321,8 @@ export interface ExtendedScanReport {
   backendVerdict: BackendVerdict;
   backendRiskScore: number; // 0 (min risk) to 100 (max risk)
   uiTrustScore: number; // 100 (max trust) to 0 (min trust)
+  criticalOverride?: boolean;
+  resolvedIp?: string;
   summary: string;
   analystReasonCodes: string[];
   fastPath: FastPathVerdict;
