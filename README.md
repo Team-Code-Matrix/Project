@@ -1,262 +1,494 @@
-# Trust Shield — Intelligent Website Trust Assessment Platform
+# Trust Shield
 
-> **Production-Quality Cybersecurity Intelligence Frontend**  
-> Evaluates website URLs through six independent security models to generate an explainable Trust Score (0–100), detailed telemetry, and actionable protective guidance.
+**AI-assisted website phishing detection and security assessment
+platform.**
 
----
+Trust Shield helps users investigate potentially unsafe websites by
+combining URL and domain analysis, phishing heuristics, machine-learning
+inference, TLS/certificate checks, web-security inspection, and
+threat-intelligence context. It presents findings with risk explanations
+and defensive recommendations.
 
-## 1. Overview
+> **Project status:** This repository contains a React/Vite frontend, a
+> Python local API with an embedded ML inference path, and a separate
+> Go/Kafka-based distributed backend architecture. The presence of an
+> integration, worker, provider adapter, or UI module in the repository
+> does not by itself mean that the service is fully operational in every
+> deployment. Configure and test each dependency before describing it as
+> live.
 
-**Trust Shield** is a cybersecurity intelligence application designed to make complex web trust signals accessible to everyday internet users without sacrificing technical rigor.
+------------------------------------------------------------------------
 
-Users submit a target website URL or domain, and Trust Shield routes the target through six autonomous analysis pillars:
-1. **Phishing & Brand Impersonation Detection** — Visual mimicry, brand asset piracy, and credential-harvesting intake endpoints.
-2. **URL & Domain Intelligence** — Domain lifespan, registrar history, lexical randomness (Shannon entropy), and punycode homograph attacks.
-3. **TLS Certificate & Chain Validation** — Certificate Authority trust path, transparency logs (SCT), SAN host matching, and cipher strength.
-4. **Redirect Chain Analysis** — HTTP 3xx hops, cross-domain jurisdictional leaps, and URL shortener resolution.
-5. **Web Security Posture** — Defensive HTTP headers (HSTS preload, CSP strictness, X-Frame-Options, Referrer-Policy).
-6. **Collaborative Threat Intelligence** — Live community incident reports and curated threat intelligence feeds (PhishTank, URLhaus, AlienVault OTX).
+## 01. Project name and one-line description
 
----
+### Trust Shield
 
-## 2. Strict Project Structure
+An intelligent website trust assessment platform designed to help users
+identify phishing indicators, suspicious domains, certificate issues,
+and web-security weaknesses before interacting with a website.
 
-In strict compliance with architectural requirements, **the entire frontend application exists inside the `frontend/` directory**:
+------------------------------------------------------------------------
 
-```text
-TrustShield/
-│
-├── frontend/                               # All frontend code & configuration
-│   ├── public/
-│   │   └── favicon.svg                     # Custom Trust Shield geometric lockmark
-│   ├── src/
-│   │   ├── assets/                         # Static media assets
-│   │   ├── components/
-│   │   │   ├── layout/
-│   │   │   │   ├── AppShell.tsx            # Ambient backdrop & global layout shell
-│   │   │   │   ├── Navigation.tsx          # Floating navbar with live status, history & RTL toggle
-│   │   │   │   └── Footer.tsx              # Integrity principles, methodology & disclosures
-│   │   │   ├── scanner/
-│   │   │   │   ├── UrlScanner.tsx          # URL input, paste affordance, normalization, quick chips
-│   │   │   │   ├── NormalizationPrompt.tsx # Bare domain to HTTPS normalization suggestion
-│   │   │   │   ├── ScanProgress.tsx        # 7-stage animated progress & streaming telemetry logs
-│   │   │   │   └── FastPathVerdictCard.tsx # Sub-150ms synchronous pre-detonation verdict card
-│   │   │   ├── dashboard/
-│   │   │   │   ├── TrustScoreCircle.tsx    # Radial SVG score gauge (0-100) & critical override banner
-│   │   │   │   ├── DashboardHeader.tsx     # Target metadata bar, check counters, export/print & share
-│   │   │   │   ├── ModelCard.tsx           # Individual model card with expandable evidence & metrics
-│   │   │   │   ├── MultiModelGrid.tsx      # Responsive grid of independent model cards
-│   │   │   │   ├── SecurityFindings.tsx    # Severity-grouped findings with filter tabs & recommendations
-│   │   │   │   ├── Recommendations.tsx     # Actionable protective checklist (Essential/Advisory)
-│   │   │   │   ├── MethodologyModal.tsx    # "How score is calculated" comprehensive disclosure
-│   │   │   │   ├── CertificateIntelligence.tsx # Deep 5-tab PKI & X.509 audit (Curves, Multi-store, CT, OCSP, CAA)
-│   │   │   │   ├── WebSecurityAudit.tsx    # 4-tab appsec audit (Headers, Cookies/CORS, JA4S/Evilginx2, CVEs)
-│   │   │   │   ├── ThreatRelationshipGraph.tsx # Interactive @xyflow/react graph (Domains, IPs, ASNs, Certs, Actors)
-│   │   │   │   ├── ForensicsViewer.tsx     # Encrypted artifact vault (Safe screenshot, defanged DOM, HAR, PEM)
-│   │   │   │   └── ScanHistoryDrawer.tsx   # Slide-out drawer with persistent history recall & management
-│   │   │   ├── intelligence/
-│   │   │   │   ├── ThreatFeedTable.tsx     # Live threat feed with search & category filtering
-│   │   │   │   ├── ThreatMetrics.tsx       # 4 metric cards & Recharts vector distribution chart
-│   │   │   │   └── ReportThreatModal.tsx   # Anonymized community threat reporting modal
-│   │   │   ├── visualizations/
-│   │   │   │   ├── BentoFeatureGrid.tsx    # 6-pillar bento grid with claymorphic surfaces
-│   │   │   │   ├── HowItWorksProcess.tsx   # 4-stage visual analysis pipeline
-│   │   │   │   └── DualMotionTicker.tsx    # Dual horizontal infinite marquee strips (L-to-R & R-to-L)
-│   │   │   └── shared/
-│   │   │       ├── RiskBadge.tsx           # Standardized risk level pill
-│   │   │       ├── VerdictBadge.tsx        # Model verdict badge (Clear, Suspicious, Malicious, etc.)
-│   │   │       ├── SeverityBadge.tsx       # Finding severity badge (Critical, High, Medium, Low, Info)
-│   │   │       └── StatusDot.tsx           # Live status indicator dot with ping animation
-│   │   ├── context/
-│   │   │   └── LanguageContext.tsx         # Bilingual context (English / Arabic) with RTL layout sync
-│   │   ├── data/
-│   │   │   └── threatIntelData.ts          # Sample threat feed telemetry & distribution metrics
-│   │   ├── hooks/
-│   │   │   └── useScan.ts                  # Dual-lane scan orchestration hook (Fast-path + Deep-scan + History)
-│   │   ├── services/
-│   │   │   ├── scanService.ts              # Clean API adapter boundary (IScanService)
-│   │   │   ├── scanService.test.ts         # Vitest unit tests for scan service scenarios
-│   │   │   ├── websocketService.ts         # Live WebSocket connection manager with reconnect logic
-│   │   │   ├── mockScanData.ts             # Initial benchmark test scenarios
-│   │   │   └── extendedMockData.ts         # Deep benchmark scenarios (Clean, AiTM Phish, eMudhra PKI Compromise)
-│   │   ├── types/
-│   │   │   ├── scan.ts                     # UI TypeScript contracts (ScanResult, ModelResult, Finding, etc.)
-│   │   │   ├── backend.ts                  # Backend architecture contracts (FastPath, PKI, WebSec, STIX, Forensics)
-│   │   │   ├── backendSchemas.ts           # Runtime Zod validation schemas for backend payloads
-│   │   │   └── threatIntel.ts              # Threat report and feed metric contracts
-│   │   ├── utils/
-│   │   │   ├── urlValidator.ts             # Strict RFC URL parsing, normalization & punycode check
-│   │   │   ├── urlValidator.test.ts        # Vitest unit tests for URL validation
-│   │   │   ├── riskScoreAdapter.ts         # Risk score (0-100) <-> Trust score (100-0) conversion & defanging
-│   │   │   ├── riskScoreAdapter.test.ts    # Vitest unit tests for risk score adapter & URL defanger
-│   │   │   └── formatters.ts               # Label formatters, date/time, and color token utilities
-│   │   ├── App.tsx                         # Main integrated application component with multi-tab dashboard
-│   │   ├── main.tsx                        # Root React mounting entry
-│   │   └── index.css                       # Design tokens, claymorphic classes, and custom scrollbars
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── tsconfig.app.json
-│   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   └── vite.config.ts                      # Optimized rollup code-splitting configuration
-│
-├── intelligent_phishing_trust_platform_architecture.pdf # Full backend architecture specification
-├── prd.md                                  # Product Requirements Document
-├── skill.md                                # Frontend Implementation Skill Guide
-├── agent.md                                # Agent Operational Instructions
-└── README.md                               # Project documentation (this file)
+## 02. Problem
+
+Phishing pages, fake login portals, malicious redirects, brand
+impersonation, and compromised websites can expose people and
+organizations to credential theft, malware, financial fraud, and data
+loss.
+
+Many users cannot easily interpret technical signals such as domain
+characteristics, TLS certificates, HTTP security headers, redirect
+chains, or threat-intelligence reports. A single green padlock is not
+enough to establish that a website is trustworthy.
+
+Trust Shield aims to make these signals easier to investigate by
+collecting technical evidence and presenting it in a structured,
+understandable security assessment.
+
+------------------------------------------------------------------------
+
+## 03. Solution
+
+Trust Shield accepts a URL and performs available security checks
+through its analysis pipeline. The application is designed around the
+following capabilities:
+
+-   **URL and domain analysis:** URL normalization, suspicious lexical
+    patterns, hostname checks, and domain-related indicators.
+-   **Phishing and impersonation analysis:** Detection logic for
+    suspicious page behavior, credential forms, and potential brand
+    impersonation.
+-   **TLS and certificate analysis:** Certificate retrieval and
+    validation checks where supported by the active backend path.
+-   **Web-security assessment:** Inspection of HTTP security headers,
+    cookies, CORS behavior, and related web-security signals where
+    implemented.
+-   **Threat intelligence:** Correlation with configured threat feeds
+    and external providers when credentials and provider access are
+    available.
+-   **Machine-learning inference:** The repository includes a trained
+    Random Forest phishing model and feature-extraction/inference code.
+-   **Risk explanation:** Findings should be presented with their
+    source, evidence, status, and limitations. A missing provider result
+    must be shown as unavailable---not treated as proof that a site is
+    safe.
+-   **Scan history and reports:** The application includes scan-history
+    and reporting interfaces; persistence and export behavior depend on
+    the configured backend implementation.
+
+Trust Shield is an investigative aid. It does not guarantee that a
+website is safe, and it is not a substitute for organizational security
+controls or professional incident response.
+
+------------------------------------------------------------------------
+
+## 04. Demo links and a screenshot
+
+-   **Live demo:** [https://trust-shield-zeta.vercel.app/](https://trust-shield-zeta.vercel.app/)
+-   **Demo video:** Add the public demo-video URL here before
+    submission.
+-   **Repository:** [https://github.com/Team-Code-Matrix/Trust-Shield](https://github.com/Team-Code-Matrix/Trust-Shield)
+-   **Screenshot:** Platform interface preview:
+
+![Trust Shield dashboard](image/website.png)
+
+> Before submission, replace the placeholders with working public links
+> and ensure the screenshot file is committed to the repository. Do not
+> submit private, expired, or access-restricted demo links.
+
+------------------------------------------------------------------------
+
+## 05. Tech stack
+
+### Frontend
+
+-   **React 19** --- component-based user interface.
+-   **TypeScript** --- typed application code and data contracts.
+-   **Vite** --- development server and production build tooling.
+-   **Tailwind CSS** --- utility-based styling.
+-   **React Router** --- client-side routing.
+-   **Framer Motion** --- interface animation.
+-   **@xyflow/react** --- interactive threat-relationship graph
+    components.
+-   **Recharts** --- charts and data visualizations.
+-   **Zod** --- runtime validation of structured data.
+-   **Lucide React** --- icons.
+-   **Vitest** --- frontend unit tests.
+-   **Oxlint** --- linting.
+
+### Backend and analysis
+
+-   **Python 3** --- local API and analysis services.
+-   **SQLite** --- local-mode persistence.
+-   **scikit-learn** --- Random Forest machine-learning inference.
+-   **NumPy and Joblib** --- model feature processing and artifact
+    loading.
+-   **Requests and urllib3** --- HTTP client functionality.
+-   **Go** --- distributed API gateway implementation.
+-   **Apache Kafka** --- asynchronous worker messaging in the
+    distributed architecture.
+-   **Redis Stack** --- caching and filter infrastructure in the
+    distributed architecture.
+-   **PostgreSQL with pgvector** --- relational and vector storage in
+    the distributed architecture.
+-   **Neo4j** --- threat-relationship graph storage in the distributed
+    architecture.
+-   **MinIO** --- S3-compatible artifact storage in the distributed
+    architecture.
+-   **Protocol Buffers** --- shared message contracts.
+
+### External security services
+
+External providers must be configured with valid credentials and tested
+before they are described as active integrations. The architecture and
+project documentation reference services and feeds such as Google Safe
+Browsing, VirusTotal, URLhaus, PhishTank, OpenPhish, Certificate
+Transparency sources, and STIX/TAXII-compatible threat intelligence.
+
+Provider availability, API permissions, quotas, and terms of use vary.
+The local SQLite setup does not require cloud API keys for its basic
+local startup path.
+
+------------------------------------------------------------------------
+
+## 06. Architecture
+
+Trust Shield has two backend execution paths in this repository.
+
+### A. Local application path
+
+The local development path is intended for running the React frontend
+with the Python API and its local ML inference implementation.
+
+``` text
+Browser
+   |
+   v
+React + TypeScript + Vite
+   |
+   | HTTP / WebSocket
+   v
+Python API (backend/server.py)
+   |
+   +--> URL validation and analysis
+   |
+   +--> Feature extraction
+   |
+   +--> Random Forest model inference
+   |
+   +--> Local SQLite database
+   |
+   +--> Scan results, history and report endpoints
 ```
 
----
+### B. Distributed backend architecture
 
-## 3. Technology Stack
+The repository also contains a Go gateway and a containerized
+distributed architecture intended for asynchronous scanning.
 
-- **React 19** (`react`, `react-dom`) — Modern declarative UI library.
-- **TypeScript** — Strict typing with explicit boundary data contracts and strict null checks.
-- **Vite 8** — Ultra-fast bundler with automated manual code-splitting.
-- **Tailwind CSS v3** — Utility-first styling with custom design tokens.
-- **@xyflow/react** (`React Flow`) — Interactive, zoomable threat relationship node-edge graph.
-- **Zod** — Runtime schema validation for untrusted external backend scan payloads.
-- **Recharts** — Responsive SVG data visualizations for threat distribution.
-- **Lucide React** — Crisp, semantic icon system.
-- **Vitest** — Unit test suite for validation, risk scoring adapter, and service orchestration.
+``` text
+React Frontend
+      |
+      | HTTP / WebSocket
+      v
+Go API Gateway
+      |
+      +--> Fast-path checks / Redis
+      |
+      +--> Kafka scan tasks
+                |
+        +-------+-------+-------+
+        |       |       |       |
+        v       v       v       v
+      Pillar 1 Pillar 2 Pillar 3 Pillar 4
+      Phishing  PKI     WebSec  Threat Intel
+        |       |       |       |
+        +-------+-------+-------+
+                |
+                v
+        Result aggregation
+                |
+        +-------+---------+
+        |       |         |
+      Postgres Neo4j    MinIO
+```
 
----
+The distributed services are defined in `backend/docker-compose.yml`.
+Treat this as a separate deployment path: start it only after reviewing
+its configuration, environment variables, health checks, network
+boundaries, and worker integration. Do not assume that the local Python
+API automatically runs the entire distributed pipeline.
 
-## 4. Visual Identity & Design System
+### Local API endpoints
 
-The visual design is founded upon **Futuristic Minimalism × Glassmorphism × Soft Claymorphism**:
+The Python server documents routes including:
 
-- **Dominant Brand Accent:** `#367055`
-- **Background Foundation:** `#0B100E` (Deep forest graphite)
-- **Secondary Background:** `#101713`
-- **Base Surface:** `#141D18`
-- **Elevated Surface:** `#19251E`
-- **Accent Light:** `#79A98B`
-- **Text Primary:** `#E8EEE9`
-- **Text Secondary:** `#9AA9A0`
-- **Border Subtle:** `rgba(190, 215, 198, 0.12)`
-- **Border Prominent:** `rgba(190, 215, 198, 0.22)`
-- **Status Colors:**
-  - Success / Low Risk: `#78B58D`
-  - Caution / Warning: `#D7AA62`
-  - High Danger: `#EA580C`
-  - Critical / Malicious: `#D97878`
-  - Informational: `#91A9B7`
+  Method   Endpoint                   Purpose
+  -------- -------------------------- ---------------------------
+  GET      `/healthz`                 Health check
+  POST     `/api/v1/scan`             Submit a scan
+  POST     `/api/v1/scan/fast-path`   Fast-path check
+  GET      `/api/v1/scan/{id}`        Retrieve a scan
+  GET      `/api/v1/scan/history`     Retrieve scan history
+  GET      `/api/v1/threats`          Threat feed endpoint
+  POST     `/api/v1/report`           Submit a community report
+  POST     `/api/v1/auth/register`    Register a user
+  POST     `/api/v1/auth/login`       Authenticate a user
+  GET      `/api/v1/auth/me`          Retrieve current user
+  POST     `/api/v1/ai/analyze`       ML analysis endpoint
+  WS       `/ws/scans/{id}`           Scan telemetry stream
 
-### Human-Authored Design Principles
-- **No generic AI tropes:** Zero neon purple/blue gradients, no random glowing orbs, no meaningless "AI-powered" labels.
-- **Tactile Clay Surfaces:** Subtle inset shadows (`box-shadow: inset 0 2px 5px rgba(0,0,0,0.6)`), tactile button gradients, and gentle 3D elevation on hover.
-- **Typography:** `Manrope` for primary interface headings and body, and `IBM Plex Mono` for technical hostnames, hashes, and tabular score figures.
-- **Dual Infinite Marquee Strips:** Two counter-rotating decorative text tickers in the About section (Strip A moves left-to-right, Strip B moves right-to-left) with full `prefers-reduced-motion` compliance.
+Check the running server's implementation and response schemas before
+relying on any endpoint in a production integration.
 
----
+------------------------------------------------------------------------
 
-## 5. Functional Capabilities
-
-### URL Input & Normalization
-- Accepts `http://` and `https://`.
-- Detects bare domains (e.g. `github.com`) and offers one-click normalization to `https://github.com/`.
-- Rejects dangerous schemes (`javascript:`, `file:`, `data:`, `ftp:`) with accessible inline feedback.
-- Deconstructs and displays the target hostname separately so users can inspect spelling and punycode homographs.
-- Provides one-click quick benchmark chips for instant demonstration.
-
-### Staged Progress Visualization
-- Progresses sequentially through 7 concrete analysis stages:
-  1. Parsing URL structure & domain hierarchy
-  2. Analysing domain intelligence & WHOIS telemetry
-  3. Checking phishing indicators & impersonation patterns
-  4. Reviewing TLS certificate signals & chain integrity
-  5. Analysing redirect behaviour & destination hops
-  6. Assessing web security posture & header hygiene
-  7. Correlating signals & computing Trust Score
-- Displays real-time streaming monospace telemetry logs.
-
-### Radial Trust Score & Critical Override
-- Centered animated radial progress arc rendering the integer score (0–100).
-- Categorized risk bands:
-  - **80–100:** Lower observed risk (No major warning signals)
-  - **60–79:** Caution (Some signals require scrutiny)
-  - **30–59:** High risk (Multiple concerning signals detected)
-  - **0–29:** Critical risk (Active deceptive or malicious indicators)
-  - **Insufficient data** support
-- **Critical Override Priority:** If an active credential harvester or malware source is confirmed, a prominent critical override warning is displayed, superseding numerical scores.
-
-### Multi-Model Breakdown & Findings
-- **6 Independent Model Cards:** Display model number, category, description, verdict badge (`Clear`, `Suspicious`, `Malicious`, `Unknown`, `Skipped`, `Error`), calibrated confidence percentage, and expandable technical evidence.
-- **Severity-Grouped Findings:** Filterable tabs for `Critical`, `High`, `Medium`, `Low`, and `Informational`, detailing source model, technical evidence lines, and concrete remediation advice.
-- **Protective Checklist:** Prioritized action items (Essential, Advisory, Monitoring).
-
-### Collaborative Threat Feed & Reporting
-- Feed table with search filtering and threat category selection (`Phishing`, `Impersonation`, `Credential Harvesting`, `Crypto Drainer`, `Scam`, `Malware`).
-- Interactive Recharts bar breakdown of active threat scheme distribution.
-- Complete community threat submission modal with input validation, interaction status, anonymization privacy guarantee, and confirmation reference ID.
-
----
-
-## 6. Local Setup and Commands
-
-All commands must be executed from inside the `frontend/` directory.
+## 07. Setup and run steps
 
 ### Prerequisites
-- Node.js `v18+` or `v20+` (tested with Node `v24.21.0`)
-- npm `v9+` or `v11+`
 
-### 1. Install Dependencies
-```bash
+-   Git
+-   Node.js **20.19+ recommended** (use a version supported by the
+    installed Vite release)
+-   npm
+-   Python **3.10+**
+-   Windows, macOS, or Linux
+
+### 1. Clone the repository
+
+``` bash
+git clone https://github.com/Team-Code-Matrix/Trust-Shield.git TrustShield
+cd TrustShield
+```
+
+Replace the repository URL if cloning from an alternate fork.
+
+### 2. Configure the backend
+
+``` bash
+cd backend
+python -m venv .venv
+```
+
+Activate the virtual environment:
+
+**Windows PowerShell**
+
+``` powershell
+.venv\Scripts\Activate.ps1
+```
+
+**macOS / Linux**
+
+``` bash
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+``` bash
+pip install -r requirements.txt
+```
+
+Create the local environment file:
+
+**Windows PowerShell**
+
+``` powershell
+Copy-Item .env.example .env
+```
+
+**macOS / Linux**
+
+``` bash
+cp .env.example .env
+```
+
+Review `backend/.env` and set a unique, strong `JWT_SECRET` before using
+the application beyond local testing. Never commit `.env`.
+
+Start the API:
+
+``` bash
+python server.py
+```
+
+The local backend is expected at:
+
+``` text
+http://localhost:8000
+```
+
+Health check:
+
+``` text
+http://localhost:8000/healthz
+```
+
+### 3. Configure and start the frontend
+
+Open a second terminal from the repository root:
+
+``` bash
 cd frontend
+```
+
+Install packages:
+
+``` bash
 npm install
 ```
 
-### 2. Start Local Development Server
-```bash
-cd frontend
+Create the frontend environment file:
+
+**Windows PowerShell**
+
+``` powershell
+Copy-Item .env.example .env.local
+```
+
+**macOS / Linux**
+
+``` bash
+cp .env.example .env.local
+```
+
+The default local API setting is:
+
+``` env
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+Start the frontend:
+
+``` bash
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### 3. Run Production Build
-```bash
-cd frontend
+Open:
+
+``` text
+http://localhost:5173
+```
+
+### 4. Run checks
+
+From `frontend/`:
+
+``` bash
+npm test
+npm run lint
 npm run build
 ```
-Generates optimized code-split production bundles in `frontend/dist/`.
 
-### 4. Run Unit Test Suite
-```bash
-cd frontend
-npm test
-```
-Runs 17 Vitest tests across 4 test suites covering RFC URL validation, punycode attacks, bidirectional risk score translation, Zod runtime schema validation, and multi-scenario scan orchestration.
+### 5. Optional Windows launcher
 
----
+From the repository root, run:
 
-## 7. Backend Integration Architecture
-
-The frontend is architected with a decoupled adapter boundary (`frontend/src/services/scanService.ts` and `frontend/src/services/websocketService.ts`):
-
-```ts
-export interface IScanService {
-  isMock: boolean;
-  getFastPathVerdict(rawUrl: string): Promise<FastPathVerdict>;
-  initiateScan(
-    rawUrl: string,
-    onProgress?: (stage: ScanProgressStage, stepIndex: number, totalSteps: number) => void
-  ): Promise<ScanResult>;
-  getExtendedReport(scanId: string, rawUrl: string): Promise<ExtendedScanReport>;
-  getScanHistory(): ScanHistoryItem[];
-  saveScanHistory(item: ScanHistoryItem): void;
-  clearScanHistory(): void;
-}
+``` text
+start.bat
 ```
 
-### Dual-Lane Pipeline Architecture:
-1. **Synchronous Fast-Path Lane (<150ms):** Calls `getFastPathVerdict(rawUrl)` which queries Redis Bloom filters, Google Safe Browsing v5 hash prefixes, and Mozilla OneCRL CRLite cache. The UI immediately renders a high-visibility `FastPathVerdictCard`.
-2. **Asynchronous Deep-Scan Lane (2–15s):** Dispatches job to backend Kafka topics consumed by 4 autonomous worker pools (Pillar 1: DOM Detonation, Pillar 2: PKI Audit, Pillar 3: WebSec & JA4S, Pillar 4: STIX CTI). Telemetry and state changes stream via WebSocket (`ScanWebSocketService`).
-3. **Deterministic Verdict Semantics:** Supports the four canonical backend verdicts: `CLEAN`, `SUSPICIOUS`, `MALICIOUS`, and `PKI_TRUST_COMPROMISED`. If a CA or intermediate certificate fails cryptographic validation (e.g., Banbreach / eMudhra October 2026 scenario), the `PKI_TRUST_COMPROMISED` override triggers regardless of the numerical score.
-4. **Threat Relationship Graph:** Visualizes STIX 2.1 entities (Domains, IPs, ASNs, SSL Certificates, JA4 hashes, Threat Actors) in an interactive node-edge graph powered by `@xyflow/react`.
-5. **MicroVM Forensics Vault:** Displays sanitized static screenshot viewports, defanged DOM trees (`hxxps://` defanging), HTTP HAR network traces, and raw X.509 PEM chains.
-6. **Bilingual RTL Support:** Instant English ↔ Arabic translation toggle in the navigation bar dynamically switches text alignment, layout margins, and document direction (`dir="rtl"`, `lang="ar"`).
+The launcher installs dependencies when needed and opens separate
+backend and frontend terminal windows. Review the script before use and
+ensure your local environment configuration is secure.
 
-To switch from the simulated mock adapter to a live backend, set `VITE_USE_MOCK=false` and configure `VITE_API_URL` and `VITE_WS_URL`. No UI components need modification.
+### 6. Optional distributed infrastructure
 
+The distributed services are defined in:
+
+``` text
+backend/docker-compose.yml
+```
+
+Review the Compose file and required secrets before starting it. The
+infrastructure includes Kafka, PostgreSQL, Redis, Neo4j, MinIO, the Go
+gateway, and four worker services. Configure persistent volumes, strong
+credentials, restricted network access, and health checks before using
+it outside a local development environment.
+
+------------------------------------------------------------------------
+
+## 08. Disclosures
+
+### Libraries and open-source components
+
+Trust Shield uses the libraries and frameworks listed in the Tech Stack
+section. Their respective licenses and notices remain applicable. Review
+package manifests and dependency licenses before redistribution or
+commercial deployment.
+
+### Templates and starter code
+
+The frontend uses the React, TypeScript, and Vite project structure and
+standard ecosystem tooling. Disclose any additional UI kits, templates,
+starter repositories, icons, datasets, or copied code actually used by
+the team. Do not claim original authorship of third-party assets.
+
+### AI tools
+
+AI-assisted development tools were used during the engineering of Trust Shield:
+-   **ChatGPT (OpenAI)** --- used for initial project ideation, threat modeling, security architecture planning, and documentation drafting.
+-   **Google Gemini** --- used for code pairing, algorithm design, full-stack synchronization, debugging, and unit test generation.
+
+The **Random Forest model** (`backend/ml/models/trustshield_phishing_model.joblib`) is a custom-trained machine-learning model trained locally with `scikit-learn` on 15 deterministic lexical and domain features. It executes local probability inference (`predict_proba`) and operates independently of external LLM APIs.
+
+### Data and API providers
+
+List every external API, dataset, threat feed, and certificate source
+actually used in the submitted build. Include applicable attribution,
+licensing, rate-limit, and acceptable-use requirements. Do not publish
+API keys, access tokens, passwords, or private URLs.
+
+### Security and limitations
+
+-   A scan result is an assessment based on the evidence available at
+    scan time; it is not a guarantee of safety.
+-   An unavailable provider or missing result must not be interpreted as
+    a clean result.
+-   External API coverage depends on credentials, service availability,
+    quotas, and provider terms.
+-   Do not scan systems without authorization.
+-   The scanning infrastructure must enforce SSRF protections,
+    private/reserved IP restrictions, redirect validation, request
+    limits, and isolated execution for untrusted content before public
+    deployment.
+-   Replace development secrets and default credentials before
+    deployment.
+-   Verify all worker pipelines and external integrations in the target
+    environment before claiming that they are operational.
+
+------------------------------------------------------------------------
+
+## 09. Track
+
+**Suggested submission track:** Cybersecurity / Digital Safety / Trust &
+Safety.
+
+Trust Shield addresses phishing, website impersonation, malicious URL
+detection, and web-security visibility. If the event provides an
+official track list, replace this suggested label with the exact track
+name used by the organizers.
+
+------------------------------------------------------------------------
+
+## Team
+
+-   **Team Name:** Code Matrix
+-   **Team Members:**
+    -   **Arnab Ghorai** (Leader) --- [GitHub](https://github.com/AG349) • [LinkedIn](https://www.linkedin.com/in/arnab-ghorai-ag349)
+    -   **Bikram Das** (Member 1) --- [GitHub](https://github.com/yyo298646-hub) • [LinkedIn](https://www.linkedin.com/in/bikram-das-sapstudent)
+    -   **Ishika Mahto** (Member 2)
+    -   **Srijit Deshmukh** (Member 3)
+-   **Contact:**
+    -   [arnabghorai349@gmail.com](mailto:arnabghorai349@gmail.com)
+    -   [yyo298646@gmail.com](mailto:yyo298646@gmail.com)
+
+------------------------------------------------------------------------
+
+## License
+
+No license has been specified in this repository documentation. Add a
+`LICENSE` file and name the selected license before making the
+repository available for reuse. Do not assume that public visibility
+automatically grants permission to reuse the code.
