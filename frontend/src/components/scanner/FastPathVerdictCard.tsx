@@ -25,83 +25,83 @@ export const FastPathVerdictCard: React.FC<FastPathVerdictCardProps> = ({
   );
 
   return (
-    <div className="glass-panel rounded-2xl p-4 md:p-5 border border-shield-border/80 shadow-clay-sm animate-fadeIn text-left">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-shield-border/50 gap-2">
+    <div className="rounded-2xl p-4 md:p-5 bg-[#101713]/90 border border-[rgba(120,135,124,0.3)] shadow-[0_15px_35px_rgba(0,0,0,0.5)] animate-fadeIn text-left">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[rgba(120,135,124,0.22)] gap-2">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-shield-accent/20 border border-shield-accent/30 text-shield-accent-light">
-            <Zap className="w-4 h-4 text-shield-accent-light" />
+          <div className="p-1.5 rounded-lg bg-[#141D18] border border-[rgba(120,135,124,0.3)] text-[#F3D081]">
+            <Zap className="w-4 h-4 text-[#F3D081]" />
           </div>
           <div>
-            <span className="text-xs font-mono uppercase tracking-wider text-shield-accent-light font-bold">
-              Fast-Path Synchronous Lane
+            <span className="text-xs font-mono uppercase tracking-wider text-[#F3D081] font-bold">
+              FAST-PATH SYNCHRONOUS LANE
             </span>
-            <span className="text-xs text-shield-text-muted ml-2 font-mono">
+            <span className="text-xs text-[#78877C] ml-2 font-mono">
               (&lt;150ms Pre-Detonation Verdict)
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-[11px] font-mono text-shield-text-muted flex items-center gap-1">
-            <Clock className="w-3 h-3 text-shield-accent-light" />
+          <span className="text-[11px] font-mono text-[#78877C] flex items-center gap-1">
+            <Clock className="w-3 h-3 text-[#F3D081]" />
             {fastPath.evaluatedInMs}ms
           </span>
           <span
-            className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-medium border uppercase ${badgeClass}`}
+            className={`px-2.5 py-0.5 rounded font-mono text-[10px] font-bold border uppercase tracking-wider ${badgeClass}`}
           >
             {label}
           </span>
         </div>
       </div>
 
-      <p className="text-xs md:text-sm text-shield-text-secondary mt-3 leading-relaxed">
+      <p className="text-xs md:text-sm text-[#B7C4B8] mt-3 leading-relaxed">
         {fastPath.summary}
       </p>
 
       {/* Synchronous Filter Matrix Badges */}
-      <div className="mt-3.5 pt-3 border-t border-shield-border/40 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px] font-mono">
-        <div className="p-2 rounded-lg bg-shield-surface/80 border border-shield-border/40 flex flex-col">
-          <span className="text-shield-text-muted">Redis Bloom / Cuckoo</span>
+      <div className="mt-3.5 pt-3 border-t border-[rgba(120,135,124,0.22)] grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px] font-mono">
+        <div className="p-2 rounded-lg bg-[#080B09] border border-[rgba(120,135,124,0.25)] flex flex-col">
+          <span className="text-[#78877C] text-[10px] uppercase">Redis Bloom / Cuckoo</span>
           <span
             className={`font-semibold mt-0.5 truncate ${
-              fastPath.bloomFilterHit ? 'text-shield-danger' : 'text-shield-success'
+              fastPath.bloomFilterHit ? 'text-rose-400' : 'text-[#78B58D]'
             }`}
           >
             {fastPath.bloomFilterHit ? `HIT (${fastPath.bloomSource || 'URLhaus'})` : 'CLEAN (0 match)'}
           </span>
         </div>
 
-        <div className="p-2 rounded-lg bg-shield-surface/80 border border-shield-border/40 flex flex-col">
-          <span className="text-shield-text-muted">Google Safe Browsing</span>
+        <div className="p-2 rounded-lg bg-[#080B09] border border-[rgba(120,135,124,0.25)] flex flex-col">
+          <span className="text-[#78877C] text-[10px] uppercase">Google Safe Browsing</span>
           <span
             className={`font-semibold mt-0.5 truncate ${
-              fastPath.googleSafeBrowsingMatch ? 'text-shield-danger' : 'text-shield-success'
+              fastPath.googleSafeBrowsingMatch ? 'text-rose-400' : 'text-[#78B58D]'
             }`}
           >
             {fastPath.googleSafeBrowsingMatch ? `FLAGGED (${fastPath.gsbThreatType || 'MALWARE'})` : 'CLEAN'}
           </span>
         </div>
 
-        <div className="p-2 rounded-lg bg-shield-surface/80 border border-shield-border/40 flex flex-col">
-          <span className="text-shield-text-muted">Mozilla OneCRL</span>
+        <div className="p-2 rounded-lg bg-[#080B09] border border-[rgba(120,135,124,0.25)] flex flex-col">
+          <span className="text-[#78877C] text-[10px] uppercase">Mozilla OneCRL</span>
           <span
             className={`font-semibold mt-0.5 truncate ${
-              fastPath.mozillaOneCrlRevoked ? 'text-shield-danger' : 'text-shield-success'
+              fastPath.mozillaOneCrlRevoked ? 'text-rose-400' : 'text-[#78B58D]'
             }`}
           >
             {fastPath.mozillaOneCrlRevoked ? 'REVOKED CA' : 'VALID'}
           </span>
         </div>
 
-        <div className="p-2 rounded-lg bg-shield-surface/80 border border-shield-border/40 flex flex-col">
-          <span className="text-shield-text-muted">Cached Domain Rep</span>
+        <div className="p-2 rounded-lg bg-[#080B09] border border-[rgba(120,135,124,0.25)] flex flex-col">
+          <span className="text-[#78877C] text-[10px] uppercase">Cached Domain Rep</span>
           <span
             className={`font-semibold mt-0.5 truncate ${
               fastPath.cachedReputation === 'MALICIOUS'
-                ? 'text-shield-danger'
+                ? 'text-rose-400'
                 : fastPath.cachedReputation === 'SUSPICIOUS'
-                ? 'text-shield-warning'
-                : 'text-shield-text-primary'
+                ? 'text-amber-400'
+                : 'text-[#E9E6DC]'
             }`}
           >
             {fastPath.cachedReputation || 'FRESH SCAN'}

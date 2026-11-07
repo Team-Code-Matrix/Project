@@ -127,14 +127,31 @@ export const UrlScanner: React.FC<UrlScannerProps> = ({
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {/* Scanner Container with Claymorphic & Glass Treatment */}
-      <div className="glass-panel-elevated rounded-3xl p-4 sm:p-6 md:p-8 border border-shield-border shadow-clay-card relative">
+    <div className="w-full max-w-[860px] mx-auto">
+      {/* Scanner Container with Translucent Swiss-Brutalist Blueprint Framing */}
+      <div className="rounded-2xl p-4 sm:p-5 md:p-6 bg-[#101713]/50 backdrop-blur-[3px] border border-[rgba(120,135,124,0.3)] shadow-[0_20px_50px_rgba(0,0,0,0.55)] relative group">
+        
+        {/* Terminal Header Strip */}
+        <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-[rgba(120,135,124,0.25)] text-xs font-mono">
+          <div className="flex items-center gap-2 text-[#B7C4B8]">
+            <span className="w-2 h-2 rounded-full bg-[#F3D081] shadow-[0_0_8px_#F3D081] animate-pulse" />
+            <span className="font-bold tracking-wider text-[11px] uppercase">TERMINAL // TARGET_INGESTION_SUITE</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded bg-[#080B09] border border-[rgba(120,135,124,0.3)] text-[10px] font-mono text-[#B7C4B8] uppercase">
+              MICROVM_ISOLATION
+            </span>
+            <span className="px-2 py-0.5 rounded bg-[#080B09] border border-[rgba(120,135,124,0.3)] text-[10px] font-mono text-[#F3D081] font-semibold uppercase">
+              RFC 3986 PARSER
+            </span>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Input Wrapper */}
-            <div className="relative flex-1 flex items-center rounded-2xl clay-input bg-[#0D1410] border border-shield-border/80 focus-within:border-shield-accent transition-all px-4 py-3.5 shadow-clay-input">
-              <Globe className="w-5 h-5 text-shield-text-muted shrink-0 mr-3" />
+            <div className="relative flex-1 flex items-center rounded-xl bg-[#080B09] border border-[rgba(120,135,124,0.35)] focus-within:border-[#F3D081]/80 focus-within:ring-1 focus-within:ring-[#F3D081]/30 transition-all px-4 py-3.5 shadow-inner">
+              <Globe className="w-5 h-5 text-[#78877C] shrink-0 mr-3" />
 
               <input
                 type="text"
@@ -142,7 +159,7 @@ export const UrlScanner: React.FC<UrlScannerProps> = ({
                 onChange={handleInputChange}
                 disabled={isScanning}
                 placeholder="Enter website URL or domain (e.g. https://example.com)"
-                className="w-full bg-transparent text-shield-text-primary placeholder:text-shield-text-muted/60 text-sm md:text-base outline-none font-mono tracking-tight"
+                className="w-full bg-transparent text-[#E9E6DC] placeholder:text-[#B7C4B8]/50 text-sm md:text-base outline-none font-mono tracking-tight"
                 aria-label="Website URL to scan"
               />
 
@@ -153,7 +170,7 @@ export const UrlScanner: React.FC<UrlScannerProps> = ({
                     type="button"
                     onClick={handleClear}
                     title="Clear input"
-                    className="p-1.5 rounded-lg text-shield-text-muted hover:text-shield-text-primary hover:bg-shield-surface transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg text-[#78877C] hover:text-[#E9E6DC] hover:bg-[#202923] transition-colors cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -164,9 +181,9 @@ export const UrlScanner: React.FC<UrlScannerProps> = ({
                   onClick={handlePaste}
                   disabled={isScanning}
                   title="Paste from clipboard"
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-mono text-shield-text-secondary hover:text-shield-text-primary bg-shield-surface border border-shield-border hover:border-shield-accent/40 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-mono text-[#B7C4B8] hover:text-[#E9E6DC] bg-[#141D18] border border-[rgba(120,135,124,0.3)] hover:border-[#F3D081]/50 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  <ClipboardPaste className="w-3.5 h-3.5 text-shield-accent-light" />
+                  <ClipboardPaste className="w-3.5 h-3.5 text-[#F3D081]" />
                   <span className="hidden sm:inline">Paste</span>
                 </button>
               </div>
@@ -176,17 +193,18 @@ export const UrlScanner: React.FC<UrlScannerProps> = ({
             <button
               type="submit"
               disabled={isScanning || !inputUrl.trim()}
-              className="clay-button px-7 py-3.5 rounded-2xl text-sm md:text-base font-bold text-white flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 transition-all cursor-pointer"
+              className="px-7 py-3.5 rounded-xl text-sm md:text-base font-black font-mono tracking-wider uppercase text-[#080B09] bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] hover:brightness-105 active:scale-[0.98] shadow-[0_4px_20px_rgba(243,208,129,0.35)] flex items-center justify-center gap-2.5 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 transition-all cursor-pointer"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-4 h-4 text-[#080B09] stroke-[2.5]" />
               <span>{isScanning ? 'Assessing...' : 'Scan URL'}</span>
             </button>
           </div>
 
           {/* Paste Notification Feedback */}
           {pasteNotice && (
-            <div className="text-xs font-mono text-shield-accent-light px-2 animate-fadeIn">
-              ✓ {pasteNotice}
+            <div className="text-xs font-mono text-[#F3D081] px-2 animate-fadeIn flex items-center gap-1.5">
+              <span>✓</span>
+              <span>{pasteNotice}</span>
             </div>
           )}
 
@@ -202,44 +220,44 @@ export const UrlScanner: React.FC<UrlScannerProps> = ({
 
           {/* Validation Feedback / Warnings */}
           {validation && !validation.valid && (
-            <div className="p-3.5 rounded-xl bg-shield-danger/10 border border-shield-danger/30 text-xs text-rose-300 flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 text-shield-danger shrink-0 mt-0.5" />
+            <div className="p-3.5 rounded-xl bg-rose-950/30 border border-rose-500/40 text-xs font-mono text-rose-300 flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               <div>
-                <strong className="font-semibold">Validation Issue:</strong> {validation.message}
+                <strong className="font-semibold uppercase tracking-wider">Validation Error:</strong> {validation.message}
               </div>
             </div>
           )}
 
           {/* Target Hostname Deconstruction Preview */}
           {validation && validation.valid && (
-            <div className="pt-2 flex flex-wrap items-center justify-between text-xs font-mono text-shield-text-secondary border-t border-shield-border/40 gap-2">
+            <div className="pt-2 flex flex-wrap items-center justify-between text-xs font-mono text-[#B7C4B8] border-t border-[rgba(120,135,124,0.25)] gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-shield-text-muted">Target Hostname:</span>
-                <span className="text-shield-accent-light font-semibold bg-shield-surface-elevated px-2 py-0.5 rounded border border-shield-border">
+                <span className="text-[#78877C] uppercase tracking-wider text-[11px]">Target:</span>
+                <span className="text-[#F3D081] font-bold bg-[#080B09] px-2 py-0.5 rounded border border-[rgba(120,135,124,0.3)]">
                   {validation.hostname}
                 </span>
                 {validation.isPunycode && (
-                  <span className="text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-600/30 flex items-center gap-1">
+                  <span className="text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-600/30 flex items-center gap-1 text-[11px]">
                     <AlertCircle className="w-3 h-3" />
-                    Punycode Homograph Alert
+                    PUNYCODE_ALERT
                   </span>
                 )}
               </div>
-              <div className="text-shield-text-muted text-[11px]">
-                Protocol: <span className="text-shield-text-primary uppercase">{validation.protocol.replace(':', '')}</span>
+              <div className="text-[#78877C] text-[11px]">
+                PROTOCOL: <span className="text-[#E9E6DC] font-bold uppercase">{validation.protocol.replace(':', '')}</span>
               </div>
             </div>
           )}
         </form>
 
         {/* Demo Quick-Select Scenarios */}
-        <div className="mt-6 pt-5 border-t border-shield-border/50">
-          <div className="flex items-center justify-between mb-3 text-xs font-mono text-shield-text-muted">
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-shield-accent-light" />
+        <div className="mt-5 pt-4 border-t border-[rgba(120,135,124,0.25)]">
+          <div className="flex items-center justify-between mb-3 text-xs font-mono text-[#78877C]">
+            <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+              <Sparkles className="w-3.5 h-3.5 text-[#F3D081]" />
               Quick Benchmark Scenarios:
             </span>
-            <span className="text-[11px] text-shield-text-muted">Click to evaluate</span>
+            <span className="text-[10px] uppercase tracking-wider text-[#78877C]">Click to evaluate</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
@@ -255,12 +273,15 @@ export const UrlScanner: React.FC<UrlScannerProps> = ({
                   onScan(scen.url);
                 }}
                 disabled={isScanning}
-                className={`text-left p-2.5 rounded-xl bg-shield-surface/80 border border-shield-border hover:bg-shield-surface-elevated transition-all flex flex-col justify-between group disabled:opacity-50 cursor-pointer ${scen.color}`}
+                className="text-left p-2.5 rounded-xl bg-[#080B09] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/50 hover:bg-[#141D18] transition-all flex flex-col justify-between group disabled:opacity-50 cursor-pointer"
               >
-                <div className="text-xs font-mono font-medium truncate w-full text-shield-text-primary group-hover:text-shield-accent-light">
+                <div className="text-xs font-mono font-medium truncate w-full text-[#E9E6DC] group-hover:text-[#F3D081] transition-colors">
                   {scen.label}
                 </div>
-                <div className="text-[11px] font-mono mt-1 opacity-80">{scen.badge}</div>
+                <div className="text-[10px] font-mono mt-1 text-[#B7C4B8] flex items-center justify-between">
+                  <span>{scen.badge}</span>
+                  <span className="opacity-0 group-hover:opacity-100 text-[#F3D081] transition-opacity">→</span>
+                </div>
               </button>
             ))}
           </div>
@@ -268,13 +289,13 @@ export const UrlScanner: React.FC<UrlScannerProps> = ({
       </div>
 
       {/* Supporting Privacy & Methodology Microcopy */}
-      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-shield-text-muted px-3 gap-2">
-        <span className="flex items-center gap-1.5 font-mono">
-          <Lock className="w-3.5 h-3.5 text-shield-accent-light" />
-          Inspect before you interact.
+      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-[#78877C] px-3 gap-2 font-mono">
+        <span className="flex items-center gap-1.5 text-[11px]">
+          <Lock className="w-3.5 h-3.5 text-[#F3D081]" />
+          INSPECT BEFORE YOU INTERACT.
         </span>
-        <span className="text-center sm:text-right text-[11px]">
-          Target URLs are evaluated via proxy sandboxes and are never contacted directly by your browser.
+        <span className="text-center sm:text-right text-[10px] text-[#78877C] tracking-wide">
+          TARGET DOMAINS EVALUATED VIA AIR-GAPPED MICROVM SANDBOXES. ZERO DIRECT CLIENT EXECUTION.
         </span>
       </div>
     </div>

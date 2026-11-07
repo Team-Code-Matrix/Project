@@ -20,6 +20,8 @@ import { DualMotionTicker } from './components/visualizations/DualMotionTicker';
 import { ThreatMetrics } from './components/intelligence/ThreatMetrics';
 import { ThreatFeedTable } from './components/intelligence/ThreatFeedTable';
 import { ReportThreatModal } from './components/intelligence/ReportThreatModal';
+import { SecurityModuleView } from './components/modules/SecurityModuleView';
+import { InteractiveHeroPanel } from './components/layout/InteractiveHeroPanel';
 import { useScan } from './hooks/useScan';
 import { INITIAL_THREAT_FEED, THREAT_FEED_METRICS } from './data/threatIntelData';
 import {
@@ -52,6 +54,9 @@ export function App() {
     resetScan,
   } = useScan();
 
+  // Active module view navigation (default is 'overview' which displays the homepage)
+  const [activeModule, setActiveModule] = useState<string>('overview');
+
   const [activeDashboardTab, setActiveDashboardTab] = useState<
     'overview' | 'pki' | 'websec' | 'graph' | 'forensics'
   >('overview');
@@ -68,19 +73,54 @@ export function App() {
     scannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  useEffect(() => {
-    if (isComplete && resultsRef.current) {
-      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [isComplete]);
-
+  // URL synchronization on mount and parameter change
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const modParam = params.get('module');
+    if (modParam) {
+      setActiveModule(modParam);
+    }
     const urlParam = params.get('url') || params.get('scan');
     if (urlParam) {
       startScan(urlParam);
     }
   }, [startScan]);
+
+  // Support browser back and forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const modParam = params.get('module') || 'overview';
+      setActiveModule(modParam);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Module selection with browser history update
+  const handleSelectModule = (moduleId: string) => {
+    setActiveModule(moduleId);
+    const url = new URL(window.location.href);
+    if (moduleId === 'overview') {
+      url.searchParams.delete('module');
+    } else {
+      url.searchParams.set('module', moduleId);
+    }
+    window.history.pushState({ module: moduleId }, '', url.toString());
+
+    if (moduleId === 'overview') {
+      handleScrollToScanner();
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    if (isComplete && resultsRef.current && activeModule === 'overview') {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isComplete, activeModule]);
 
   const handleOpenReportWithUrl = (urlToReport?: string) => {
     setReportInitialUrl(urlToReport || targetUrl || '');
@@ -89,305 +129,288 @@ export function App() {
 
   return (
     <AppShell
-      onScanClick={handleScrollToScanner}
-      onOpenMethodology={() => setIsMethodologyOpen(true)}
+      onScanClick={() => {
+        if (activeModule !== 'overview') {
+          handleSelectModule('overview');
+        }
+        handleScrollToScanner();
+      }}
+      onOpenMethodology={() => handleSelectModule('methodology')}
       onOpenReportModal={() => handleOpenReportWithUrl()}
-      onOpenHistory={() => setIsHistoryOpen(true)}
+      onOpenHistory={() => handleSelectModule('history')}
+      activeModule={activeModule}
+      onSelectModule={handleSelectModule}
+      activeHostname={hostname}
+      activeTrustScore={result?.score ?? undefined}
     >
-      {/* HERO SECTION / PRIMARY SCANNER */}
-      <section
-        id="scanner"
-        ref={scannerRef}
-        className="relative pt-12 md:pt-20 pb-16 px-4 max-w-7xl mx-auto w-full flex flex-col items-center text-center"
-      >
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-shield-surface border border-shield-border text-xs font-mono text-shield-accent-light mb-6 shadow-clay-sm animate-fadeIn">
-          <Shield className="w-3.5 h-3.5 text-shield-accent-light" />
-          <span>CYBERSECURITY & WEB REPUTATION ENGINE</span>
-        </div>
+      {/* 
+        CONDITIONAL RENDERING:
+        If activeModule === 'overview', render the complete homepage experience exactly as it was.
+        If activeModule !== 'overview', render the dedicated security analysis module view with shared scan context.
+      */}
+      {activeModule === 'overview' ? (
+        <>
+          {/* HERO SECTION / PRIMARY SCANNER */}
+          <section
+            id="scanner"
+            ref={scannerRef}
+            className="relative pt-8 md:pt-14 pb-16 px-4 max-w-7xl mx-auto w-full flex flex-col items-center"
+          >
+            {/* Interactive 3D Perspective Hero Terminal Panel */}
+            <InteractiveHeroPanel />
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-shield-text-primary max-w-4xl mx-auto leading-[1.12] mb-6">
-          Not every link deserves <br className="hidden sm:inline" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-shield-text-primary via-shield-accent-light to-shield-success">
-            your trust.
-          </span>
-        </h1>
-
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-shield-text-secondary leading-relaxed mb-10">
-          Go beyond the lock icon. Analyse websites through multiple security intelligence models and understand the risks before you interact.
-        </p>
-
-        <UrlScanner
-          onScan={(url) => startScan(url)}
-          isScanning={isScanning}
-          initialUrl={targetUrl}
-        />
-
-        {/* Fast-Path Synchronous Lane Pre-Detonation Verdict Banner */}
-        {fastPath && (
-          <div className="w-full max-w-4xl mx-auto mt-5">
-            <FastPathVerdictCard fastPath={fastPath} hostname={hostname} />
-          </div>
-        )}
-
-        {/* Active Scanning Animation State */}
-        {isScanning && (
-          <div className="w-full mt-6">
-            <ScanProgress
-              currentStage={currentStage}
-              targetUrl={targetUrl}
-              hostname={hostname}
+            <UrlScanner
+              onScan={(url) => startScan(url)}
+              isScanning={isScanning}
+              initialUrl={targetUrl}
             />
-          </div>
-        )}
 
-        {/* Error Feedback State */}
-        {isError && error && (
-          <div className="mt-8 p-5 rounded-2xl bg-shield-danger/15 border border-shield-danger/30 text-rose-300 max-w-2xl mx-auto text-sm text-left flex items-start gap-3 shadow-clay-card animate-fadeIn">
-            <AlertTriangle className="w-5 h-5 text-shield-danger shrink-0 mt-0.5" />
-            <div>
-              <div className="font-bold uppercase tracking-wider mb-1">Assessment Interrupted</div>
-              <p className="text-shield-text-secondary">{error}</p>
-              <button
-                type="button"
-                onClick={resetScan}
-                className="mt-3 text-xs font-mono text-shield-accent-light hover:underline cursor-pointer"
-              >
-                Clear and retry
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* DEDICATED RESULTS DASHBOARD */}
-      {isComplete && result && (
-        <section
-          id="results"
-          ref={resultsRef}
-          className="py-12 px-4 max-w-7xl mx-auto w-full space-y-8 animate-fadeIn"
-        >
-          {/* Dashboard Header Bar with Print, JSON Export, Share */}
-          <DashboardHeader
-            scanResult={result}
-            onReset={resetScan}
-            onOpenMethodology={() => setIsMethodologyOpen(true)}
-          />
-
-          {/* Bento-style Score Centerpiece & Summary */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Centerpiece Trust Score Gauge (Span 5) */}
-            <div className="lg:col-span-5 clay-card rounded-3xl border border-shield-border flex items-center justify-center">
-              <TrustScoreCircle
-                score={result.score}
-                riskLevel={result.riskLevel}
-                criticalOverride={result.criticalOverride}
-                overrideReason={result.overrideReason}
-              />
-            </div>
-
-            {/* Assessment Plain-Language Summary & Fast Telemetry (Span 7) */}
-            <div className="lg:col-span-7 clay-card rounded-3xl p-6 md:p-8 flex flex-col justify-between border border-shield-border">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono uppercase tracking-wider text-shield-accent-light">
-                    Executive Analysis Summary
-                  </span>
-                  <span className="text-xs font-mono text-shield-text-muted">
-                    Engine v2.4 (Dual-Lane Deep Detonation)
-                  </span>
-                </div>
-
-                <h3 className="text-xl md:text-2xl font-bold text-shield-text-primary text-left">
-                  {result.summary}
-                </h3>
-
-                <p className="text-xs md:text-sm text-shield-text-secondary leading-relaxed text-left">
-                  Evaluated across domain age, DNS reputation, SSL/TLS handshake transparency, deep redirect traversal, and collaborative threat feeds. The score synthesizes individual model verdicts while prioritizing confirmed critical indicators.
-                </p>
+            {/* Fast-Path Synchronous Lane Pre-Detonation Verdict Banner */}
+            {fastPath && (
+              <div className="w-full max-w-[860px] mx-auto mt-5">
+                <FastPathVerdictCard fastPath={fastPath} hostname={hostname} />
               </div>
-
-              {/* Fast telemetry tags */}
-              <div className="mt-6 pt-5 border-t border-shield-border/50 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono text-left">
-                <div className="p-3 rounded-xl bg-shield-surface-elevated border border-shield-border/50">
-                  <div className="text-shield-text-muted text-[11px]">Primary Scheme</div>
-                  <div className="font-bold text-shield-text-primary uppercase mt-0.5">
-                    {result.protocol.replace(':', '')}
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-shield-surface-elevated border border-shield-border/50">
-                  <div className="text-shield-text-muted text-[11px]">Hosting Origin</div>
-                  <div className="font-bold text-shield-text-primary mt-0.5 truncate">
-                    {result.country || 'Global Anycast'}
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-shield-surface-elevated border border-shield-border/50">
-                  <div className="text-shield-text-muted text-[11px]">Model Consensus</div>
-                  <div className="font-bold text-shield-accent-light mt-0.5">
-                    {result.riskLevel === 'low'
-                      ? 'Consensus Clear'
-                      : result.criticalOverride
-                      ? 'Override Active'
-                      : 'Anomalies Noted'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Multi-Pillar Deep-Dive Module Navigation Tabs */}
-          <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-shield-surface-elevated border border-shield-border text-xs font-mono">
-            <button
-              type="button"
-              onClick={() => setActiveDashboardTab('overview')}
-              className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-                activeDashboardTab === 'overview'
-                  ? 'bg-shield-accent text-white font-bold shadow-clay-sm'
-                  : 'text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              <span>Multi-Model Pillars ({result.models.length})</span>
-            </button>
-
-            {extendedReport && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('pki')}
-                  className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-                    activeDashboardTab === 'pki'
-                      ? 'bg-shield-accent text-white font-bold shadow-clay-sm'
-                      : 'text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface'
-                  }`}
-                >
-                  <Lock className="w-4 h-4" />
-                  <span>PKI & Certificates</span>
-                  {extendedReport.backendVerdict === 'PKI_TRUST_COMPROMISED' && (
-                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('websec')}
-                  className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-                    activeDashboardTab === 'websec'
-                      ? 'bg-shield-accent text-white font-bold shadow-clay-sm'
-                      : 'text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface'
-                  }`}
-                >
-                  <FileCheck2 className="w-4 h-4" />
-                  <span>Web Security & JA4+</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('graph')}
-                  className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-                    activeDashboardTab === 'graph'
-                      ? 'bg-shield-accent text-white font-bold shadow-clay-sm'
-                      : 'text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface'
-                  }`}
-                >
-                  <Network className="w-4 h-4" />
-                  <span>Threat Graph</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('forensics')}
-                  className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-                    activeDashboardTab === 'forensics'
-                      ? 'bg-shield-accent text-white font-bold shadow-clay-sm'
-                      : 'text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface'
-                  }`}
-                >
-                  <FileSearch className="w-4 h-4" />
-                  <span>Forensic Vault</span>
-                </button>
-              </>
             )}
-          </div>
 
-          {/* TAB CONTENT RENDERING */}
-          {activeDashboardTab === 'overview' && (
-            <div className="space-y-8 animate-fadeIn">
-              {/* 6 Multi-Model Analysis Cards Grid */}
-              <MultiModelGrid models={result.models} />
+            {/* Active Scanning Animation State */}
+            {isScanning && (
+              <div className="w-full mt-6">
+                <ScanProgress
+                  currentStage={currentStage}
+                  targetUrl={targetUrl}
+                  hostname={hostname}
+                />
+              </div>
+            )}
 
-              {/* Security Findings List */}
-              <SecurityFindings findings={result.findings} />
+            {/* Error Feedback State */}
+            {isError && error && (
+              <div className="mt-8 p-5 rounded-2xl bg-shield-danger/15 border border-shield-danger/30 text-rose-300 max-w-2xl mx-auto text-sm text-left flex items-start gap-3 shadow-clay-card animate-fadeIn">
+                <AlertTriangle className="w-5 h-5 text-shield-danger shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold uppercase tracking-wider mb-1">Assessment Interrupted</div>
+                  <p className="text-shield-text-secondary">{error}</p>
+                  <button
+                    type="button"
+                    onClick={resetScan}
+                    className="mt-3 text-xs font-mono text-shield-accent-light hover:underline cursor-pointer"
+                  >
+                    Clear and retry
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
 
-              {/* Protective Recommendations */}
-              <Recommendations
-                actions={result.recommendedActions}
-                riskLevel={result.riskLevel}
-                onOpenReportModal={() => handleOpenReportWithUrl(result.submittedUrl)}
+          {/* DEDICATED RESULTS DASHBOARD */}
+          {isComplete && result && (
+            <section
+              id="results"
+              ref={resultsRef}
+              className="py-12 px-4 max-w-7xl mx-auto w-full space-y-8 animate-fadeIn"
+            >
+              {/* Dashboard Header Bar with Print, JSON Export, Share */}
+              <DashboardHeader
+                scanResult={result}
+                onReset={resetScan}
+                onOpenMethodology={() => handleSelectModule('methodology')}
               />
+
+              {/* Bento-style Score Centerpiece & Summary */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Centerpiece Trust Score Gauge (Span 5) */}
+                <div className="lg:col-span-5 clay-card rounded-3xl border border-shield-border flex items-center justify-center">
+                  <TrustScoreCircle
+                    score={result.score}
+                    riskLevel={result.riskLevel}
+                    criticalOverride={result.criticalOverride}
+                    overrideReason={result.overrideReason}
+                  />
+                </div>
+
+                {/* Assessment Plain-Language Summary & Fast Telemetry (Span 7) */}
+                <div className="lg:col-span-7 clay-card rounded-3xl p-6 md:p-8 flex flex-col justify-between border border-shield-border">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono uppercase tracking-wider text-shield-accent-light">
+                        Executive Analysis Summary
+                      </span>
+                      <span className="text-xs font-mono text-shield-text-muted">
+                        Engine v2.4 (Dual-Lane Deep Detonation)
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl md:text-2xl font-bold text-shield-text-primary text-left">
+                      {result.summary}
+                    </h3>
+
+                    <p className="text-xs md:text-sm text-shield-text-secondary leading-relaxed text-left">
+                      Evaluated across domain age, DNS reputation, SSL/TLS handshake transparency, deep redirect traversal, and collaborative threat feeds. The score synthesizes individual model verdicts while prioritizing confirmed critical indicators.
+                    </p>
+                  </div>
+
+                  {/* Fast telemetry tags */}
+                  <div className="mt-6 pt-5 border-t border-shield-border/50 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono text-left">
+                    <div className="p-3 rounded-xl bg-shield-surface-elevated border border-shield-border/50">
+                      <div className="text-shield-text-muted text-[11px]">Primary Scheme</div>
+                      <div className="font-bold text-shield-text-primary uppercase mt-0.5">
+                        {result.protocol.replace(':', '')}
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-shield-surface-elevated border border-shield-border/50">
+                      <div className="text-shield-text-muted text-[11px]">Hosting Origin</div>
+                      <div className="font-bold text-shield-text-primary mt-0.5 truncate">
+                        {result.country || 'Global Anycast'}
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-shield-surface-elevated border border-shield-border/50">
+                      <div className="text-shield-text-muted text-[11px]">Model Consensus</div>
+                      <div className="font-bold text-shield-accent-light mt-0.5">
+                        {result.riskLevel === 'low'
+                          ? 'Consensus Clear'
+                          : result.criticalOverride
+                          ? 'Override Active'
+                          : 'Anomalies Noted'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Multi-Pillar Deep-Dive Module Navigation Tabs */}
+              <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-shield-surface-elevated border border-shield-border text-xs font-mono">
+                <button
+                  type="button"
+                  onClick={() => setActiveDashboardTab('overview')}
+                  className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+                    activeDashboardTab === 'overview'
+                      ? 'bg-shield-accent text-white font-bold shadow-clay-sm'
+                      : 'text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface'
+                  }`}
+                >
+                  <Layers className="w-4 h-4" />
+                  <span>Multi-Model Pillars ({result.models.length})</span>
+                </button>
+
+                {extendedReport && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectModule('cert-intel')}
+                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>PKI & Certificates</span>
+                      {extendedReport.backendVerdict === 'PKI_TRUST_COMPROMISED' && (
+                        <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectModule('headers')}
+                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface"
+                    >
+                      <FileCheck2 className="w-4 h-4" />
+                      <span>Web Security & Headers</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectModule('threat-graph')}
+                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface"
+                    >
+                      <Network className="w-4 h-4" />
+                      <span>Threat Graph</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectModule('forensics')}
+                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface"
+                    >
+                      <FileSearch className="w-4 h-4" />
+                      <span>Forensic Vault</span>
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* TAB CONTENT RENDERING */}
+              {activeDashboardTab === 'overview' && (
+                <div className="space-y-8 animate-fadeIn">
+                  {/* 6 Multi-Model Analysis Cards Grid */}
+                  <MultiModelGrid models={result.models} />
+
+                  {/* Security Findings List */}
+                  <SecurityFindings findings={result.findings} />
+
+                  {/* Protective Recommendations */}
+                  <Recommendations
+                    actions={result.recommendedActions}
+                    riskLevel={result.riskLevel}
+                    onOpenReportModal={() => handleOpenReportWithUrl(result.submittedUrl)}
+                  />
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* BENTO FEATURE GRID */}
+          <BentoFeatureGrid />
+
+          {/* HOW IT WORKS PROCESS FLOW */}
+          <HowItWorksProcess />
+
+          {/* DUAL INFINITE MOTION STRIPS */}
+          <DualMotionTicker />
+
+          {/* THREAT INTELLIGENCE LIVE SECTION */}
+          <section id="threat-intel" className="py-20 px-4 max-w-7xl mx-auto w-full space-y-10 text-left">
+            <div className="flex flex-col items-start border-b border-[rgba(120,135,124,0.25)] pb-8">
+              <div className="inline-flex items-center gap-2 text-xs font-mono text-[#F3D081] mb-3 uppercase tracking-widest">
+                <Activity className="w-3.5 h-3.5 text-[#F3D081]" />
+                <span>04 // GLOBAL COMMUNITY TELEMETRY</span>
+              </div>
+              <h2 className="swiss-display text-3xl sm:text-4xl md:text-5xl font-black text-[#E9E6DC] mb-4">
+                COLLABORATIVE THREAT TELEMETRY.
+              </h2>
+              <p className="text-[#B7C4B8] text-base md:text-lg leading-relaxed max-w-3xl">
+                Real-time telemetry aggregated from community incident reports, automated honeypots, and partner intelligence feeds. Help protect the wider internet ecosystem by reporting active threats.
+              </p>
             </div>
-          )}
 
-          {activeDashboardTab === 'pki' && extendedReport && (
-            <CertificateIntelligence
-              pki={extendedReport.pkiIntelligence}
-              isPkiCompromised={extendedReport.backendVerdict === 'PKI_TRUST_COMPROMISED'}
+            <ThreatMetrics metrics={THREAT_FEED_METRICS} />
+
+            <ThreatFeedTable
+              threats={INITIAL_THREAT_FEED}
+              onScanDomain={(dom) => {
+                startScan(dom);
+                handleScrollToScanner();
+              }}
+              onOpenReportModal={() => handleOpenReportWithUrl()}
             />
-          )}
-
-          {activeDashboardTab === 'websec' && extendedReport && (
-            <WebSecurityAudit webSec={extendedReport.webSecurityAudit} />
-          )}
-
-          {activeDashboardTab === 'graph' && extendedReport && (
-            <ThreatRelationshipGraph graphData={extendedReport.threatIntelligence.graphData} />
-          )}
-
-          {activeDashboardTab === 'forensics' && extendedReport && (
-            <ForensicsViewer
-              forensics={extendedReport.forensics}
-              hostname={extendedReport.hostname}
-            />
-          )}
-        </section>
-      )}
-
-      {/* BENTO FEATURE GRID */}
-      <BentoFeatureGrid />
-
-      {/* HOW IT WORKS PROCESS FLOW */}
-      <HowItWorksProcess />
-
-      {/* DUAL INFINITE MOTION STRIPS */}
-      <DualMotionTicker />
-
-      {/* THREAT INTELLIGENCE LIVE SECTION */}
-      <section id="threat-intel" className="py-20 px-4 max-w-7xl mx-auto w-full space-y-10">
-        <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-shield-surface border border-shield-border text-xs font-mono text-shield-accent-light mb-4">
-            <Activity className="w-3.5 h-3.5" />
-            <span>GLOBAL COMMUNITY INTELLIGENCE</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shield-text-primary mb-4">
-            Collaborative Threat Telemetry
-          </h2>
-          <p className="text-shield-text-secondary text-sm md:text-base leading-relaxed">
-            Real-time telemetry aggregated from community incident reports, automated honeypots, and partner intelligence feeds. Help protect the wider internet ecosystem by reporting active threats.
-          </p>
-        </div>
-
-        <ThreatMetrics metrics={THREAT_FEED_METRICS} />
-
-        <ThreatFeedTable
-          threats={INITIAL_THREAT_FEED}
-          onScanDomain={(dom) => {
-            startScan(dom);
-            handleScrollToScanner();
-          }}
-          onOpenReportModal={() => handleOpenReportWithUrl()}
+          </section>
+        </>
+      ) : (
+        /* DEDICATED SECURITY MODULE VIEW */
+        <SecurityModuleView
+          activeModule={activeModule}
+          targetUrl={targetUrl}
+          hostname={hostname}
+          result={result}
+          extendedReport={extendedReport}
+          history={history}
+          isScanning={isScanning}
+          onBackToOverview={() => handleSelectModule('overview')}
+          onStartScan={(url) => startScan(url)}
+          onSelectScanHistory={(item) => loadHistoryItem(item)}
+          onClearHistory={clearHistory}
+          onOpenReportModal={handleOpenReportWithUrl}
         />
-      </section>
+      )}
 
       {/* MODALS & DRAWERS */}
       <MethodologyModal

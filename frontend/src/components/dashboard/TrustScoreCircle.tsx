@@ -125,15 +125,15 @@ export const TrustScoreCircle: React.FC<TrustScoreCircleProps> = ({
 
           {score !== null ? (
             <div className="flex items-baseline justify-center">
-              <span className="text-6xl md:text-7xl font-extrabold tracking-tighter text-shield-text-primary tabular-nums font-sans">
+              <span className="text-6xl md:text-7xl font-black tracking-tighter text-[#E9E6DC] tabular-nums font-sans">
                 {animatedScore}
               </span>
-              <span className="text-lg md:text-xl font-mono text-shield-text-muted ml-1">
+              <span className="text-lg md:text-xl font-mono text-[#78877C] ml-1">
                 / 100
               </span>
             </div>
           ) : (
-            <span className="text-2xl font-bold text-shield-text-secondary">
+            <span className="text-2xl font-bold text-[#B7C4B8] font-mono">
               N/A
             </span>
           )}

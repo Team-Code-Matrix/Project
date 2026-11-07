@@ -63,51 +63,51 @@ Evaluated via Trust Shield Multi-Model Engine.`;
   };
 
   return (
-    <div className="glass-panel-elevated rounded-3xl p-6 md:p-8 border border-shield-border shadow-clay-card text-left">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-shield-border/60">
-        <div className="space-y-2">
+    <div className="rounded-2xl p-6 md:p-8 bg-[#101713]/90 border border-[rgba(120,135,124,0.3)] shadow-[0_20px_50px_rgba(0,0,0,0.6)] text-left relative">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[rgba(120,135,124,0.25)]">
+        <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-shield-accent/20 border border-shield-accent/30 text-[11px] font-mono text-shield-accent-light uppercase">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#080B09] border border-[rgba(120,135,124,0.3)] text-[10px] font-mono font-bold text-[#F3D081] uppercase tracking-wider">
               <Shield className="w-3.5 h-3.5" />
-              Scan ID: {scanResult.scanId}
+              SCAN_ID: {scanResult.scanId}
             </span>
 
             {scanResult.isDemo && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-950/40 border border-amber-600/30 text-[11px] font-mono text-amber-300">
-                Demo Assessment
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-950/40 border border-amber-600/30 text-[10px] font-mono text-amber-300 uppercase tracking-wider">
+                DEMO_SANDBOX
               </span>
             )}
 
             <button
               type="button"
               onClick={onOpenMethodology}
-              className="text-xs font-mono text-shield-text-secondary hover:text-shield-accent-light underline underline-offset-4 transition-colors cursor-pointer"
+              className="text-xs font-mono text-[#B7C4B8] hover:text-[#F3D081] underline underline-offset-4 transition-colors cursor-pointer"
             >
               How score is calculated?
             </button>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-baseline gap-2">
-            <h1 className="text-2xl md:text-3xl font-extrabold text-shield-text-primary tracking-tight font-mono">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black font-sans text-[#E9E6DC] tracking-tight uppercase">
               {scanResult.hostname}
             </h1>
-            <span className="text-xs font-mono text-shield-text-muted truncate max-w-lg">
+            <span className="text-xs font-mono text-[#78877C] truncate max-w-lg">
               ({scanResult.submittedUrl})
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-shield-text-muted">
+          <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#78877C]">
             <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5 text-[#F3D081]" />
               {formatTimestamp(scanResult.checkedAt)}
             </span>
             {scanResult.resolvedIp && (
               <span>
-                IP: <code className="text-shield-text-secondary">{scanResult.resolvedIp}</code>
+                RESOLVED_IP: <code className="text-[#E9E6DC] font-bold">{scanResult.resolvedIp}</code>
               </span>
             )}
             {scanResult.asn && (
-              <span className="truncate max-w-xs">{scanResult.asn}</span>
+              <span className="truncate max-w-xs text-[#B7C4B8]">{scanResult.asn}</span>
             )}
           </div>
         </div>
@@ -118,16 +118,16 @@ Evaluated via Trust Shield Multi-Model Engine.`;
             type="button"
             onClick={handleCopySummary}
             title="Copy plain-text summary"
-            className="clay-button-secondary px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-medium text-shield-text-primary flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-mono font-bold tracking-wider uppercase text-[#E9E6DC] bg-[#141D18] border border-[rgba(120,135,124,0.3)] hover:border-[#F3D081] hover:text-[#F3D081] flex items-center gap-1.5 cursor-pointer transition-all"
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4 text-shield-success" />
-                <span className="text-shield-success">Copied</span>
+                <Check className="w-4 h-4 text-[#78B58D]" />
+                <span className="text-[#78B58D]">Copied</span>
               </>
             ) : (
               <>
-                <Share2 className="w-4 h-4 text-shield-accent-light" />
+                <Share2 className="w-4 h-4 text-[#F3D081]" />
                 <span>Share</span>
               </>
             )}
@@ -137,7 +137,7 @@ Evaluated via Trust Shield Multi-Model Engine.`;
             type="button"
             onClick={handleDownloadJson}
             title="Download full JSON report"
-            className="clay-button-secondary px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-medium text-shield-text-primary flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-mono font-bold tracking-wider uppercase text-[#E9E6DC] bg-[#141D18] border border-[rgba(120,135,124,0.3)] hover:border-[#F3D081] hover:text-[#F3D081] flex items-center gap-1.5 cursor-pointer transition-all"
           >
             <Download className="w-4 h-4 text-shield-accent-light" />
             <span>Export JSON</span>

@@ -1,22 +1,65 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Manrope:wght@300;400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg-primary: #0B100E;
-  --bg-secondary: #101713;
-  --surface-base: #141D18;
-  --surface-elevated: #19251E;
-  --surface-glass: rgba(20, 29, 24, 0.78);
+  /* ========================================================================= */
+  /* SWISS-BRUTALIST ARCHITECTURAL COLOR SYSTEM                                */
+  /* ========================================================================= */
+  --color-obsidian: #080B09;
+  --color-forest-charcoal: #202923;
+  --color-ivory: #E9E6DC;
+  --color-muted-sage: #B7C4B8;
+  --color-desaturated-green: #78877C;
+  --color-champagne-gold: #F3D081;
+
+  /* Structural Hairlines & Blueprint Grid Lines */
+  --border-hairline: rgba(120, 135, 124, 0.28);
+  --border-hairline-prominent: rgba(120, 135, 124, 0.55);
+  --border-hairline-gold: rgba(243, 208, 129, 0.5);
+
+  /* Theme tokens */
+  --bg-primary: #080B09;
+  --bg-secondary: #202923;
+  --surface-base: #101713;
+  --surface-elevated: #15201A;
+  --surface-glass: rgba(16, 23, 19, 0.85);
   --accent: #367055;
   --accent-light: #79A98B;
   --accent-soft: #244B3A;
-  --text-primary: #E8EEE9;
-  --text-secondary: #9AA9A0;
-  --border-subtle: rgba(190, 215, 198, 0.12);
-  --border-prominent: rgba(190, 215, 198, 0.22);
+  --text-primary: #E9E6DC;
+  --text-secondary: #B7C4B8;
+  --text-muted: #78877C;
+  --border-subtle: rgba(120, 135, 124, 0.22);
+  --border-prominent: rgba(120, 135, 124, 0.45);
+
+  /* ========================================================================= */
+  /* FLUID TYPOGRAPHY SCALE (CSS CLAMP)                                        */
+  /* ========================================================================= */
+  --font-size-hero: clamp(2rem, 4.3vw, 3.85rem);
+  --font-size-hero-sub: clamp(1.5rem, 3.2vw, 2.75rem);
+  --font-size-display: clamp(1.9rem, 3.8vw, 3.4rem);
+  --font-size-h1: clamp(1.6rem, 3.2vw, 2.75rem);
+  --font-size-h2: clamp(1.3rem, 2.2vw, 1.95rem);
+  --font-size-h3: clamp(1.05rem, 1.6vw, 1.45rem);
+  --font-size-base: clamp(0.85rem, 1vw, 1rem);
+  --font-size-meta: clamp(0.68rem, 0.8vw, 0.8rem);
+  --font-size-micro: clamp(0.58rem, 0.68vw, 0.68rem);
+
+  /* ========================================================================= */
+  /* SWISS INTERNATIONAL TYPOGRAPHIC METRICS                                   */
+  /* ========================================================================= */
+  --line-height-ultra-tight: 0.94;
+  --line-height-tight: 0.98;
+  --line-height-heading: 1.08;
+  --line-height-body: 1.5;
+
+  --letter-spacing-massive: -0.045em;
+  --letter-spacing-tight: -0.03em;
+  --letter-spacing-mono: -0.01em;
+  --letter-spacing-meta: 0.09em;
 }
 
 * {
@@ -25,9 +68,9 @@
 
 html {
   scroll-behavior: smooth;
-  background-color: #0B100E;
-  color: #E8EEE9;
-  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-obsidian);
+  color: var(--color-ivory);
+  font-family: 'Inter', 'Manrope', system-ui, -apple-system, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -35,8 +78,8 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background-color: #0B100E;
-  color: #E8EEE9;
+  background-color: var(--color-obsidian);
+  color: var(--color-ivory);
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -46,6 +89,165 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
+}
+
+/* ========================================================================= */
+/* SWISS-BRUTALIST ARCHITECTURAL TYPOGRAPHY UTILITIES                         */
+/* ========================================================================= */
+
+.swiss-hero-title {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: var(--font-size-hero);
+  line-height: var(--line-height-ultra-tight);
+  letter-spacing: var(--letter-spacing-massive);
+  font-weight: 900;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  color: var(--color-ivory);
+}
+
+.swiss-hero-sub {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: var(--font-size-hero-sub);
+  line-height: var(--line-height-ultra-tight);
+  letter-spacing: var(--letter-spacing-massive);
+  font-weight: 800;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.swiss-display {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: var(--font-size-display);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+  font-weight: 800;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  color: var(--color-ivory);
+}
+
+.swiss-h2 {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: var(--font-size-h2);
+  line-height: var(--line-height-heading);
+  letter-spacing: var(--letter-spacing-tight);
+  font-weight: 700;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  color: var(--color-ivory);
+}
+
+.swiss-h3 {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-heading);
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.swiss-meta-label {
+  font-family: 'IBM Plex Mono', Menlo, Consolas, monospace;
+  font-size: var(--font-size-micro);
+  line-height: 1.2;
+  letter-spacing: var(--letter-spacing-meta);
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-desaturated-green);
+}
+
+.swiss-meta-tag {
+  font-family: 'IBM Plex Mono', Menlo, Consolas, monospace;
+  font-size: var(--font-size-meta);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Hairline Rules (Architectural Blueprint Dividers) */
+.swiss-hairline-t {
+  border-top: 1px solid var(--border-hairline);
+}
+
+.swiss-hairline-b {
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.swiss-hairline-l {
+  border-left: 1px solid var(--border-hairline);
+}
+
+.swiss-hairline-r {
+  border-right: 1px solid var(--border-hairline);
+}
+
+.swiss-hairline-all {
+  border: 1px solid var(--border-hairline);
+}
+
+/* Blueprint Blueprint Card Framing */
+.swiss-blueprint-card {
+  background-color: rgba(16, 23, 19, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-hairline);
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.swiss-blueprint-card:hover {
+  border-color: var(--border-hairline-prominent);
+}
+
+/* Blueprint Corner Crosshair Markers (+) */
+.swiss-corner-mark::before {
+  content: '+';
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 14px;
+  height: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  color: var(--color-desaturated-green);
+  pointer-events: none;
+}
+
+.swiss-corner-mark::after {
+  content: '+';
+  position: absolute;
+  bottom: -7px;
+  right: -7px;
+  width: 14px;
+  height: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  color: var(--color-desaturated-green);
+  pointer-events: none;
+}
+
+/* Stacked text layering effect without blurry drop shadows */
+.swiss-stacked-text {
+  position: relative;
+  display: inline-block;
+}
+
+.swiss-stacked-shadow {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  color: rgba(120, 135, 124, 0.35);
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* Tabular figures for monospace and metrics */
@@ -112,8 +314,10 @@ aside::-webkit-scrollbar, aside *::-webkit-scrollbar,
 }
 
 .clay-button:hover:not(:disabled) {
-  background: linear-gradient(180deg, #448C6B 0%, #367055 100%);
-  box-shadow: 0 6px 18px rgba(54, 112, 85, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.28), inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, #FCE7B2 0%, #F3D081 50%, #D4A747 100%);
+  color: #080B09;
+  border-color: rgba(243, 208, 129, 0.65);
+  box-shadow: 0 6px 24px rgba(243, 208, 129, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.3);
   transform: translateY(-1px);
 }
 
@@ -166,8 +370,49 @@ aside::-webkit-scrollbar, aside *::-webkit-scrollbar,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .motion-ticker-track {
+  .motion-ticker-track,
+  .animate-hero-entrance,
+  .animate-hero-content,
+  .animate-hero-meta {
     animation: none !important;
     transform: none !important;
+    opacity: 1 !important;
   }
+}
+
+/* ========================================================================= */
+/* HERO PANEL ENTRANCE & INTERACTION KEYFRAMES                               */
+/* ========================================================================= */
+@keyframes heroPanelEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-entrance {
+  animation: heroPanelEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes heroContentStagger {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-content {
+  animation: heroContentStagger 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
+}
+
+.animate-hero-meta {
+  animation: heroContentStagger 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.16s forwards;
 }

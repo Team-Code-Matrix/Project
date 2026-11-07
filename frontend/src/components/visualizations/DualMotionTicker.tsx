@@ -26,18 +26,18 @@ export const DualMotionTicker: React.FC = () => {
 
   return (
     <div
-      className="relative w-full py-10 overflow-hidden border-y border-shield-border/60 bg-[#0C120F]/60 backdrop-blur-md"
+      className="relative w-full py-8 overflow-hidden border-y border-[rgba(120,135,124,0.25)] bg-[#080B09]/80 backdrop-blur-md"
       aria-label="Trust Shield Principles"
     >
       {/* Subtle edge fade gradients */}
-      <div className="absolute left-0 top-0 bottom-0 w-24 md:w-48 bg-gradient-to-r from-shield-bg to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-24 md:w-48 bg-gradient-to-l from-shield-bg to-transparent z-10 pointer-events-none" />
+      <div className="absolute left-0 top-0 bottom-0 w-24 md:w-48 bg-gradient-to-r from-[#080B09] to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-24 md:w-48 bg-gradient-to-l from-[#080B09] to-transparent z-10 pointer-events-none" />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {/* Strip A: Left to Right */}
         <div className="flex overflow-hidden select-none group">
           <div
-            className="flex shrink-0 items-center gap-6 animate-ticker-l2r group-hover:[animation-play-state:paused] motion-ticker-track"
+            className="flex shrink-0 items-center gap-4 animate-ticker-l2r group-hover:[animation-play-state:paused] motion-ticker-track"
             aria-hidden="true"
           >
             {duplicatedA.map((item, idx) => {
@@ -45,15 +45,15 @@ export const DualMotionTicker: React.FC = () => {
               return (
                 <div
                   key={`strip-a-${idx}`}
-                  className="inline-flex items-center gap-3.5 px-5 py-2.5 rounded-full bg-shield-surface/80 border border-shield-border hover:border-shield-accent-light/40 transition-colors shadow-clay-sm"
+                  className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-[#101713] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/50 transition-colors shadow-sm"
                 >
-                  <span className="p-1.5 rounded-full bg-shield-accent/20 text-shield-accent-light">
+                  <span className="p-1 rounded-lg bg-[#141D18] text-[#F3D081]">
                     <Icon className="w-3.5 h-3.5" />
                   </span>
-                  <span className="text-sm font-medium tracking-wide text-shield-text-primary whitespace-nowrap">
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#E9E6DC] whitespace-nowrap">
                     {item.text}
                   </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-shield-accent/60" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#F3D081]" />
                 </div>
               );
             })}
@@ -63,7 +63,7 @@ export const DualMotionTicker: React.FC = () => {
         {/* Strip B: Right to Left (Faster / distinct styling) */}
         <div className="flex overflow-hidden select-none group">
           <div
-            className="flex shrink-0 items-center gap-6 animate-ticker-r2l group-hover:[animation-play-state:paused] motion-ticker-track"
+            className="flex shrink-0 items-center gap-4 animate-ticker-r2l group-hover:[animation-play-state:paused] motion-ticker-track"
             aria-hidden="true"
           >
             {duplicatedB.map((item, idx) => {
@@ -71,15 +71,15 @@ export const DualMotionTicker: React.FC = () => {
               return (
                 <div
                   key={`strip-b-${idx}`}
-                  className="inline-flex items-center gap-3.5 px-5 py-2.5 rounded-full bg-shield-surface-elevated/70 border border-shield-border/70 hover:border-shield-accent/40 transition-colors"
+                  className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-[#141D18]/90 border border-[rgba(120,135,124,0.2)] hover:border-[#F3D081]/40 transition-colors"
                 >
-                  <span className="p-1.5 rounded-full bg-shield-surface text-shield-accent-light/80">
+                  <span className="p-1 rounded-lg bg-[#080B09] text-[#B7C4B8]">
                     <Icon className="w-3.5 h-3.5" />
                   </span>
-                  <span className="text-sm font-mono text-shield-text-secondary whitespace-nowrap">
+                  <span className="text-xs font-mono text-[#B7C4B8] whitespace-nowrap tracking-wide">
                     {item.text}
                   </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-shield-border-strong" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#78877C]" />
                 </div>
               );
             })}

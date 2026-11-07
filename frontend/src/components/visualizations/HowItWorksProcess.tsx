@@ -38,15 +38,15 @@ export const HowItWorksProcess: React.FC = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-20 px-4 max-w-7xl mx-auto w-full">
-      <div className="flex flex-col items-center text-center mb-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-shield-surface border border-shield-border text-xs font-mono text-shield-accent-light mb-4">
-          <span>PIPELINE WORKFLOW</span>
+    <section id="how-it-works" className="py-20 px-4 max-w-7xl mx-auto w-full text-left">
+      <div className="flex flex-col items-start mb-16 border-b border-[rgba(120,135,124,0.25)] pb-8">
+        <div className="inline-flex items-center gap-2 text-xs font-mono text-[#F3D081] mb-3 uppercase tracking-widest">
+          <span>03 // PIPELINE WORKFLOW SPECIFICATION</span>
         </div>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shield-text-primary mb-4">
-          How Trust Shield assesses risk.
+        <h2 className="swiss-display text-3xl sm:text-4xl md:text-5xl font-black text-[#E9E6DC] mb-4">
+          HOW TRUST SHIELD ASSESSES RISK.
         </h2>
-        <p className="max-w-2xl text-shield-text-secondary text-base leading-relaxed">
+        <p className="max-w-3xl text-[#B7C4B8] text-base leading-relaxed">
           Security is not a single binary state. Our multi-stage pipeline translates deep cybersecurity telemetry into clear, actionable advice.
         </p>
       </div>
@@ -58,33 +58,33 @@ export const HowItWorksProcess: React.FC = () => {
           return (
             <div
               key={item.step}
-              className="clay-card rounded-2xl p-6 relative flex flex-col justify-between border border-shield-border/80 group hover:border-shield-accent/50 transition-all"
+              className="rounded-2xl p-6 relative flex flex-col justify-between bg-[#101713]/90 border border-[rgba(120,135,124,0.3)] hover:border-[#F3D081]/50 transition-all shadow-[0_15px_35px_rgba(0,0,0,0.5)] group"
             >
               <div>
                 {/* Step header */}
                 <div className="flex items-center justify-between mb-5">
-                  <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-shield-surface-elevated text-shield-accent-light border border-shield-border">
-                    PHASE {item.step}
+                  <span className="font-mono text-xs font-bold px-2.5 py-1 rounded bg-[#080B09] text-[#F3D081] border border-[rgba(120,135,124,0.3)] tracking-wider">
+                    PHASE // {item.step}
                   </span>
-                  <div className="p-2 rounded-xl bg-shield-accent/15 text-shield-accent-light group-hover:scale-110 transition-transform">
+                  <div className="p-2 rounded-xl bg-[#141D18] border border-[rgba(120,135,124,0.3)] text-[#F3D081] group-hover:scale-110 transition-transform">
                     <Icon className="w-5 h-5" />
                   </div>
                 </div>
 
-                <div className="text-xs font-mono text-shield-text-muted mb-1 uppercase tracking-wider">
+                <div className="text-xs font-mono text-[#78877C] mb-1.5 uppercase tracking-wider font-semibold">
                   {item.subtitle}
                 </div>
-                <h3 className="text-lg font-bold text-shield-text-primary mb-3">
+                <h3 className="text-lg font-bold font-sans text-[#E9E6DC] mb-3 tracking-tight group-hover:text-[#F3D081] transition-colors">
                   {item.title}
                 </h3>
-                <p className="text-sm text-shield-text-secondary leading-relaxed">
+                <p className="text-sm text-[#B7C4B8] leading-relaxed">
                   {item.description}
                 </p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-shield-border/40 flex items-center justify-between text-xs font-mono text-shield-text-muted">
+              <div className="mt-6 pt-4 border-t border-[rgba(120,135,124,0.25)] flex items-center justify-between text-xs font-mono text-[#78877C]">
                 <span>STAGE {index + 1} OF 4</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-shield-accent-light" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F3D081]" />
               </div>
             </div>
           );
@@ -92,10 +92,10 @@ export const HowItWorksProcess: React.FC = () => {
       </div>
 
       {/* Transparency Callout */}
-      <div className="mt-10 p-5 rounded-xl bg-shield-surface/60 border border-shield-border/80 flex items-start gap-3.5 max-w-3xl mx-auto">
-        <AlertCircle className="w-5 h-5 text-shield-accent-light shrink-0 mt-0.5" />
-        <div className="text-xs md:text-sm text-shield-text-secondary leading-relaxed">
-          <strong className="text-shield-text-primary font-medium">Important Methodology Note:</strong> Individual models operate autonomously and may disagree. An overall score represents observed risk in performed checks and is not an absolute guarantee of safety. Critical indicators override numerical scores.
+      <div className="mt-10 p-5 rounded-xl bg-[#101713]/85 border border-[rgba(120,135,124,0.3)] flex items-start gap-3.5 max-w-4xl">
+        <AlertCircle className="w-5 h-5 text-[#F3D081] shrink-0 mt-0.5" />
+        <div className="text-xs md:text-sm text-[#B7C4B8] leading-relaxed font-mono">
+          <strong className="text-[#E9E6DC] font-bold uppercase tracking-wider">Methodology Note:</strong> Individual models operate autonomously and may disagree. An overall score represents observed risk in performed checks and is not an absolute guarantee of safety. Critical indicators override numerical scores.
         </div>
       </div>
     </section>
