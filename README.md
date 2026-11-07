@@ -82,15 +82,19 @@ controls or professional incident response.
 
 ------------------------------------------------------------------------
 
-## 04. Demo links and a screenshot
+## 04. Demo links and screenshots
 
 -   **Live demo:** [https://trust-shield-zeta.vercel.app/](https://trust-shield-zeta.vercel.app/)
--   **Demo video:** Add the public demo-video URL here before
-    submission.
+-   **Demo video:** Add the public demo-video URL here before submission.
 -   **Repository:** [https://github.com/Team-Code-Matrix/Trust-Shield](https://github.com/Team-Code-Matrix/Trust-Shield)
--   **Screenshot:** Platform interface preview:
 
-![Trust Shield dashboard](image/website.png)
+### Screenshots
+
+#### 1. Real-Time Terminal & URL Scanner Interface
+![Trust Shield Terminal & Scanner View](image/website1.png)
+
+#### 2. Comprehensive Security Assessment & Threat Dashboard
+![Trust Shield Security Analysis Dashboard](image/website2.png)
 
 > Before submission, replace the placeholders with working public links
 > and ensure the screenshot file is committed to the repository. Do not
