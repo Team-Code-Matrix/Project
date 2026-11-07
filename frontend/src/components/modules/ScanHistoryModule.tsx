@@ -25,9 +25,9 @@ export const ScanHistoryModule: React.FC<ScanHistoryModuleProps> = ({
   return (
     <div className="space-y-6 text-left">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0D1410] border border-shield-border/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] hover:border-[#F3D081]/40 transition-all">
         <div>
-          <span className="text-xs font-mono text-shield-accent-light uppercase tracking-wider">
+          <span className="text-xs font-mono text-[#F3D081] uppercase tracking-wider">
             Assessment Session Ledger
           </span>
           <h2 className="text-lg md:text-xl font-bold text-shield-text-primary">
@@ -60,7 +60,7 @@ export const ScanHistoryModule: React.FC<ScanHistoryModuleProps> = ({
             {history.map((item) => (
               <div
                 key={item.scanId}
-                className="p-4 rounded-2xl bg-[#0D1410] border border-shield-border/60 hover:border-shield-accent/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
+                className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2.5">

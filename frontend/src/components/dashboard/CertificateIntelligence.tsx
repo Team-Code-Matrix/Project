@@ -207,7 +207,7 @@ export const CertificateIntelligence: React.FC<CertificateIntelligenceProps> = (
 
           {/* Selected Certificate Deep-Dive Inspector */}
           {selectedCert && (
-            <div className="p-6 rounded-2xl bg-[#090E0C] border border-shield-border/80 font-mono text-xs space-y-4">
+            <div className="p-6 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] hover:border-[#F3D081]/30 transition-all font-mono text-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-shield-border/40 gap-2">
                 <span className="text-shield-text-primary font-bold text-sm">
                   X.509 Certificate Parameter Inspector [{selectedCert.type.toUpperCase()}]
@@ -319,13 +319,13 @@ export const CertificateIntelligence: React.FC<CertificateIntelligenceProps> = (
       {/* TAB 2: KEY ENTROPY & CURVE PARAMETER AUDIT */}
       {activeTab === 'crypto' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-4 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-3">
+          <div className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-3">
             <div className="flex items-center justify-between border-b border-shield-border/40 pb-2">
               <span className="text-shield-text-primary font-bold text-sm">
                 Cryptographic Key-Entropy & Curve Parameter Verification
               </span>
               <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${
-                pki.keyEntropyVerdict === 'VALID' ? 'bg-emerald-950 text-emerald-300' : 'bg-rose-950 text-rose-300'
+                pki.keyEntropyVerdict === 'VALID' ? 'bg-[#2A2111]/80 text-[#F3D081] border border-[#F3D081]/30' : 'bg-rose-950 text-rose-300'
               }`}>
                 {pki.keyEntropyVerdict}
               </span>
@@ -387,12 +387,12 @@ export const CertificateIntelligence: React.FC<CertificateIntelligenceProps> = (
       {/* TAB 3: CERTIFICATE TRANSPARENCY & SCTS */}
       {activeTab === 'ct' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-4">
             <div className="flex items-center justify-between border-b border-shield-border/40 pb-2">
               <span className="text-shield-text-primary font-bold text-sm">
                 Certificate Transparency (CT) Stream Verification (RFC 6962 / RFC 9162 CT v2.0)
               </span>
-              <span className="px-2.5 py-0.5 rounded bg-shield-accent/20 text-shield-accent-light border border-shield-accent/30">
+              <span className="px-2.5 py-0.5 rounded bg-[#2A2111]/80 text-[#F3D081] border border-[#F3D081]/30">
                 {pki.certificateTransparency.sctsDeliveredCount} SCTs Delivered
               </span>
             </div>
@@ -400,7 +400,7 @@ export const CertificateIntelligence: React.FC<CertificateIntelligenceProps> = (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-shield-text-secondary">
               <div className="p-3 rounded-xl bg-shield-surface border border-shield-border/50">
                 <div className="text-shield-text-muted mb-1">Merkle Inclusion Status</div>
-                <div className="font-bold text-shield-success">
+                <div className="font-bold text-[#F3D081]">
                   {pki.certificateTransparency.merkleInclusionProofStatus}
                 </div>
               </div>
@@ -414,7 +414,7 @@ export const CertificateIntelligence: React.FC<CertificateIntelligenceProps> = (
 
               <div className="p-3 rounded-xl bg-shield-surface border border-shield-border/50">
                 <div className="text-shield-text-muted mb-1">Rogue Issuance Alert</div>
-                <div className={`font-bold ${pki.certificateTransparency.unexpectedIssuanceAlert ? 'text-shield-danger' : 'text-shield-success'}`}>
+                <div className={`font-bold ${pki.certificateTransparency.unexpectedIssuanceAlert ? 'text-shield-danger' : 'text-[#F3D081]'}`}>
                   {pki.certificateTransparency.unexpectedIssuanceAlert ? 'ALERT: Unexpected CA' : 'Clean (Expected Authority)'}
                 </div>
               </div>
@@ -430,13 +430,13 @@ export const CertificateIntelligence: React.FC<CertificateIntelligenceProps> = (
       {/* TAB 4: REVOCATION & CA HEALTH MONITOR */}
       {activeTab === 'revocation' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-4">
             <div className="flex items-center justify-between border-b border-shield-border/40 pb-2">
               <span className="text-shield-text-primary font-bold text-sm">
                 Multi-Channel Revocation Telemetry & CA Health (RFC 6960 OCSP / CRL)
               </span>
               <span className={`px-2.5 py-0.5 rounded font-bold ${
-                pki.revocationHealth.ocspStatus === 'GOOD' ? 'bg-emerald-950 text-emerald-300' : 'bg-rose-950 text-rose-300'
+                pki.revocationHealth.ocspStatus === 'GOOD' ? 'bg-[#2A2111]/80 text-[#F3D081] border border-[#F3D081]/30' : 'bg-rose-950 text-rose-300'
               }`}>
                 OCSP: {pki.revocationHealth.ocspStatus}
               </span>
@@ -445,7 +445,7 @@ export const CertificateIntelligence: React.FC<CertificateIntelligenceProps> = (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-shield-text-secondary">
               <div className="p-3 rounded-xl bg-shield-surface border border-shield-border/50">
                 <div className="text-shield-text-muted mb-1">OCSP Stapling</div>
-                <div className={`font-bold ${pki.revocationHealth.ocspStapled ? 'text-shield-success' : 'text-shield-warning'}`}>
+                <div className={`font-bold ${pki.revocationHealth.ocspStapled ? 'text-[#F3D081]' : 'text-shield-warning'}`}>
                   {pki.revocationHealth.ocspStapled ? 'Active (Stapled)' : 'Not Stapled'}
                 </div>
               </div>
@@ -459,14 +459,14 @@ export const CertificateIntelligence: React.FC<CertificateIntelligenceProps> = (
 
               <div className="p-3 rounded-xl bg-shield-surface border border-shield-border/50">
                 <div className="text-shield-text-muted mb-1">CRL Signature</div>
-                <div className={`font-bold ${pki.revocationHealth.crlSignatureValid ? 'text-shield-success' : 'text-shield-danger'}`}>
+                <div className={`font-bold ${pki.revocationHealth.crlSignatureValid ? 'text-[#F3D081]' : 'text-shield-danger'}`}>
                   {pki.revocationHealth.crlSignatureValid ? 'Cryptographically Valid' : 'INVALID SIGNATURE'}
                 </div>
               </div>
 
               <div className="p-3 rounded-xl bg-shield-surface border border-shield-border/50">
                 <div className="text-shield-text-muted mb-1">Mozilla OneCRL</div>
-                <div className={`font-bold ${pki.revocationHealth.oneCrlIncluded ? 'text-shield-danger' : 'text-shield-success'}`}>
+                <div className={`font-bold ${pki.revocationHealth.oneCrlIncluded ? 'text-shield-danger' : 'text-[#F3D081]'}`}>
                   {pki.revocationHealth.oneCrlIncluded ? 'REVOKED IN ONECRL' : 'Clean'}
                 </div>
               </div>
@@ -478,13 +478,13 @@ export const CertificateIntelligence: React.FC<CertificateIntelligenceProps> = (
       {/* TAB 5: DNS CAA POLICY CHECKER */}
       {activeTab === 'caa' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-4">
             <div className="flex items-center justify-between border-b border-shield-border/40 pb-2">
               <span className="text-shield-text-primary font-bold text-sm">
                 Authoritative DNS Certification Authority Authorization (RFC 8659 CAA)
               </span>
               <span className={`px-2.5 py-0.5 rounded font-bold ${
-                pki.dnsCaaPolicy.policyMismatch ? 'bg-rose-950 text-rose-300' : 'bg-emerald-950 text-emerald-300'
+                pki.dnsCaaPolicy.policyMismatch ? 'bg-rose-950 text-rose-300' : 'bg-[#2A2111]/80 text-[#F3D081] border border-[#F3D081]/30'
               }`}>
                 {pki.dnsCaaPolicy.policyMismatch ? 'CAA POLICY MISMATCH' : 'CAA COMPLIANT'}
               </span>

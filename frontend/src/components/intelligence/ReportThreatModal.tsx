@@ -135,7 +135,7 @@ export const ReportThreatModal: React.FC<ReportThreatModalProps> = ({
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://deceptive-login-portal.com/auth"
-                className="w-full px-3.5 py-2.5 rounded-xl clay-input bg-[#0D1410] text-xs font-mono text-shield-text-primary placeholder:text-shield-text-muted/60 outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl clay-input text-xs font-mono text-shield-text-primary placeholder:text-shield-text-muted/60 outline-none"
               />
             </div>
 
@@ -147,7 +147,7 @@ export const ReportThreatModal: React.FC<ReportThreatModalProps> = ({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ThreatCategory)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-shield-surface border border-shield-border text-xs font-mono text-shield-text-primary outline-none cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#080B09]/70 backdrop-blur-[3px] border border-[rgba(120,135,124,0.3)] text-xs font-mono text-shield-text-primary outline-none cursor-pointer focus:border-[#F3D081]/70"
               >
                 <option value="phishing">Phishing Portal (Login Clone)</option>
                 <option value="impersonation">Brand Impersonation / Typosquatting</option>
@@ -169,7 +169,7 @@ export const ReportThreatModal: React.FC<ReportThreatModalProps> = ({
                 value={targetBrand}
                 onChange={(e) => setTargetBrand(e.target.value)}
                 placeholder="e.g. Microsoft, PayPal, Chase Bank, Apple"
-                className="w-full px-3.5 py-2.5 rounded-xl clay-input bg-[#0D1410] text-xs font-mono text-shield-text-primary placeholder:text-shield-text-muted/60 outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl clay-input text-xs font-mono text-shield-text-primary placeholder:text-shield-text-muted/60 outline-none"
               />
             </div>
 
@@ -183,7 +183,7 @@ export const ReportThreatModal: React.FC<ReportThreatModalProps> = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Received via SMS asking for package delivery fee; prompted for credit card..."
-                className="w-full px-3.5 py-2.5 rounded-xl clay-input bg-[#0D1410] text-xs font-mono text-shield-text-primary placeholder:text-shield-text-muted/60 outline-none resize-none"
+                className="w-full px-3.5 py-2.5 rounded-xl clay-input text-xs font-mono text-shield-text-primary placeholder:text-shield-text-muted/60 outline-none resize-none"
               />
             </div>
 

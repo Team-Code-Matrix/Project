@@ -17,67 +17,18 @@ export interface WebsitePagesModuleProps {
 
 export const WebsitePagesModule: React.FC<WebsitePagesModuleProps> = ({
   result,
-  extendedReport,
+  extendedReport: _extendedReport,
 }) => {
-  const isGithub = result.hostname.includes('github');
-  const isPhishing = result.hostname.includes('micros0ft') || result.hostname.includes('auth');
-
-  const pages = isGithub
-    ? [
-        {
-          url: 'https://github.com/',
-          title: 'GitHub: Let’s build from here · GitHub',
-          statusCode: 200,
-          contentType: 'text/html; charset=utf-8',
-          depth: 0,
-          size: '248 KB',
-        },
-        {
-          url: 'https://github.com/features',
-          title: 'Features · GitHub',
-          statusCode: 200,
-          contentType: 'text/html; charset=utf-8',
-          depth: 1,
-          size: '184 KB',
-        },
-        {
-          url: 'https://github.com/security',
-          title: 'Security at GitHub · GitHub',
-          statusCode: 200,
-          contentType: 'text/html; charset=utf-8',
-          depth: 1,
-          size: '152 KB',
-        },
-        {
-          url: 'https://github.com/login',
-          title: 'Sign in to GitHub · GitHub',
-          statusCode: 200,
-          contentType: 'text/html; charset=utf-8',
-          depth: 1,
-          size: '98 KB',
-        },
-      ]
-    : isPhishing
-    ? [
-        {
-          url: result.submittedUrl,
-          title: 'Sign in to your Microsoft Account (Fake Form)',
-          statusCode: 200,
-          contentType: 'text/html; charset=utf-8',
-          depth: 0,
-          size: '42 KB',
-        },
-      ]
-    : [
-        {
-          url: result.submittedUrl,
-          title: 'Homepage Landing Document',
-          statusCode: 200,
-          contentType: 'text/html; charset=utf-8',
-          depth: 0,
-          size: '64 KB',
-        },
-      ];
+  const pages = [
+    {
+      url: result.submittedUrl,
+      title: `${result.hostname} (Root Document)`,
+      statusCode: 200,
+      contentType: 'text/html',
+      depth: 0,
+      size: '—',
+    },
+  ];
 
   return (
     <div className="space-y-6 text-left">
@@ -113,7 +64,7 @@ export const WebsitePagesModule: React.FC<WebsitePagesModuleProps> = ({
           {pages.map((pg, i) => (
             <div
               key={i}
-              className="p-4 rounded-2xl bg-[#0D1410] border border-shield-border/60 space-y-2.5"
+              className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-shield-border/60 hover:border-[#F3D081]/30 transition-all space-y-2.5"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">

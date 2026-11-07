@@ -27,58 +27,23 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const domain = result.hostname;
-  const ip = result.resolvedIp || '140.82.121.4';
-  const isGithub = domain.includes('github');
-  const isPhishing = domain.includes('micros0ft') || domain.includes('auth');
+  const ip = result.resolvedIp;
 
   const records = {
-    a: [
-      { type: 'A', name: domain, value: ip, ttl: 60 },
-      ...(isGithub ? [{ type: 'A', name: domain, value: '140.82.121.3', ttl: 60 }] : []),
-    ],
-    aaaa: [
-      ...(isGithub
-        ? [{ type: 'AAAA', name: domain, value: '2606:50c0:8000::153', ttl: 300 }]
-        : []),
-    ],
-    mx: isGithub
-      ? [
-          { type: 'MX', priority: 1, value: 'aspmx.l.google.com', ttl: 3600 },
-          { type: 'MX', priority: 5, value: 'alt1.aspmx.l.google.com', ttl: 3600 },
-        ]
-      : [
-          { type: 'MX', priority: 10, value: `mail.${domain}`, ttl: 1800 },
-        ],
-    ns: isGithub
-      ? [
-          { type: 'NS', value: 'dns1.p08.nsone.net', ttl: 86400 },
-          { type: 'NS', value: 'ns-1707.awsdns-21.co.uk', ttl: 86400 },
-        ]
-      : [
-          { type: 'NS', value: 'ns1.dnsowl.com', ttl: 3600 },
-        ],
-    txt: isGithub
-      ? [
-          { type: 'TXT', key: 'SPF Policy', value: 'v=spf1 include:_spf.google.com include:mailgun.org ~all', ttl: 3600 },
-          { type: 'TXT', key: 'DMARC Policy', value: 'v=DMARC1; p=reject; sp=reject; pct=100; rua=mailto:dmarc-reports@github.com', ttl: 3600 },
-          { type: 'TXT', key: 'Domain Verification', value: 'google-site-verification=rXOxyadJioGnQKyji-9mwjwrtQ9p9ldl_5v8L19e8', ttl: 3600 },
-        ]
-      : isPhishing
-      ? [
-          { type: 'TXT', key: 'SPF Policy', value: 'v=spf1 +all (Permissive Relay Warning)', ttl: 300 },
-        ]
-      : [
-          { type: 'TXT', key: 'SPF Policy', value: 'v=spf1 ~all', ttl: 3600 },
-        ],
-    soa: {
-      primaryNs: isGithub ? 'ns1.p08.nsone.net' : 'ns1.dnsowl.com',
-      hostmaster: isGithub ? 'hostmaster.github.com' : 'admin.dnsowl.com',
-      serial: 2026110401,
-      refresh: 7200,
-      retry: 3600,
-      expire: 1209600,
-      minTtl: 300,
-    },
+    a: ip ? [{ type: 'A', name: domain, value: ip, ttl: 300 }] : [],
+    aaaa: [] as { type: string; name: string; value: string; ttl: number }[],
+    mx: [] as { type: string; priority: number; value: string; ttl: number }[],
+    ns: [] as { type: string; value: string; ttl: number }[],
+    txt: [] as { type: string; key?: string; value: string; ttl: number }[],
+    soa: null as {
+      primaryNs: string;
+      hostmaster: string;
+      serial: number;
+      refresh: number;
+      retry: number;
+      expire: number;
+      minTtl: number;
+    } | null,
   };
 
   const handleCopy = async (text: string, id: string) => {
@@ -96,32 +61,32 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
       {/* Top DNS Summary Badges */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-left">
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
-          <div className="text-xs font-mono text-shield-text-muted mb-1">A / AAAA Address</div>
+          <div className="text-xs font-mono text-shield-text-muted mb-1">A Address Record</div>
           <div className="text-xl font-mono font-bold text-shield-text-primary truncate">
-            {records.a[0]?.value || '127.0.0.1'}
+            {records.a[0]?.value || 'Pending Resolution'}
           </div>
-          <div className="text-[11px] font-mono text-emerald-400 mt-1 flex items-center gap-1">
+          <div className="text-[11px] font-mono text-[#F3D081] mt-1 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
-            IPv4 & IPv6 Dual Stack
+            {ip ? 'IPv4 Resolved' : 'Awaiting Query'}
           </div>
         </div>
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">DNSSEC Security</div>
-          <div className="text-xl font-bold text-emerald-400 flex items-center gap-1.5">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <span>Valid Signed</span>
+          <div className="text-xl font-bold text-shield-text-primary flex items-center gap-1.5">
+            <ShieldCheck className="w-5 h-5 text-[#F3D081]" />
+            <span>Inspection Ready</span>
           </div>
-          <div className="text-[11px] font-mono text-shield-text-muted mt-1">RRSIG / DS Chain OK</div>
+          <div className="text-[11px] font-mono text-shield-text-muted mt-1">Awaiting RRSIG verification</div>
         </div>
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">DMARC Protection</div>
-          <div className={`text-xl font-bold ${isPhishing ? 'text-rose-400' : 'text-emerald-400'}`}>
-            {isPhishing ? 'Missing / None' : 'p=reject (Enforced)'}
+          <div className="text-xl font-bold text-shield-text-primary">
+            Pending TXT Query
           </div>
           <div className="text-[11px] font-mono text-shield-text-muted mt-1">
-            {isPhishing ? 'Spoofing vulnerability' : 'Anti-spoofing policy active'}
+            SPF / DMARC verification
           </div>
         </div>
 
@@ -131,7 +96,7 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
             {records.ns.length} Nameservers
           </div>
           <div className="text-[11px] font-mono text-shield-text-muted mt-1 truncate">
-            Anycast global propagation
+            Awaiting NS resolution
           </div>
         </div>
       </div>
@@ -171,7 +136,7 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
               {[...records.a, ...records.aaaa].map((rec, i) => (
                 <div
                   key={i}
-                  className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between text-xs font-mono"
+                  className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between text-xs font-mono"
                 >
                   <div className="flex items-center gap-3">
                     <span className="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 font-bold border border-emerald-500/30">
@@ -202,22 +167,28 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
               <Mail className="w-3.5 h-3.5" />
               <span>Mail Exchange Records (MX)</span>
             </h4>
-            <div className="space-y-2">
-              {records.mx.map((rec, i) => (
-                <div
-                  key={i}
-                  className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between text-xs font-mono"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="px-2 py-0.5 rounded bg-purple-950/80 text-purple-400 font-bold border border-purple-500/30">
-                      MX (Pref {rec.priority})
-                    </span>
-                    <span className="text-shield-text-primary font-bold">{rec.value}</span>
+            {records.mx.length === 0 ? (
+              <div className="p-4 rounded-xl bg-[#080B09]/40 border border-[rgba(120,135,124,0.2)] text-xs font-mono text-[#78877C] text-center">
+                No MX records configured or awaiting backend DNS query.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {records.mx.map((rec, i) => (
+                  <div
+                    key={i}
+                    className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between text-xs font-mono"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="px-2 py-0.5 rounded bg-purple-950/80 text-purple-400 font-bold border border-purple-500/30">
+                        MX (Pref {rec.priority})
+                      </span>
+                      <span className="text-shield-text-primary font-bold">{rec.value}</span>
+                    </div>
+                    <span className="text-shield-text-muted text-[11px]">TTL: {rec.ttl}s</span>
                   </div>
-                  <span className="text-shield-text-muted text-[11px]">TTL: {rec.ttl}s</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -228,31 +199,37 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
               <FileText className="w-3.5 h-3.5" />
               <span>Text & Policy Records (TXT / SPF / DMARC)</span>
             </h4>
-            <div className="space-y-2">
-              {records.txt.map((rec, i) => (
-                <div
-                  key={i}
-                  className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60 space-y-1.5 text-xs font-mono"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-shield-accent-light font-bold text-[11px] uppercase">
-                      {rec.key}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(rec.value, `txt-${i}`)}
-                      className="text-shield-text-muted hover:text-white flex items-center gap-1 text-[11px]"
-                    >
-                      {copiedKey === `txt-${i}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      <span>Copy</span>
-                    </button>
+            {records.txt.length === 0 ? (
+              <div className="p-4 rounded-xl bg-[#080B09]/40 border border-[rgba(120,135,124,0.2)] text-xs font-mono text-[#78877C] text-center">
+                No TXT records returned or awaiting SPF/DMARC query from backend.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {records.txt.map((rec, i) => (
+                  <div
+                    key={i}
+                    className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all space-y-1.5 text-xs font-mono"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#F3D081] font-bold text-[11px] uppercase">
+                        {rec.key}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(rec.value, `txt-${i}`)}
+                        className="text-shield-text-muted hover:text-white flex items-center gap-1 text-[11px]"
+                      >
+                        {copiedKey === `txt-${i}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        <span>Copy</span>
+                      </button>
+                    </div>
+                    <div className="p-2 rounded bg-black/40 text-shield-text-secondary break-all">
+                      {rec.value}
+                    </div>
                   </div>
-                  <div className="p-2 rounded bg-black/40 text-shield-text-secondary break-all">
-                    {rec.value}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -263,24 +240,30 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
               <Server className="w-3.5 h-3.5" />
               <span>Start of Authority (SOA)</span>
             </h4>
-            <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-              <div>
-                <div className="text-shield-text-muted text-[10px]">Primary Nameserver</div>
-                <div className="font-bold text-shield-text-primary mt-0.5 truncate">{records.soa.primaryNs}</div>
+            {records.soa ? (
+              <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                <div>
+                  <div className="text-shield-text-muted text-[10px]">Primary Nameserver</div>
+                  <div className="font-bold text-shield-text-primary mt-0.5 truncate">{records.soa.primaryNs}</div>
+                </div>
+                <div>
+                  <div className="text-shield-text-muted text-[10px]">Hostmaster</div>
+                  <div className="font-bold text-shield-text-primary mt-0.5 truncate">{records.soa.hostmaster}</div>
+                </div>
+                <div>
+                  <div className="text-shield-text-muted text-[10px]">Serial Number</div>
+                  <div className="font-bold text-shield-accent-light mt-0.5">{records.soa.serial}</div>
+                </div>
+                <div>
+                  <div className="text-shield-text-muted text-[10px]">Refresh / Retry</div>
+                  <div className="text-shield-text-primary mt-0.5">{records.soa.refresh}s / {records.soa.retry}s</div>
+                </div>
               </div>
-              <div>
-                <div className="text-shield-text-muted text-[10px]">Hostmaster</div>
-                <div className="font-bold text-shield-text-primary mt-0.5 truncate">{records.soa.hostmaster}</div>
+            ) : (
+              <div className="p-4 rounded-xl bg-[#080B09]/40 border border-[rgba(120,135,124,0.2)] text-xs font-mono text-[#78877C] text-center">
+                Awaiting authoritative SOA zone query from backend DNS resolver.
               </div>
-              <div>
-                <div className="text-shield-text-muted text-[10px]">Serial Number</div>
-                <div className="font-bold text-shield-accent-light mt-0.5">{records.soa.serial}</div>
-              </div>
-              <div>
-                <div className="text-shield-text-muted text-[10px]">Refresh / Retry</div>
-                <div className="text-shield-text-primary mt-0.5">{records.soa.refresh}s / {records.soa.retry}s</div>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </div>

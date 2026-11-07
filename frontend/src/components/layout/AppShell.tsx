@@ -30,7 +30,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#080B09] text-shield-text-primary flex flex-col relative selection:bg-emerald-500 selection:text-[#080B09] overflow-x-hidden">
+    <div className="min-h-screen bg-[#080B09] text-shield-text-primary flex flex-col relative selection:bg-[#F3D081] selection:text-[#080B09] overflow-x-hidden">
       {/* 
         Interactive Global ASCII Binary World Map Canvas 
         - Decoupled from app state with React.memo

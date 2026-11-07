@@ -85,7 +85,7 @@ export const TrustScoreCircle: React.FC<TrustScoreCircleProps> = ({
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#101713"
+            stroke="rgba(8, 11, 9, 0.55)"
             strokeWidth="16"
           />
 

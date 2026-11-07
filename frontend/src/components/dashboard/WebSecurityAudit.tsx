@@ -108,10 +108,10 @@ export const WebSecurityAudit: React.FC<WebSecurityAuditProps> = ({ webSec }) =>
       {/* TAB 1: HTTP HEADERS */}
       {activeTab === 'headers' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-4">
             <div className="text-shield-text-primary font-bold text-sm border-b border-shield-border/40 pb-2 flex justify-between">
               <span>OWASP Defensive Response Headers Baseline</span>
-              <span className="text-shield-accent-light">Grade: {webSec.httpHeaders.csp.grade}</span>
+              <span className="text-[#F3D081]">Grade: {webSec.httpHeaders.csp.grade}</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-shield-text-secondary">
@@ -185,7 +185,7 @@ export const WebSecurityAudit: React.FC<WebSecurityAuditProps> = ({ webSec }) =>
       {/* TAB 2: COOKIES & CORS */}
       {activeTab === 'cookies_cors' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-4">
             <div className="text-shield-text-primary font-bold text-sm border-b border-shield-border/40 pb-2">
               Session Cookie Flags & CORS Inspection
             </div>
@@ -210,7 +210,7 @@ export const WebSecurityAudit: React.FC<WebSecurityAuditProps> = ({ webSec }) =>
                   <span>CORS Cross-Origin Policy</span>
                 </div>
                 <div className="text-shield-text-secondary space-y-1">
-                  <div>Policy Status: <span className="font-bold text-shield-accent-light">{webSec.corsPolicy.verdict}</span></div>
+                  <div>Policy Status: <span className="font-bold text-[#F3D081]">{webSec.corsPolicy.verdict}</span></div>
                   <div>Wildcard Origin (*): <span className={webSec.corsPolicy.wildcardOrigin ? 'text-shield-danger font-bold' : 'text-shield-success'}>{webSec.corsPolicy.wildcardOrigin ? 'YES (Exposed)' : 'NO'}</span></div>
                   <div>Origin Header Reflection: <span className={webSec.corsPolicy.originReflection ? 'text-shield-danger font-bold' : 'text-shield-success'}>{webSec.corsPolicy.originReflection ? 'YES (Vulnerable)' : 'NO'}</span></div>
                   <div>Credentials Allowed: <span>{webSec.corsPolicy.credentialsAllowed ? 'true' : 'false'}</span></div>
@@ -224,10 +224,10 @@ export const WebSecurityAudit: React.FC<WebSecurityAuditProps> = ({ webSec }) =>
       {/* TAB 3: TLS & JA4+ FINGERPRINTING */}
       {activeTab === 'tls_ja4' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-4">
             <div className="text-shield-text-primary font-bold text-sm border-b border-shield-border/40 pb-2 flex justify-between">
               <span>TLS Cipher Suite & Server Fingerprinting</span>
-              <span className="text-shield-accent-light">{webSec.tlsFingerprints.negotiatedProtocol}</span>
+              <span className="text-[#F3D081]">{webSec.tlsFingerprints.negotiatedProtocol}</span>
             </div>
 
             <div className="space-y-2.5 text-shield-text-secondary">
@@ -247,19 +247,19 @@ export const WebSecurityAudit: React.FC<WebSecurityAuditProps> = ({ webSec }) =>
               {/* JA3S and JA4+ Hashes */}
               <div className="p-3 rounded-xl bg-shield-surface border border-shield-border/50 space-y-1.5">
                 <div className="flex items-center gap-1.5 font-bold text-shield-text-primary">
-                  <Fingerprint className="w-4 h-4 text-shield-accent-light" />
+                  <Fingerprint className="w-4 h-4 text-[#F3D081]" />
                   <span>Server JA3S & JA4+ TLS Fingerprints</span>
                 </div>
                 {webSec.tlsFingerprints.ja4sHash && (
                   <div>
                     <span className="text-shield-text-muted">JA4S Hash:</span>{' '}
-                    <span className="text-shield-accent-light select-all">{webSec.tlsFingerprints.ja4sHash}</span>
+                    <span className="text-[#F3D081] select-all">{webSec.tlsFingerprints.ja4sHash}</span>
                   </div>
                 )}
                 {webSec.tlsFingerprints.ja3sHash && (
                   <div>
                     <span className="text-shield-text-muted">JA3S Hash:</span>{' '}
-                    <span className="text-shield-accent-light select-all">{webSec.tlsFingerprints.ja3sHash}</span>
+                    <span className="text-[#F3D081] select-all">{webSec.tlsFingerprints.ja3sHash}</span>
                   </div>
                 )}
                 <p className="text-[11px] text-shield-text-muted mt-1">
@@ -274,7 +274,7 @@ export const WebSecurityAudit: React.FC<WebSecurityAuditProps> = ({ webSec }) =>
       {/* TAB 4: PASSIVE EXPOSURE & CVE MATCHES */}
       {activeTab === 'exposure' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-4">
             <div className="text-shield-text-primary font-bold text-sm border-b border-shield-border/40 pb-2 flex justify-between">
               <span>Passive Banner Exposure & Software Vulnerabilities (CVEs)</span>
               <span className="text-shield-danger">{webSec.passiveExposure.matchedCves.length} CVEs Detected</span>

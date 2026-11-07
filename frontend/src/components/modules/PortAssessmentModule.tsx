@@ -20,12 +20,11 @@ export interface PortAssessmentModuleProps {
 
 export const PortAssessmentModule: React.FC<PortAssessmentModuleProps> = ({
   result,
-  extendedReport,
+  extendedReport: _extendedReport,
 }) => {
   const [filter, setFilter] = useState<'all' | 'open' | 'filtered'>('all');
 
   const domain = result.hostname;
-  const isPhishing = domain.includes('micros0ft') || domain.includes('auth');
 
   // Realistic observed service port table
   const portList = [
@@ -53,13 +52,11 @@ export const PortAssessmentModule: React.FC<PortAssessmentModuleProps> = ({
       port: 8443,
       protocol: 'TCP',
       service: 'HTTPS-ALT',
-      state: isPhishing ? 'OPEN' : 'FILTERED',
-      version: isPhishing ? 'Phishing Harvester Listener' : 'Firewalled',
-      risk: isPhishing ? 'HIGH_RISK' : 'SAFE',
-      riskColor: isPhishing ? 'text-rose-400 bg-rose-950/40 border-rose-500/30' : 'text-shield-text-muted bg-shield-surface',
-      description: isPhishing
-        ? 'Secondary administrative TLS port observed receiving automated harvested credentials.'
-        : 'Alternative TLS port is filtered by edge boundary firewall.',
+      state: 'FILTERED',
+      version: 'Firewalled',
+      risk: 'SAFE',
+      riskColor: 'text-shield-text-muted bg-shield-surface',
+      description: 'Alternative TLS port is filtered by edge boundary firewall.',
     },
     {
       port: 8080,
@@ -154,11 +151,11 @@ export const PortAssessmentModule: React.FC<PortAssessmentModuleProps> = ({
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">Perimeter Risk</div>
-          <div className={`text-2xl font-black ${isPhishing ? 'text-rose-400' : 'text-emerald-400'}`}>
-            {isPhishing ? 'Anomalous' : 'Hardened'}
+          <div className="text-2xl font-black text-emerald-400">
+            Hardened
           </div>
           <div className="text-[11px] font-mono text-shield-text-muted mt-1">
-            {isPhishing ? 'Unusual high port open' : 'No exposed DB / SSH'}
+            No exposed DB / SSH
           </div>
         </div>
       </div>

@@ -232,7 +232,7 @@ export function App() {
                 <div className="lg:col-span-7 clay-card rounded-3xl p-6 md:p-8 flex flex-col justify-between border border-shield-border">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono uppercase tracking-wider text-shield-accent-light">
+                      <span className="text-xs font-mono uppercase tracking-wider text-[#F3D081]">
                         Executive Analysis Summary
                       </span>
                       <span className="text-xs font-mono text-shield-text-muted">
@@ -251,23 +251,23 @@ export function App() {
 
                   {/* Fast telemetry tags */}
                   <div className="mt-6 pt-5 border-t border-shield-border/50 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono text-left">
-                    <div className="p-3 rounded-xl bg-shield-surface-elevated border border-shield-border/50">
+                    <div className="p-3 rounded-xl bg-[#101713]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)]">
                       <div className="text-shield-text-muted text-[11px]">Primary Scheme</div>
                       <div className="font-bold text-shield-text-primary uppercase mt-0.5">
                         {result.protocol.replace(':', '')}
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-shield-surface-elevated border border-shield-border/50">
+                    <div className="p-3 rounded-xl bg-[#101713]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)]">
                       <div className="text-shield-text-muted text-[11px]">Hosting Origin</div>
                       <div className="font-bold text-shield-text-primary mt-0.5 truncate">
                         {result.country || 'Global Anycast'}
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-shield-surface-elevated border border-shield-border/50">
+                    <div className="p-3 rounded-xl bg-[#101713]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)]">
                       <div className="text-shield-text-muted text-[11px]">Model Consensus</div>
-                      <div className="font-bold text-shield-accent-light mt-0.5">
+                      <div className="font-bold text-[#F3D081] mt-0.5">
                         {result.riskLevel === 'low'
                           ? 'Consensus Clear'
                           : result.criticalOverride
@@ -280,14 +280,14 @@ export function App() {
               </div>
 
               {/* Multi-Pillar Deep-Dive Module Navigation Tabs */}
-              <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-shield-surface-elevated border border-shield-border text-xs font-mono">
+              <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-[#101713]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] text-xs font-mono">
                 <button
                   type="button"
                   onClick={() => setActiveDashboardTab('overview')}
                   className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
                     activeDashboardTab === 'overview'
-                      ? 'bg-shield-accent text-white font-bold shadow-clay-sm'
-                      : 'text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface'
+                      ? 'bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] text-[#080B09] font-bold shadow-[0_4px_16px_rgba(243,208,129,0.3)]'
+                      : 'text-shield-text-secondary hover:text-shield-text-primary hover:bg-white/[0.05]'
                   }`}
                 >
                   <Layers className="w-4 h-4" />
@@ -299,7 +299,7 @@ export function App() {
                     <button
                       type="button"
                       onClick={() => handleSelectModule('cert-intel')}
-                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface"
+                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-white/[0.05]"
                     >
                       <Lock className="w-4 h-4" />
                       <span>PKI & Certificates</span>
@@ -311,7 +311,7 @@ export function App() {
                     <button
                       type="button"
                       onClick={() => handleSelectModule('headers')}
-                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface"
+                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-white/[0.05]"
                     >
                       <FileCheck2 className="w-4 h-4" />
                       <span>Web Security & Headers</span>
@@ -320,7 +320,7 @@ export function App() {
                     <button
                       type="button"
                       onClick={() => handleSelectModule('threat-graph')}
-                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface"
+                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-white/[0.05]"
                     >
                       <Network className="w-4 h-4" />
                       <span>Threat Graph</span>
@@ -329,7 +329,7 @@ export function App() {
                     <button
                       type="button"
                       onClick={() => handleSelectModule('forensics')}
-                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-shield-surface"
+                      className="px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 text-shield-text-secondary hover:text-shield-text-primary hover:bg-white/[0.05]"
                     >
                       <FileSearch className="w-4 h-4" />
                       <span>Forensic Vault</span>
@@ -372,7 +372,7 @@ export function App() {
             <div className="flex flex-col items-start border-b border-[rgba(120,135,124,0.25)] pb-8">
               <div className="inline-flex items-center gap-2 text-xs font-mono text-[#F3D081] mb-3 uppercase tracking-widest">
                 <Activity className="w-3.5 h-3.5 text-[#F3D081]" />
-                <span>04 // GLOBAL COMMUNITY TELEMETRY</span>
+                <span>LIVE THREAT TELEMETRY</span>
               </div>
               <h2 className="swiss-display text-3xl sm:text-4xl md:text-5xl font-black text-[#E9E6DC] mb-4">
                 COLLABORATIVE THREAT TELEMETRY.

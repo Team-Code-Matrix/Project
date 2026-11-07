@@ -16,6 +16,24 @@ interface ThreatMetricsProps {
 }
 
 export const ThreatMetrics: React.FC<ThreatMetricsProps> = ({ metrics }) => {
+  if (!metrics || (metrics.totalThreatsMonitored === 0 && metrics.categoryBreakdown.length === 0)) {
+    return (
+      <div className="rounded-2xl p-8 md:p-12 text-center bg-gradient-to-br from-white/[0.04] via-[#101713]/40 to-[#080B09]/45 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] shadow-[0_20px_50px_rgba(0,0,0,0.55)] space-y-4">
+        <div className="w-12 h-12 rounded-xl bg-[#141D18]/70 border border-[rgba(120,135,124,0.3)] text-[#F3D081] flex items-center justify-center mx-auto">
+          <Radio className="w-6 h-6 text-[#F3D081] animate-pulse" />
+        </div>
+        <div className="space-y-1.5">
+          <h3 className="text-base md:text-lg font-bold font-sans uppercase tracking-tight text-[#E9E6DC]">
+            Awaiting Live Telemetry Connection
+          </h3>
+          <p className="text-xs md:text-sm text-[#B7C4B8] max-w-md mx-auto">
+            Live global threat sensors and community feeds will stream in real time once connected to the backend telemetry pipeline.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const chartData = metrics.categoryBreakdown.map((item) => ({
     name: item.name,
     count: item.count,
@@ -84,9 +102,6 @@ export const ThreatMetrics: React.FC<ThreatMetricsProps> = ({ metrics }) => {
               Relative frequency of identified malicious schemes over the last 30 days
             </p>
           </div>
-          <span className="text-[11px] font-mono text-shield-text-muted bg-shield-surface-elevated px-2.5 py-1 rounded-md border border-shield-border self-start sm:self-auto">
-            Sample Telemetry
-          </span>
         </div>
 
         <div className="h-64 w-full">

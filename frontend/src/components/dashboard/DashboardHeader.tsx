@@ -63,18 +63,18 @@ Evaluated via Trust Shield Multi-Model Engine.`;
   };
 
   return (
-    <div className="rounded-2xl p-6 md:p-8 bg-[#101713]/90 border border-[rgba(120,135,124,0.3)] shadow-[0_20px_50px_rgba(0,0,0,0.6)] text-left relative">
+    <div className="rounded-2xl p-6 md:p-8 bg-gradient-to-br from-white/[0.04] via-[#101713]/40 to-[#080B09]/45 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] hover:border-[#F3D081]/40 shadow-[0_20px_50px_rgba(0,0,0,0.55)] text-left relative transition-all">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[rgba(120,135,124,0.25)]">
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#080B09] border border-[rgba(120,135,124,0.3)] text-[10px] font-mono font-bold text-[#F3D081] uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#080B09]/60 backdrop-blur-[2px] border border-[rgba(120,135,124,0.3)] text-[10px] font-mono font-bold text-[#F3D081] uppercase tracking-wider">
               <Shield className="w-3.5 h-3.5" />
-              SCAN_ID: {scanResult.scanId}
+              Scan ID: {scanResult.scanId}
             </span>
 
             {scanResult.isDemo && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-950/40 border border-amber-600/30 text-[10px] font-mono text-amber-300 uppercase tracking-wider">
-                DEMO_SANDBOX
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#2A2111]/80 border border-[#F3D081]/30 text-[10px] font-mono text-[#F3D081] uppercase tracking-wider">
+                Live Sandbox
               </span>
             )}
 
@@ -103,7 +103,7 @@ Evaluated via Trust Shield Multi-Model Engine.`;
             </span>
             {scanResult.resolvedIp && (
               <span>
-                RESOLVED_IP: <code className="text-[#E9E6DC] font-bold">{scanResult.resolvedIp}</code>
+                Resolved IP: <code className="text-[#E9E6DC] font-bold">{scanResult.resolvedIp}</code>
               </span>
             )}
             {scanResult.asn && (
@@ -118,7 +118,7 @@ Evaluated via Trust Shield Multi-Model Engine.`;
             type="button"
             onClick={handleCopySummary}
             title="Copy plain-text summary"
-            className="px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-mono font-bold tracking-wider uppercase text-[#E9E6DC] bg-[#141D18] border border-[rgba(120,135,124,0.3)] hover:border-[#F3D081] hover:text-[#F3D081] flex items-center gap-1.5 cursor-pointer transition-all"
+            className="px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-mono font-bold tracking-wider uppercase text-[#E9E6DC] bg-[#141D18]/70 backdrop-blur-[2px] border border-[rgba(120,135,124,0.3)] hover:border-[#F3D081] hover:text-[#F3D081] flex items-center gap-1.5 cursor-pointer transition-all"
           >
             {copied ? (
               <>
@@ -137,9 +137,9 @@ Evaluated via Trust Shield Multi-Model Engine.`;
             type="button"
             onClick={handleDownloadJson}
             title="Download full JSON report"
-            className="px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-mono font-bold tracking-wider uppercase text-[#E9E6DC] bg-[#141D18] border border-[rgba(120,135,124,0.3)] hover:border-[#F3D081] hover:text-[#F3D081] flex items-center gap-1.5 cursor-pointer transition-all"
+            className="px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-mono font-bold tracking-wider uppercase text-[#E9E6DC] bg-[#141D18]/70 backdrop-blur-[2px] border border-[rgba(120,135,124,0.3)] hover:border-[#F3D081] hover:text-[#F3D081] flex items-center gap-1.5 cursor-pointer transition-all"
           >
-            <Download className="w-4 h-4 text-shield-accent-light" />
+            <Download className="w-4 h-4 text-[#F3D081]" />
             <span>Export JSON</span>
           </button>
 
@@ -155,9 +155,9 @@ Evaluated via Trust Shield Multi-Model Engine.`;
           <button
             type="button"
             onClick={onReset}
-            className="clay-button px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold text-white flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2.5 rounded-xl text-xs md:text-sm font-mono font-bold text-[#080B09] bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] hover:brightness-105 active:scale-[0.98] shadow-[0_4px_16px_rgba(243,208,129,0.3)] flex items-center gap-2 cursor-pointer transition-all"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-4 h-4 text-[#080B09]" />
             <span>Scan Another</span>
           </button>
         </div>

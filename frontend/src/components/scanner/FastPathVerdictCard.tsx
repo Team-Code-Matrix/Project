@@ -25,10 +25,10 @@ export const FastPathVerdictCard: React.FC<FastPathVerdictCardProps> = ({
   );
 
   return (
-    <div className="rounded-2xl p-4 md:p-5 bg-[#101713]/90 border border-[rgba(120,135,124,0.3)] shadow-[0_15px_35px_rgba(0,0,0,0.5)] animate-fadeIn text-left">
+    <div className="rounded-2xl p-4 md:p-5 bg-gradient-to-br from-white/[0.04] via-[#101713]/40 to-[#080B09]/45 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] hover:border-[#F3D081]/40 shadow-[0_15px_35px_rgba(0,0,0,0.5)] animate-fadeIn text-left transition-all">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[rgba(120,135,124,0.22)] gap-2">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-[#141D18] border border-[rgba(120,135,124,0.3)] text-[#F3D081]">
+          <div className="p-1.5 rounded-lg bg-[#141D18]/70 backdrop-blur-[2px] border border-[rgba(120,135,124,0.3)] text-[#F3D081]">
             <Zap className="w-4 h-4 text-[#F3D081]" />
           </div>
           <div>
@@ -60,7 +60,7 @@ export const FastPathVerdictCard: React.FC<FastPathVerdictCardProps> = ({
 
       {/* Synchronous Filter Matrix Badges */}
       <div className="mt-3.5 pt-3 border-t border-[rgba(120,135,124,0.22)] grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px] font-mono">
-        <div className="p-2 rounded-lg bg-[#080B09] border border-[rgba(120,135,124,0.25)] flex flex-col">
+        <div className="p-2 rounded-lg bg-[#080B09]/60 backdrop-blur-[2px] border border-[rgba(120,135,124,0.25)] flex flex-col">
           <span className="text-[#78877C] text-[10px] uppercase">Redis Bloom / Cuckoo</span>
           <span
             className={`font-semibold mt-0.5 truncate ${
@@ -71,7 +71,7 @@ export const FastPathVerdictCard: React.FC<FastPathVerdictCardProps> = ({
           </span>
         </div>
 
-        <div className="p-2 rounded-lg bg-[#080B09] border border-[rgba(120,135,124,0.25)] flex flex-col">
+        <div className="p-2 rounded-lg bg-[#080B09]/60 backdrop-blur-[2px] border border-[rgba(120,135,124,0.25)] flex flex-col">
           <span className="text-[#78877C] text-[10px] uppercase">Google Safe Browsing</span>
           <span
             className={`font-semibold mt-0.5 truncate ${
@@ -82,7 +82,7 @@ export const FastPathVerdictCard: React.FC<FastPathVerdictCardProps> = ({
           </span>
         </div>
 
-        <div className="p-2 rounded-lg bg-[#080B09] border border-[rgba(120,135,124,0.25)] flex flex-col">
+        <div className="p-2 rounded-lg bg-[#080B09]/60 backdrop-blur-[2px] border border-[rgba(120,135,124,0.25)] flex flex-col">
           <span className="text-[#78877C] text-[10px] uppercase">Mozilla OneCRL</span>
           <span
             className={`font-semibold mt-0.5 truncate ${
@@ -93,7 +93,7 @@ export const FastPathVerdictCard: React.FC<FastPathVerdictCardProps> = ({
           </span>
         </div>
 
-        <div className="p-2 rounded-lg bg-[#080B09] border border-[rgba(120,135,124,0.25)] flex flex-col">
+        <div className="p-2 rounded-lg bg-[#080B09]/60 backdrop-blur-[2px] border border-[rgba(120,135,124,0.25)] flex flex-col">
           <span className="text-[#78877C] text-[10px] uppercase">Cached Domain Rep</span>
           <span
             className={`font-semibold mt-0.5 truncate ${

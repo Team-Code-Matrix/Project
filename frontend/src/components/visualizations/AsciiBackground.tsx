@@ -9,7 +9,6 @@ export interface AsciiBackgroundProps {
   cursorRadius?: number; // Soft radial illumination radius in pixels
 }
 
-const GOLD_HEX = '#F3D081';
 const OBSIDIAN_BG = '#080B09';
 
 // Deterministic 32-bit integer hash to keep characters perfectly stable across frames
@@ -74,36 +73,63 @@ const getTierBaseColor = (tier: number): string => {
   }
 };
 
-// Illuminated colors for the soft radial cursor light
-// Center: warm amber -> Middle: low-opacity muted gold -> Outer: almost transparent dark green/sage -> Edge: 0
+// Illuminated colors for the restrained background ASCII map cursor scanning effect:
+// Combines muted champagne gold, dark olive, subtle sepia, and forest-green tones.
 const getIlluminatedColor = (tier: number, intensity: number): string => {
   const isLand = tier >= 2;
 
   if (isLand) {
-    if (intensity >= 0.55) {
-      // Centre: subtle warm amber / champagne gold
-      const a = 0.28 + intensity * 0.44; // max ~0.72
-      return `rgba(243, 208, 129, ${a.toFixed(3)})`;
-    } else if (intensity >= 0.22) {
-      // Middle: low-opacity muted gold
-      const a = 0.20 + intensity * 0.35; // ~0.28 - 0.39
-      return `rgba(238, 218, 165, ${a.toFixed(3)})`;
+    if (tier === 2) {
+      // Coastline contour - recognizable silhouette definition
+      if (intensity >= 0.50) {
+        // High intensity: Muted warm champagne gold with subtle sepia
+        const a = 0.32 + intensity * 0.36; // max ~0.68
+        return `rgba(215, 186, 130, ${a.toFixed(3)})`;
+      } else if (intensity >= 0.20) {
+        // Mid intensity: Dark olive-sage
+        const a = 0.24 + intensity * 0.28; // ~0.30 - 0.38
+        return `rgba(175, 188, 155, ${a.toFixed(3)})`;
+      } else {
+        // Outer falloff: Soft sage contour
+        const a = 0.16 + intensity * 0.22; // ~0.16 - 0.20
+        return `rgba(183, 196, 184, ${a.toFixed(3)})`;
+      }
     } else {
-      // Outer region: almost transparent dark green / sage
-      const a = 0.16 + intensity * 0.25; // ~0.16 - 0.21
-      return `rgba(183, 196, 184, ${a.toFixed(3)})`;
+      // Continental Landmass (tier 3) & Core Inland (tier 4)
+      if (intensity >= 0.50) {
+        // High intensity: Refined brushed champagne gold & sepia
+        const a = 0.30 + intensity * 0.38; // max ~0.68
+        return `rgba(224, 198, 142, ${a.toFixed(3)})`;
+      } else if (intensity >= 0.20) {
+        // Mid intensity: Dark olive-tinted champagne / sepia
+        const a = 0.22 + intensity * 0.26; // ~0.27 - 0.35
+        return `rgba(185, 180, 145, ${a.toFixed(3)})`;
+      } else {
+        // Outer falloff: Subtle ivory & forest-green tone
+        const a = 0.16 + intensity * 0.20; // ~0.16 - 0.20
+        return `rgba(165, 180, 165, ${a.toFixed(3)})`;
+      }
     }
   } else {
-    // Ocean
-    if (intensity >= 0.55) {
-      const a = 0.08 + intensity * 0.20; // max ~0.28
-      return `rgba(243, 208, 129, ${a.toFixed(3)})`;
-    } else if (intensity >= 0.22) {
-      const a = 0.05 + intensity * 0.12; // ~0.08 - 0.11
-      return `rgba(200, 190, 160, ${a.toFixed(3)})`;
+    // Ocean (tier 0 & 1) - quiet maritime coordinate space, subtle scanning highlight
+    if (tier === 1) {
+      // Coastal Ocean / Shelf
+      if (intensity >= 0.45) {
+        const a = 0.14 + intensity * 0.22; // max ~0.36
+        return `rgba(155, 172, 148, ${a.toFixed(3)})`;
+      } else {
+        const a = 0.08 + intensity * 0.14; // max ~0.22
+        return `rgba(130, 148, 134, ${a.toFixed(3)})`;
+      }
     } else {
-      const a = 0.03 + intensity * 0.08; // ~0.03 - 0.05
-      return `rgba(120, 135, 124, ${a.toFixed(3)})`;
+      // Deep Ocean
+      if (intensity >= 0.45) {
+        const a = 0.10 + intensity * 0.18; // max ~0.28
+        return `rgba(142, 158, 140, ${a.toFixed(3)})`;
+      } else {
+        const a = 0.06 + intensity * 0.10; // max ~0.16
+        return `rgba(125, 140, 128, ${a.toFixed(3)})`;
+      }
     }
   }
 };
@@ -153,7 +179,7 @@ export const AsciiBackground: React.FC<AsciiBackgroundProps> = React.memo(
   ({
     className = '',
     baseBgColor = OBSIDIAN_BG,
-    cursorRadius = 240,
+    cursorRadius = 260,
   }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animFrameRef = useRef<number | null>(null);
@@ -172,6 +198,9 @@ export const AsciiBackground: React.FC<AsciiBackgroundProps> = React.memo(
       active: false,
       alpha: 0,
     });
+
+    // Reference to hero panel bounding box for strict interaction isolation
+    const heroRectRef = useRef<DOMRect | null>(null);
 
     // Cached map data & offscreen pre-rendered static layer
     const mapImageRef = useRef<HTMLImageElement | null>(null);
@@ -203,6 +232,7 @@ export const AsciiBackground: React.FC<AsciiBackgroundProps> = React.memo(
       if (!ctx) return;
 
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const hasFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
       // 1. Build or re-build base offscreen canvas with recognizable ASCII world map
       const rebuildBaseCanvas = () => {
@@ -403,7 +433,7 @@ export const AsciiBackground: React.FC<AsciiBackgroundProps> = React.memo(
         renderFrame();
       };
 
-      // 2. High-performance draw function (renders clean static world map without outer cursor spotlight)
+      // 2. High-performance draw function (renders clean static world map + restrained cursor scanning effect outside hero panel)
       const renderFrame = () => {
         if (!ctx || !canvas) return;
         const baseCanvas = baseCanvasRef.current;
@@ -412,10 +442,185 @@ export const AsciiBackground: React.FC<AsciiBackgroundProps> = React.memo(
 
         // Draw static pre-rendered base layer in a single GPU drawImage call (0.1ms)
         ctx.drawImage(baseCanvas, 0, 0, grid.width, grid.height);
+
+        const current = mouseCurrentRef.current;
+        const target = mouseTargetRef.current;
+
+        // Smooth position lerp
+        const lerpPos = 0.12;
+        current.x += (target.x - current.x) * lerpPos;
+        current.y += (target.y - current.y) * lerpPos;
+
+        // Smooth alpha fade
+        const targetAlpha = target.active ? 1.0 : 0.0;
+        const lerpAlpha = 0.09;
+        current.alpha += (targetAlpha - current.alpha) * lerpAlpha;
+
+        const isMoving =
+          Math.abs(target.x - current.x) > 0.4 ||
+          Math.abs(target.y - current.y) > 0.4 ||
+          Math.abs(targetAlpha - current.alpha) > 0.005;
+
+        // Render soft radial scanning illumination strictly OUTSIDE the hero panel
+        if (current.alpha > 0.008 && current.x >= -cursorRadius && current.y >= -cursorRadius) {
+          const cx = current.x;
+          const cy = current.y;
+          const R = cursorRadius;
+          const R2 = R * R;
+          const charW = grid.charWidth;
+          const charH = grid.charHeight;
+          const heroRect = heroRectRef.current;
+
+          // A. Soft, feathered ambient radial aura (muted sepia / dark olive / forest green)
+          // Uses evenodd clipping to guarantee ZERO background light leaks into the hero panel
+          ctx.save();
+          if (heroRect) {
+            ctx.beginPath();
+            ctx.rect(0, 0, grid.width, grid.height);
+            // Hero panel has rounded-2xl (16px border-radius)
+            if (typeof (ctx as any).roundRect === 'function') {
+              (ctx as any).roundRect(heroRect.left, heroRect.top, heroRect.width, heroRect.height, 16);
+            } else {
+              ctx.rect(heroRect.left, heroRect.top, heroRect.width, heroRect.height);
+            }
+            ctx.clip('evenodd');
+          }
+
+          const radGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.15);
+          radGrad.addColorStop(0, `rgba(181, 145, 91, ${(0.028 * current.alpha).toFixed(4)})`);
+          radGrad.addColorStop(0.35, `rgba(135, 140, 105, ${(0.018 * current.alpha).toFixed(4)})`);
+          radGrad.addColorStop(0.70, `rgba(90, 115, 95, ${(0.009 * current.alpha).toFixed(4)})`);
+          radGrad.addColorStop(1, 'rgba(8, 11, 9, 0)');
+
+          ctx.fillStyle = radGrad;
+          ctx.beginPath();
+          ctx.arc(cx, cy, R * 1.15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          // B. Character-level illumination within bounding box
+          const minCol = Math.max(0, Math.floor((cx - R) / charW));
+          const maxCol = Math.min(grid.cols, Math.ceil((cx + R) / charW));
+          const minRow = Math.max(0, Math.floor((cy - R) / charH));
+          const maxRow = Math.min(grid.rows, Math.ceil((cy + R) / charH));
+
+          ctx.font = '300 9.5px "JetBrains Mono", "Fira Code", "IBM Plex Mono", Menlo, Consolas, monospace';
+          ctx.textBaseline = 'middle';
+          ctx.textAlign = 'center';
+
+          const now = performance.now() * 0.0025;
+
+          for (let r = minRow; r < maxRow; r++) {
+            const py = r * charH + charH / 2;
+            const inHeroY = heroRect ? py >= heroRect.top && py <= heroRect.bottom : false;
+            const dy = py - cy;
+            const dy2 = dy * dy;
+
+            for (let c = minCol; c < maxCol; c++) {
+              const px = c * charW + charW / 2;
+
+              // Strict isolation: NEVER illuminate inside the hero panel
+              if (inHeroY && heroRect && px >= heroRect.left && px <= heroRect.right) {
+                continue;
+              }
+
+              const dx = px - cx;
+              const dist2 = dx * dx + dy2;
+
+              if (dist2 < R2) {
+                const dist = Math.sqrt(dist2);
+                const norm = dist / R; // 0 (center) to 1 (outer edge)
+
+                // Smooth cubic falloff curve fading smoothly to pure zero at edge with continuous derivative
+                const t = 1 - norm;
+                const smoothT = t * t * (3 - 2 * t);
+                let intensity = Math.pow(smoothT, 1.5) * current.alpha;
+
+                if (intensity > 0.01) {
+                  const tier = grid.tiers[r * grid.cols + c];
+                  const char = getTierChar(tier, c, r);
+                  if (char === ' ') continue;
+
+                  // Subtle scanning wave response when cursor passes over land
+                  if (tier >= 2) {
+                    const wave = Math.sin(dist * 0.04 - now * 2) * 0.06;
+                    intensity = Math.max(0, Math.min(1, intensity + wave * intensity));
+                  }
+
+                  ctx.fillStyle = getIlluminatedColor(tier, intensity);
+                  ctx.fillText(char, px, py);
+                }
+              }
+            }
+          }
+        }
+
+        // Loop management: only keep running if motion or fade is active
+        if (isMoving && (current.alpha > 0.005 || target.active)) {
+          animFrameRef.current = requestAnimationFrame(renderFrame);
+        } else {
+          animFrameRef.current = null;
+        }
       };
 
-      // 3. Debounced resize listener
+      // 3. Request-frame scheduler
+      const scheduleRender = () => {
+        if (animFrameRef.current === null) {
+          animFrameRef.current = requestAnimationFrame(renderFrame);
+        }
+      };
+
+      // 4. Mouse event listeners with hero panel boundary detection
+      const handleMouseMove = (e: MouseEvent) => {
+        const heroEl = document.getElementById('hero-interactive-panel');
+        let isOverHero = false;
+
+        if (heroEl) {
+          const r = heroEl.getBoundingClientRect();
+          heroRectRef.current = r;
+          // Check if cursor is inside hero panel (with 2px padding for seamless boundary handoff)
+          if (
+            e.clientX >= r.left - 2 &&
+            e.clientX <= r.right + 2 &&
+            e.clientY >= r.top - 2 &&
+            e.clientY <= r.bottom + 2
+          ) {
+            isOverHero = true;
+          }
+        }
+
+        if (isOverHero) {
+          // Cursor entered hero panel: smoothly transition background map illumination to 0
+          mouseTargetRef.current.active = false;
+        } else {
+          // Cursor is on background: restore map scanning illumination
+          mouseTargetRef.current = {
+            x: e.clientX,
+            y: e.clientY,
+            active: true,
+          };
+        }
+        scheduleRender();
+      };
+
+      const handleMouseLeave = () => {
+        mouseTargetRef.current.active = false;
+        scheduleRender();
+      };
+
+      const handleScroll = () => {
+        const heroEl = document.getElementById('hero-interactive-panel');
+        if (heroEl) {
+          heroRectRef.current = heroEl.getBoundingClientRect();
+        }
+      };
+
+      // 5. Debounced resize listener
       const handleResize = () => {
+        const heroEl = document.getElementById('hero-interactive-panel');
+        if (heroEl) {
+          heroRectRef.current = heroEl.getBoundingClientRect();
+        }
         if (resizeTimeoutRef.current !== null) {
           window.clearTimeout(resizeTimeoutRef.current);
         }
@@ -425,9 +630,14 @@ export const AsciiBackground: React.FC<AsciiBackgroundProps> = React.memo(
         }, 150);
       };
 
+      if (!prefersReducedMotion && hasFinePointer) {
+        window.addEventListener('mousemove', handleMouseMove, { passive: true });
+        window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+      }
+      window.addEventListener('scroll', handleScroll, { passive: true });
       window.addEventListener('resize', handleResize, { passive: true });
 
-      // 4. Load accurate high-fidelity world map SVG
+      // 6. Load accurate high-fidelity world map SVG
       const img = new Image();
       img.src = '/world-map-accurate.svg';
       img.crossOrigin = 'anonymous';
@@ -455,6 +665,11 @@ export const AsciiBackground: React.FC<AsciiBackgroundProps> = React.memo(
           window.clearTimeout(resizeTimeoutRef.current);
           resizeTimeoutRef.current = null;
         }
+        if (!prefersReducedMotion && hasFinePointer) {
+          window.removeEventListener('mousemove', handleMouseMove);
+          window.removeEventListener('mouseleave', handleMouseLeave);
+        }
+        window.removeEventListener('scroll', handleScroll);
         window.removeEventListener('resize', handleResize);
 
         if (ctx && canvas) {

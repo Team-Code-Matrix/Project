@@ -22,38 +22,20 @@ export interface WhoisLookupModuleProps {
 
 export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
   result,
-  extendedReport,
+  extendedReport: _extendedReport,
 }) => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const domain = result.hostname;
-  const isGithub = domain.includes('github');
-  const isPhishing = domain.includes('micros0ft') || domain.includes('auth');
-  const isShortener = domain.includes('bit.ly');
-  const domainAgeDays = isGithub ? 5942 : isPhishing ? 3 : 4820;
-  const domainAgeYears = (domainAgeDays / 365.25).toFixed(1);
+  const registrar = 'Authoritative RDAP / WHOIS Registry';
+  const regDate = result.checkedAt || new Date().toISOString();
+  const expDate = result.checkedAt
+    ? new Date(new Date(result.checkedAt).getTime() + 365 * 24 * 3600 * 1000).toISOString()
+    : new Date().toISOString();
+  const updatedDate = result.checkedAt || new Date().toISOString();
 
-  const registrar = isGithub
-    ? 'MarkMonitor Inc. (IANA ID 292)'
-    : isPhishing
-    ? 'NameSilo LLC (IANA ID 1479)'
-    : isShortener
-    ? 'CSC Corporate Domains, Inc.'
-    : 'Cloudflare, Inc. (IANA ID 1910)';
-
-  const regDate = isPhishing ? '2026-11-04T08:12:00Z' : '2007-10-09T18:20:50Z';
-  const expDate = isPhishing ? '2027-11-04T08:12:00Z' : '2028-10-09T18:20:50Z';
-  const updatedDate = isPhishing ? '2026-11-04T08:14:22Z' : '2024-09-12T14:30:10Z';
-
-  const nameservers = isGithub
-    ? ['dns1.p08.nsone.net', 'dns2.p08.nsone.net', 'ns-1707.awsdns-21.co.uk', 'ns-421.awsdns-52.com']
-    : isPhishing
-    ? ['ns1.dnsowl.com', 'ns2.dnsowl.com']
-    : ['ns1.cloudflare.com', 'ns2.cloudflare.com'];
-
-  const statusList = isPhishing
-    ? ['clientTransferProhibited', 'addPeriod']
-    : ['clientDeleteProhibited', 'clientTransferProhibited', 'clientUpdateProhibited'];
+  const nameservers: string[] = [];
+  const statusList = ['clientTransferProhibited', 'clientUpdateProhibited'];
 
   const handleCopy = async (text: string, label: string) => {
     try {
@@ -72,63 +54,57 @@ export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
         {/* Domain Age Card */}
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="flex items-center gap-2 text-shield-text-muted text-xs font-mono mb-2">
-            <Clock className="w-4 h-4 text-shield-accent-light" />
+            <Clock className="w-4 h-4 text-[#F3D081]" />
             <span>Domain Age</span>
           </div>
-          <div className="text-2xl font-black text-shield-text-primary">
-            {domainAgeDays > 365 ? `${domainAgeYears} yrs` : `${domainAgeDays} days`}
+          <div className="text-xl font-bold text-shield-text-primary">
+            Awaiting RDAP
           </div>
           <div className="text-[11px] font-mono mt-1 text-shield-text-muted">
-            {domainAgeDays > 730 ? (
-              <span className="text-emerald-400">✓ Established & Verified</span>
-            ) : domainAgeDays < 30 ? (
-              <span className="text-rose-400">⚠ Newly Registered Domain (&lt;30d)</span>
-            ) : (
-              <span className="text-amber-400">Moderate Tenure</span>
-            )}
+            Registration record query
           </div>
         </div>
 
         {/* Registrar Card */}
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="flex items-center gap-2 text-shield-text-muted text-xs font-mono mb-2">
-            <Building className="w-4 h-4 text-shield-accent-light" />
+            <Building className="w-4 h-4 text-[#F3D081]" />
             <span>Sponsoring Registrar</span>
           </div>
           <div className="text-base font-bold text-shield-text-primary truncate" title={registrar}>
-            {registrar.split('(')[0]}
+            {registrar}
           </div>
           <div className="text-[11px] font-mono mt-1 text-shield-text-muted truncate">
-            {registrar.includes('(') ? registrar.slice(registrar.indexOf('(')) : 'ICANN Accredited'}
+            ICANN Accredited
           </div>
         </div>
 
         {/* Expiration Card */}
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="flex items-center gap-2 text-shield-text-muted text-xs font-mono mb-2">
-            <Calendar className="w-4 h-4 text-shield-accent-light" />
-            <span>Registry Expiration</span>
+            <Calendar className="w-4 h-4 text-[#F3D081]" />
+            <span>Registry Status</span>
           </div>
           <div className="text-base font-bold text-shield-text-primary">
-            {new Date(expDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+            Active Query
           </div>
           <div className="text-[11px] font-mono mt-1 text-shield-text-muted">
-            Active Registration
+            Registry live lookup
           </div>
         </div>
 
         {/* DNSSEC Card */}
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="flex items-center gap-2 text-shield-text-muted text-xs font-mono mb-2">
-            <ShieldCheck className="w-4 h-4 text-shield-accent-light" />
+            <ShieldCheck className="w-4 h-4 text-[#F3D081]" />
             <span>DNSSEC Validation</span>
           </div>
-          <div className="text-base font-bold text-emerald-400 flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Signed / Valid</span>
+          <div className="text-base font-bold text-shield-text-primary flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4 text-[#F3D081]" />
+            <span>Inspection Ready</span>
           </div>
           <div className="text-[11px] font-mono mt-1 text-shield-text-muted">
-            Cryptographic zone verified
+            Cryptographic zone check
           </div>
         </div>
       </div>
@@ -151,22 +127,22 @@ export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-          <div className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Domain Name:</span>
             <span className="font-bold text-shield-text-primary">{domain}</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Creation Date:</span>
             <span className="text-shield-text-primary">{new Date(regDate).toUTCString()}</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Registry Expiry:</span>
             <span className="text-shield-text-primary">{new Date(expDate).toUTCString()}</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Updated Date:</span>
             <span className="text-shield-text-primary">{new Date(updatedDate).toUTCString()}</span>
           </div>
@@ -180,26 +156,32 @@ export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
               <Server className="w-3.5 h-3.5" />
               <span>Authoritative Nameservers ({nameservers.length})</span>
             </h4>
-            <div className="space-y-2">
-              {nameservers.map((ns, idx) => (
-                <div
-                  key={ns}
-                  className="p-3 rounded-xl bg-shield-surface/60 border border-shield-border/50 text-xs font-mono flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-shield-text-muted text-[10px]">NS{idx + 1}:</span>
-                    <span className="text-shield-text-primary font-medium">{ns}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(ns, `ns-${idx}`)}
-                    className="text-shield-text-muted hover:text-white"
+            {nameservers.length === 0 ? (
+              <div className="p-3.5 rounded-xl bg-[#080B09]/40 border border-[rgba(120,135,124,0.2)] text-xs font-mono text-[#78877C] text-center">
+                Awaiting authoritative nameserver records from registry.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {nameservers.map((ns, idx) => (
+                  <div
+                    key={ns}
+                    className="p-3 rounded-xl bg-shield-surface/60 border border-shield-border/50 text-xs font-mono flex items-center justify-between"
                   >
-                    {copiedField === `ns-${idx}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-shield-text-muted text-[10px]">NS{idx + 1}:</span>
+                      <span className="text-shield-text-primary font-medium">{ns}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(ns, `ns-${idx}`)}
+                      className="text-shield-text-muted hover:text-white"
+                    >
+                      {copiedField === `ns-${idx}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Domain Status Codes */}

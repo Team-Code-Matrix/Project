@@ -19,39 +19,20 @@ export const HttpStatusCodesModule: React.FC<HttpStatusCodesModuleProps> = ({
   result,
   extendedReport,
 }) => {
-  const isShortener = result.hostname.includes('bit.ly');
-  const isPhishing = result.hostname.includes('micros0ft') || result.hostname.includes('auth');
-
   const harEntries = extendedReport?.forensics.harTraceSummary?.entries || [
     {
       method: 'GET',
       url: result.submittedUrl,
       status: 200,
-      mimeType: 'text/html; charset=utf-8',
-      sizeBytes: 142080,
-      durationMs: 48,
-    },
-    {
-      method: 'GET',
-      url: `${result.submittedUrl}/assets/index.css`,
-      status: 200,
-      mimeType: 'text/css',
-      sizeBytes: 65760,
-      durationMs: 14,
-    },
-    {
-      method: 'GET',
-      url: `${result.submittedUrl}/assets/app.js`,
-      status: 200,
-      mimeType: 'application/javascript',
-      sizeBytes: 204800,
-      durationMs: 22,
+      mimeType: 'text/html',
+      sizeBytes: 0,
+      durationMs: 0,
     },
   ];
 
   const statusCategories = {
     '2xx Success': harEntries.filter((e) => e.status >= 200 && e.status < 300).length,
-    '3xx Redirection': harEntries.filter((e) => e.status >= 300 && e.status < 400).length + (isShortener ? 1 : 0),
+    '3xx Redirection': harEntries.filter((e) => e.status >= 300 && e.status < 400).length,
     '4xx Client Error': harEntries.filter((e) => e.status >= 400 && e.status < 500).length,
     '5xx Server Error': harEntries.filter((e) => e.status >= 500).length,
   };
@@ -88,7 +69,7 @@ export const HttpStatusCodesModule: React.FC<HttpStatusCodesModuleProps> = ({
           {harEntries.map((entry, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-2xl bg-[#0D1410] border border-shield-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div className="flex items-center gap-3">
                 <span

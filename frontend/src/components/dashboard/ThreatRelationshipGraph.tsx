@@ -50,20 +50,20 @@ export const ThreatRelationshipGraph: React.FC<ThreatRelationshipGraphProps> = (
       // Styling based on risk state
       let borderStyle = 'border-shield-border';
       let textStyle = 'text-shield-text-primary';
-      let bgStyle = 'bg-[#141D18]';
+      let bgStyle = 'bg-[#080B09]/80 backdrop-blur-[4px]';
 
       if (n.riskState === 'malicious') {
         borderStyle = 'border-rose-500/70 shadow-[0_0_15px_rgba(217,120,120,0.3)]';
         textStyle = 'text-rose-300';
-        bgStyle = 'bg-[#1C1214]';
+        bgStyle = 'bg-[#1C1214]/85 backdrop-blur-[4px]';
       } else if (n.riskState === 'suspicious') {
         borderStyle = 'border-amber-500/60';
         textStyle = 'text-amber-300';
-        bgStyle = 'bg-[#1D1812]';
+        bgStyle = 'bg-[#1D1812]/85 backdrop-blur-[4px]';
       } else if (n.riskState === 'pki_compromised') {
         borderStyle = 'border-purple-500/70';
         textStyle = 'text-purple-300';
-        bgStyle = 'bg-[#19121E]';
+        bgStyle = 'bg-[#19121E]/85 backdrop-blur-[4px]';
       }
 
       return {
@@ -120,8 +120,8 @@ export const ThreatRelationshipGraph: React.FC<ThreatRelationshipGraphProps> = (
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-shield-border/60">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-shield-accent/20 border border-shield-accent/30 text-shield-accent-light">
-            <Network className="w-5 h-5 text-shield-accent-light" />
+          <div className="p-2.5 rounded-xl bg-[#2A2111]/80 border border-[#F3D081]/30 text-[#F3D081]">
+            <Network className="w-5 h-5 text-[#F3D081]" />
           </div>
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-shield-text-primary">
@@ -151,7 +151,7 @@ export const ThreatRelationshipGraph: React.FC<ThreatRelationshipGraphProps> = (
       </div>
 
       {/* Main Graph Canvas & Inspector Drawer */}
-      <div className="relative w-full h-[460px] rounded-2xl bg-[#080D0A] border border-shield-border/70 overflow-hidden">
+      <div className="relative w-full h-[460px] rounded-2xl bg-[#080D0A]/70 backdrop-blur-[2px] border border-shield-border/70 overflow-hidden">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -160,7 +160,7 @@ export const ThreatRelationshipGraph: React.FC<ThreatRelationshipGraphProps> = (
           onNodeClick={onNodeClick}
           fitView
           attributionPosition="bottom-left"
-          className="bg-[#080D0A]"
+          className="bg-transparent"
         >
           <Background color="#1A2920" gap={20} size={1} />
           <Controls className="bg-shield-surface border border-shield-border text-shield-text-primary rounded-xl fill-shield-text-primary" />
@@ -209,7 +209,7 @@ export const ThreatRelationshipGraph: React.FC<ThreatRelationshipGraphProps> = (
 
       <div className="text-xs font-mono text-shield-text-muted flex flex-wrap items-center justify-between gap-2 pt-2">
         <span>Click any node to inspect telemetry attributes. Drag or zoom to explore the infrastructure graph.</span>
-        <span className="text-shield-accent-light">Graph Engine: STIX 2.1 Graph Normalizer</span>
+        <span className="text-[#F3D081]">Graph Engine: STIX 2.1 Graph Normalizer</span>
       </div>
     </div>
   );

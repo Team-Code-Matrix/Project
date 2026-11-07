@@ -106,9 +106,9 @@ export const ForensicsViewer: React.FC<ForensicsViewerProps> = ({ forensics, hos
       </div>
 
       {/* Defanged Notice Banner */}
-      <div className="p-3.5 rounded-xl bg-[#0C120F] border border-shield-border/70 flex items-center justify-between text-xs font-mono">
+      <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] flex items-center justify-between text-xs font-mono">
         <div className="flex items-center gap-2">
-          <span className="text-shield-accent-light font-bold">Defanged Target:</span>
+          <span className="text-[#F3D081] font-bold">Defanged Target:</span>
           <code className="text-shield-text-primary select-all">{forensics.targetUrlDefanged}</code>
         </div>
         <span className="text-[11px] text-shield-text-muted">Sandboxed Origin Protection Active</span>
@@ -117,27 +117,27 @@ export const ForensicsViewer: React.FC<ForensicsViewerProps> = ({ forensics, hos
       {/* TAB 1: SCREENSHOT PREVIEW */}
       {activeTab === 'screenshot' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-4">
             <div className="flex items-center justify-between border-b border-shield-border/40 pb-2">
               <span className="text-shield-text-primary font-bold text-sm">
                 Headless Playwright Detonation Viewport Capture
               </span>
               <span className="text-shield-text-muted text-[11px] flex items-center gap-1">
-                <Clock className="w-3 h-3 text-shield-accent-light" />
+                <Clock className="w-3 h-3 text-[#F3D081]" />
                 {forensics.screenshotTimestamp || 'Captured during sandbox execution'}
               </span>
             </div>
 
             {/* Simulated Safe Screenshot Frame */}
-            <div className="w-full max-w-2xl mx-auto rounded-xl border border-shield-border/80 bg-[#141D18] overflow-hidden shadow-2xl">
+            <div className="w-full max-w-2xl mx-auto rounded-xl border border-shield-border/80 bg-[#080B09]/70 backdrop-blur-[4px] overflow-hidden shadow-2xl">
               {/* Fake browser bar */}
-              <div className="px-4 py-2 bg-[#0B100E] border-b border-shield-border/60 flex items-center gap-2 text-xs text-shield-text-muted">
+              <div className="px-4 py-2 bg-[#060907]/80 border-b border-shield-border/60 flex items-center gap-2 text-xs text-shield-text-muted">
                 <div className="flex gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-500/60" />
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
                 </div>
-                <div className="flex-1 text-center truncate font-mono text-[11px] bg-[#141D18] px-3 py-0.5 rounded-md text-shield-text-secondary">
+                <div className="flex-1 text-center truncate font-mono text-[11px] bg-[#080B09]/80 px-3 py-0.5 rounded-md text-shield-text-secondary">
                   {forensics.targetUrlDefanged}
                 </div>
               </div>
@@ -164,13 +164,13 @@ export const ForensicsViewer: React.FC<ForensicsViewerProps> = ({ forensics, hos
       {/* TAB 2: DEFANGED DOM TREE */}
       {activeTab === 'dom' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-3">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-3">
             <div className="text-shield-text-primary font-bold text-sm border-b border-shield-border/40 pb-2 flex justify-between">
               <span>Sanitized DOM Snapshot (Scripts & Event Handlers Stripped)</span>
-              <span className="text-shield-accent-light">OWASP Defanged</span>
+              <span className="text-[#F3D081]">OWASP Defanged</span>
             </div>
 
-            <pre className="p-4 rounded-xl bg-[#060907] border border-shield-border/60 text-shield-text-secondary overflow-x-auto text-[11px] leading-relaxed max-h-96">
+            <pre className="p-4 rounded-xl bg-[#060907]/80 backdrop-blur-[2px] border border-shield-border/60 text-shield-text-secondary overflow-x-auto text-[11px] leading-relaxed max-h-96">
               <code>{forensics.domSnapshotDefangedHtml || `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,10 +198,10 @@ export const ForensicsViewer: React.FC<ForensicsViewerProps> = ({ forensics, hos
       {/* TAB 3: HTTP HAR TRACE */}
       {activeTab === 'har' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-4">
             <div className="text-shield-text-primary font-bold text-sm border-b border-shield-border/40 pb-2 flex justify-between">
               <span>HTTP Archive (HAR) Network Transaction Log</span>
-              <span className="text-shield-accent-light">
+              <span className="text-[#F3D081]">
                 {forensics.harTraceSummary?.totalRequests || 4} Requests Tracked
               </span>
             </div>
@@ -249,7 +249,7 @@ export const ForensicsViewer: React.FC<ForensicsViewerProps> = ({ forensics, hos
       {/* TAB 4: RAW PEM CERTIFICATE CHAIN */}
       {activeTab === 'pem' && (
         <div className="space-y-4 animate-fadeIn font-mono text-xs">
-          <div className="p-5 rounded-2xl bg-[#090E0C] border border-shield-border/80 space-y-3">
+          <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] space-y-3">
             <div className="flex items-center justify-between border-b border-shield-border/40 pb-2">
               <span className="text-shield-text-primary font-bold text-sm">
                 Raw X.509 Base64-Encoded Certificate PEM Chain
@@ -257,7 +257,7 @@ export const ForensicsViewer: React.FC<ForensicsViewerProps> = ({ forensics, hos
               <button
                 type="button"
                 onClick={handleCopyPem}
-                className="clay-button-secondary px-3 py-1 rounded-lg text-xs text-shield-accent-light hover:text-white flex items-center gap-1.5 cursor-pointer"
+                className="clay-button-secondary px-3 py-1 rounded-lg text-xs text-[#F3D081] hover:text-white flex items-center gap-1.5 cursor-pointer"
               >
                 {copiedPem ? <Check className="w-3.5 h-3.5 text-shield-success" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedPem ? 'Copied PEM Chain' : 'Copy PEM Chain'}</span>

@@ -154,7 +154,7 @@ export const SecurityFindings: React.FC<SecurityFindingsProps> = ({ findings }) 
                           <Terminal className="w-3.5 h-3.5 text-shield-accent-light" />
                           <span>Technical Evidence & Provenance</span>
                         </div>
-                        <div className="p-3 rounded-lg bg-[#0C120F] border border-shield-border/70 space-y-1.5 text-shield-text-secondary">
+                        <div className="p-3 rounded-lg bg-[#080B09]/70 backdrop-blur-[2px] border border-shield-border/70 space-y-1.5 text-shield-text-secondary">
                           {finding.evidence.map((line, idx) => (
                             <div key={idx} className="flex items-start gap-2">
                               <span className="text-shield-accent-light shrink-0">&gt;</span>

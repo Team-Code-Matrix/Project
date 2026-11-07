@@ -1,5 +1,4 @@
 import React from 'react';
-import { Shield, Lock } from 'lucide-react';
 
 interface FooterProps {
   onOpenMethodology: () => void;
@@ -19,8 +18,8 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Brand Info */}
           <div className="space-y-4 md:col-span-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-[#101713] border border-[rgba(120,135,124,0.3)]">
-                <Shield className="w-5 h-5 text-[#F3D081]" />
+              <div className="p-2 rounded-xl bg-[#101713]/80 border border-[rgba(120,135,124,0.3)] w-9 h-9 flex items-center justify-center">
+                <img src="/favicon.svg" alt="Trust Shield Logo" className="w-5 h-5 object-contain" />
               </div>
               <span className="text-lg font-black font-sans tracking-tight uppercase text-[#E9E6DC]">
                 TRUST SHIELD
@@ -30,10 +29,6 @@ export const Footer: React.FC<FooterProps> = ({
             <p className="text-xs md:text-sm text-[#B7C4B8] max-w-md leading-relaxed">
               An intelligent website trust assessment platform combining multi-model analysis across phishing detection, domain reputation, TLS certificate validation, redirect tracking, and collaborative threat intelligence.
             </p>
-
-            <div className="text-xs font-mono text-[#78877C] uppercase tracking-wider">
-              SYS_SPEC: BUILT FOR HIGH-ASSURANCE INTERNET SAFETY.
-            </div>
           </div>
 
           {/* Product & Engine Links */}
@@ -94,13 +89,11 @@ export const Footer: React.FC<FooterProps> = ({
           <div>
             © {CURRENT_YEAR} TRUST SHIELD INTELLIGENCE. ALL RIGHTS RESERVED.
           </div>
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-[#F3D081]">
-              <Lock className="w-3.5 h-3.5 text-[#F3D081]" />
-              RFC-3986 & WCAG 2.2 AA
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[rgba(120,135,124,0.4)]" />
-            <span>SWISS INTERNATIONAL BRUTALIST ARCHITECTURE</span>
+          <div className="flex items-center gap-2 text-[#78877C] font-mono text-xs">
+            <span className="w-2 h-2 rounded-full bg-[#F3D081] animate-pulse inline-block mr-0.5" />
+            <span>All Systems Operational</span>
+            <span>•</span>
+            <span>Sandboxed Analysis Engine</span>
           </div>
         </div>
       </div>

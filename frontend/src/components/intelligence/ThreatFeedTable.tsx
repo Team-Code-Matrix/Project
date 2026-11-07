@@ -72,9 +72,6 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
             <h3 className="text-xl font-bold text-shield-text-primary">
               Recent Threat Feed Telemetry
             </h3>
-            <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-amber-950/40 text-amber-300 border border-amber-600/30">
-              Sample Data
-            </span>
           </div>
           <p className="text-xs text-shield-text-secondary">
             Anonymized community reports and automated honey-sensor detections
@@ -84,16 +81,30 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
         <button
           type="button"
           onClick={onOpenReportModal}
-          className="clay-button px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold text-white flex items-center gap-2 self-start md:self-auto cursor-pointer"
+          className="px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold text-[#080B09] bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] hover:brightness-105 active:scale-[0.98] shadow-[0_4px_16px_rgba(243,208,129,0.3)] flex items-center gap-2 self-start md:self-auto cursor-pointer transition-all"
         >
-          <PlusCircle className="w-4 h-4" />
+          <PlusCircle className="w-4 h-4 text-[#080B09]" />
           <span>Report Suspicious URL</span>
         </button>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full flex items-center rounded-xl bg-[#0C120F] border border-shield-border/80 px-3 py-2 text-xs font-mono">
+      {threats.length === 0 ? (
+        <div className="py-12 text-center space-y-3">
+          <div className="w-10 h-10 rounded-xl bg-[#141D18]/70 border border-[rgba(120,135,124,0.3)] text-[#F3D081] flex items-center justify-center mx-auto">
+            <Radio className="w-5 h-5 text-[#F3D081]" />
+          </div>
+          <div className="text-sm font-mono text-[#E9E6DC]">
+            Awaiting Live Threat Feed Telemetry
+          </div>
+          <p className="text-xs text-[#B7C4B8] max-w-sm mx-auto">
+            No live threat reports currently ingested. Active incident reports and honey-sensor telemetry will stream in real time once connected.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Filter & Search Bar */}
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="relative flex-1 w-full flex items-center rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.3)] focus-within:border-[#F3D081]/60 px-3 py-2 text-xs font-mono">
           <Search className="w-4 h-4 text-shield-text-muted mr-2 shrink-0" />
           <input
             type="text"
@@ -107,7 +118,7 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value as any)}
-          className="px-3 py-2 rounded-xl bg-shield-surface border border-shield-border text-xs font-mono text-shield-text-secondary outline-none cursor-pointer"
+          className="px-3 py-2 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.3)] text-xs font-mono text-shield-text-secondary outline-none cursor-pointer focus:border-[#F3D081]/60"
         >
           <option value="all">All Categories</option>
           <option value="impersonation">Brand Impersonation</option>
@@ -143,7 +154,7 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
               filtered.map((report) => (
                 <tr
                   key={report.id}
-                  className="hover:bg-shield-surface-elevated/40 transition-colors"
+                  className="hover:bg-white/[0.04] transition-colors"
                 >
                   <td className="py-3.5 px-3 font-semibold text-shield-text-primary">
                     <div className="flex items-center gap-1.5">
@@ -161,7 +172,7 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
                     {report.category.replace('_', ' ')}
                   </td>
 
-                  <td className="py-3.5 px-3 text-shield-accent-light">
+                  <td className="py-3.5 px-3 text-[#F3D081]">
                     {report.targetBrand || '—'}
                   </td>
 
@@ -176,7 +187,7 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
                       <button
                         type="button"
                         onClick={() => onScanDomain(`https://${report.domain}${report.urlPath || ''}`)}
-                        className="clay-button-secondary px-2.5 py-1 rounded-lg text-[11px] text-shield-accent-light hover:text-white cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-mono text-[#F3D081] bg-[#141D18]/70 hover:bg-[#F3D081] hover:text-[#080B09] border border-[#F3D081]/30 transition-all cursor-pointer font-bold"
                       >
                         Inspect
                       </button>
@@ -188,6 +199,8 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
           </tbody>
         </table>
       </div>
+      </>
+      )}
     </div>
   );
 };

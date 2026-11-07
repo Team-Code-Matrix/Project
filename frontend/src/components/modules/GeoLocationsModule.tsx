@@ -18,52 +18,21 @@ export interface GeoLocationsModuleProps {
 
 export const GeoLocationsModule: React.FC<GeoLocationsModuleProps> = ({
   result,
-  extendedReport,
+  extendedReport: _extendedReport,
 }) => {
-  const isGithub = result.hostname.includes('github');
-  const isPhishing = result.hostname.includes('micros0ft') || result.hostname.includes('auth');
-
-  const geo = isGithub
-    ? {
-        ip: result.resolvedIp || '140.82.121.4',
-        country: 'United States',
-        countryCode: 'US',
-        city: 'San Francisco',
-        region: 'California (CA)',
-        postalCode: '94107',
-        coordinates: '37.7749° N, 122.4194° W',
-        asn: 'AS36459',
-        org: 'GitHub, Inc. (Microsoft Sub-Entity)',
-        isp: 'GitHub Anycast Routing Network',
-        threatScore: 0,
-      }
-    : isPhishing
-    ? {
-        ip: result.resolvedIp || '194.38.20.15',
-        country: 'Russia',
-        countryCode: 'RU',
-        city: 'Moscow',
-        region: 'Moscow Oblast',
-        postalCode: '101000',
-        coordinates: '55.7558° N, 37.6173° E',
-        asn: 'AS48282',
-        org: 'Bulletproof Hosting Solutions Ltd',
-        isp: 'Offshore Bulletproof Transit',
-        threatScore: 92,
-      }
-    : {
-        ip: result.resolvedIp || '104.21.48.12',
-        country: result.country || 'United States',
-        countryCode: 'US',
-        city: 'Ashburn',
-        region: 'Virginia (VA)',
-        postalCode: '20147',
-        coordinates: '39.0438° N, 77.4874° W',
-        asn: 'AS13335',
-        org: 'Cloudflare, Inc.',
-        isp: 'Cloudflare Global Anycast',
-        threatScore: 10,
-      };
+  const geo = {
+    ip: result.resolvedIp || 'Awaiting IP resolution',
+    country: result.country || 'Global Anycast / Pending',
+    countryCode: result.country ? result.country.slice(0, 2).toUpperCase() : '—',
+    city: 'Edge POP Location',
+    region: 'Anycast Network Edge',
+    postalCode: '—',
+    coordinates: 'Routing Coordinate Dependent',
+    asn: result.asn || 'Pending ASN Resolution',
+    org: result.asn || 'Authoritative Network Provider',
+    isp: 'Anycast Transit Provider',
+    threatScore: result.score !== null ? 100 - result.score : 0,
+  };
 
   return (
     <div className="space-y-6 text-left">
@@ -104,32 +73,32 @@ export const GeoLocationsModule: React.FC<GeoLocationsModuleProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Host IP Address:</span>
             <span className="font-bold text-shield-text-primary">{geo.ip}</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Geographic Coordinates:</span>
             <span className="text-shield-text-primary">{geo.coordinates}</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Hosting Carrier (ISP):</span>
-            <span className="font-bold text-shield-accent-light truncate max-w-[200px]">{geo.isp}</span>
+            <span className="font-bold text-[#F3D081] truncate max-w-[200px]">{geo.isp}</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Registered ASN Entity:</span>
             <span className="text-shield-text-primary truncate max-w-[200px]">{geo.org}</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">City & Metro Region:</span>
             <span className="text-shield-text-primary">{geo.city}, {geo.region}</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Postal / Zip Code:</span>
             <span className="text-shield-text-primary">{geo.postalCode}</span>
           </div>

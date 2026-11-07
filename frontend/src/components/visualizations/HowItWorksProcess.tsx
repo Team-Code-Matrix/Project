@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send, Cpu, GitMerge, Award, AlertCircle } from 'lucide-react';
+import { Send, Cpu, GitMerge, Award } from 'lucide-react';
 
 export const HowItWorksProcess: React.FC = () => {
   const steps = [
@@ -22,7 +22,7 @@ export const HowItWorksProcess: React.FC = () => {
     {
       step: '03',
       title: 'Signal Correlation',
-      subtitle: 'Bayesian Fusion',
+      subtitle: 'Cross-Model Correlation',
       description:
         'Discrepancies are surfaced rather than smoothed away. If a domain possesses a valid SSL cert but triggers a brand-spoofing alert, malicious flags take priority.',
       icon: GitMerge,
@@ -41,7 +41,7 @@ export const HowItWorksProcess: React.FC = () => {
     <section id="how-it-works" className="py-20 px-4 max-w-7xl mx-auto w-full text-left">
       <div className="flex flex-col items-start mb-16 border-b border-[rgba(120,135,124,0.25)] pb-8">
         <div className="inline-flex items-center gap-2 text-xs font-mono text-[#F3D081] mb-3 uppercase tracking-widest">
-          <span>03 // PIPELINE WORKFLOW SPECIFICATION</span>
+          <span>ASSESSMENT PIPELINE</span>
         </div>
         <h2 className="swiss-display text-3xl sm:text-4xl md:text-5xl font-black text-[#E9E6DC] mb-4">
           HOW TRUST SHIELD ASSESSES RISK.
@@ -58,15 +58,15 @@ export const HowItWorksProcess: React.FC = () => {
           return (
             <div
               key={item.step}
-              className="rounded-2xl p-6 relative flex flex-col justify-between bg-[#101713]/90 border border-[rgba(120,135,124,0.3)] hover:border-[#F3D081]/50 transition-all shadow-[0_15px_35px_rgba(0,0,0,0.5)] group"
+              className="rounded-2xl p-6 relative flex flex-col justify-between bg-gradient-to-br from-white/[0.04] via-[#101713]/40 to-[#080B09]/45 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] hover:border-[#F3D081]/50 transition-all duration-300 shadow-[0_20px_45px_-10px_rgba(0,0,0,0.55),inset_0_1px_1px_0_rgba(233,230,220,0.18),inset_0_-1px_1px_0_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-10px_rgba(0,0,0,0.7),inset_0_1px_2px_0_rgba(243,208,129,0.3)] group"
             >
               <div>
                 {/* Step header */}
                 <div className="flex items-center justify-between mb-5">
-                  <span className="font-mono text-xs font-bold px-2.5 py-1 rounded bg-[#080B09] text-[#F3D081] border border-[rgba(120,135,124,0.3)] tracking-wider">
-                    PHASE // {item.step}
+                  <span className="font-mono text-xs font-bold px-2.5 py-1 rounded bg-[#080B09]/60 backdrop-blur-[2px] text-[#F3D081] border border-[rgba(120,135,124,0.3)] tracking-wider">
+                    STEP {item.step}
                   </span>
-                  <div className="p-2 rounded-xl bg-[#141D18] border border-[rgba(120,135,124,0.3)] text-[#F3D081] group-hover:scale-110 transition-transform">
+                  <div className="p-2 rounded-xl bg-[#141D18]/60 backdrop-blur-[2px] border border-[rgba(120,135,124,0.3)] text-[#F3D081] group-hover:scale-110 transition-transform">
                     <Icon className="w-5 h-5" />
                   </div>
                 </div>
@@ -81,22 +81,9 @@ export const HowItWorksProcess: React.FC = () => {
                   {item.description}
                 </p>
               </div>
-
-              <div className="mt-6 pt-4 border-t border-[rgba(120,135,124,0.25)] flex items-center justify-between text-xs font-mono text-[#78877C]">
-                <span>STAGE {index + 1} OF 4</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#F3D081]" />
-              </div>
             </div>
           );
         })}
-      </div>
-
-      {/* Transparency Callout */}
-      <div className="mt-10 p-5 rounded-xl bg-[#101713]/85 border border-[rgba(120,135,124,0.3)] flex items-start gap-3.5 max-w-4xl">
-        <AlertCircle className="w-5 h-5 text-[#F3D081] shrink-0 mt-0.5" />
-        <div className="text-xs md:text-sm text-[#B7C4B8] leading-relaxed font-mono">
-          <strong className="text-[#E9E6DC] font-bold uppercase tracking-wider">Methodology Note:</strong> Individual models operate autonomously and may disagree. An overall score represents observed risk in performed checks and is not an absolute guarantee of safety. Critical indicators override numerical scores.
-        </div>
       </div>
     </section>
   );

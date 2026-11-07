@@ -1,111 +1,19 @@
-import { ThreatReport, ThreatFeedMetrics } from '../types/threatIntel';
+import type { ThreatReport, ThreatFeedMetrics } from '../types/threatIntel';
 
-export const INITIAL_THREAT_FEED: ThreatReport[] = [
-  {
-    id: 'tr-9941',
-    domain: 'login.micros0ft-support-auth.com',
-    urlPath: '/verify',
-    category: 'impersonation',
-    reportedAt: '12 minutes ago',
-    status: 'verified',
-    confidenceScore: 99,
-    reporterType: 'automated_sensor',
-    corroborationCount: 28,
-    targetBrand: 'Microsoft 365',
-    indicators: ['Typosquatted domain', 'Clone of Entra ID login', 'Telegram credential dump'],
-  },
-  {
-    id: 'tr-9940',
-    domain: 'metamask-restore-seed-vault.io',
-    urlPath: '/recovery',
-    category: 'crypto_drainer',
-    reportedAt: '28 minutes ago',
-    status: 'verified',
-    confidenceScore: 98,
-    reporterType: 'community',
-    corroborationCount: 42,
-    targetBrand: 'MetaMask',
-    indicators: ['Mnemonic seed phrase intake', 'Unverified smart contract approval'],
-  },
-  {
-    id: 'tr-9939',
-    domain: 'paypa1-account-resolution-center.net',
-    urlPath: '/dispute/case-902',
-    category: 'credential_harvesting',
-    reportedAt: '45 minutes ago',
-    status: 'investigating',
-    confidenceScore: 94,
-    reporterType: 'partner_feed',
-    corroborationCount: 15,
-    targetBrand: 'PayPal',
-    indicators: ['Typosquatting "1" for "l"', 'Credit card number intake', 'Newly registered'],
-  },
-  {
-    id: 'tr-9938',
-    domain: 'usps-tracking-package-redelivery.org',
-    urlPath: '/track/redelivery-fee',
-    category: 'scam',
-    reportedAt: '1 hour ago',
-    status: 'verified',
-    confidenceScore: 96,
-    reporterType: 'community',
-    corroborationCount: 67,
-    targetBrand: 'USPS',
-    indicators: ['Smishing delivery vector', '$1.99 redelivery fee lure', 'Stripe token thief'],
-  },
-  {
-    id: 'tr-9937',
-    domain: 'apple-id-security-lockout-notice.com',
-    urlPath: '/auth/unlock',
-    category: 'phishing',
-    reportedAt: '2 hours ago',
-    status: 'mitigated',
-    confidenceScore: 97,
-    reporterType: 'automated_sensor',
-    corroborationCount: 84,
-    targetBrand: 'Apple',
-    indicators: ['DNS registrar suspension active', 'PhishTank listed', 'Two-factor hijack'],
-  },
-  {
-    id: 'tr-9936',
-    domain: 'update-chrome-browser-security.icu',
-    urlPath: '/download/patch.exe',
-    category: 'malware_distribution',
-    reportedAt: '3 hours ago',
-    status: 'verified',
-    confidenceScore: 99,
-    reporterType: 'partner_feed',
-    corroborationCount: 31,
-    targetBrand: 'Google Chrome',
-    indicators: ['Trojan dropper payload', 'Fake browser update banner', 'Executable download'],
-  },
-  {
-    id: 'tr-9935',
-    domain: 'netflix-billing-renewal-failed.cc',
-    urlPath: '/update-card',
-    category: 'phishing',
-    reportedAt: '4 hours ago',
-    status: 'investigating',
-    confidenceScore: 91,
-    reporterType: 'community',
-    corroborationCount: 19,
-    targetBrand: 'Netflix',
-    indicators: ['Payment form mimicry', 'High-abuse TLD .cc', 'No TLS certificate'],
-  },
-];
+/**
+ * Initial threat feed telemetry state.
+ * Empty by default — populated dynamically by backend threat intelligence feeds.
+ */
+export const INITIAL_THREAT_FEED: ThreatReport[] = [];
 
+/**
+ * Initial threat feed metrics state.
+ * Empty / zeroed by default — populated dynamically by backend telemetry sensors.
+ */
 export const THREAT_FEED_METRICS: ThreatFeedMetrics = {
-  totalThreatsMonitored: 84920,
-  activeCampaigns24h: 314,
-  verifiedMaliciousDomains: 1845,
-  communityReportsToday: 628,
-  categoryBreakdown: [
-    { category: 'phishing', name: 'Phishing Portals', count: 780, percentage: 42 },
-    { category: 'impersonation', name: 'Brand Impersonation', count: 412, percentage: 22 },
-    { category: 'credential_harvesting', name: 'Credential Harvesting', count: 320, percentage: 17 },
-    { category: 'crypto_drainer', name: 'Crypto Drainers', count: 185, percentage: 10 },
-    { category: 'scam', name: 'Delivery / Fee Scams', count: 95, percentage: 5 },
-    { category: 'malware_distribution', name: 'Malware Droppers', count: 53, percentage: 4 },
-  ],
+  totalThreatsMonitored: 0,
+  activeCampaigns24h: 0,
+  verifiedMaliciousDomains: 0,
+  communityReportsToday: 0,
+  categoryBreakdown: [],
 };
-

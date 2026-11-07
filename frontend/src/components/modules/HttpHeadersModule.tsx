@@ -27,27 +27,27 @@ export const HttpHeadersModule: React.FC<HttpHeadersModuleProps> = ({
   const headers = extendedReport?.webSecurityAudit.httpHeaders;
 
   const csp = headers?.csp || {
-    present: true,
-    directivesCount: 14,
+    present: false,
+    directivesCount: 0,
     unsafeInline: false,
     unsafeEval: false,
     wildcardOrigins: false,
-    grade: 'A+' as const,
-    rawHeader: "default-src 'none'; base-uri 'self'; connect-src 'self' https://api.github.com; font-src 'self' data:; form-action 'self' github.com; frame-ancestors 'none'; img-src 'self' data: https:; script-src 'self' 'nonce-...' https://github.githubassets.com; style-src 'self' 'unsafe-inline' https://github.githubassets.com;",
+    grade: 'F' as const,
+    rawHeader: 'No Content-Security-Policy header returned by target host.',
   };
 
   const hsts = headers?.hsts || {
-    present: true,
-    maxAgeSeconds: 31536000,
-    includeSubdomains: true,
-    preloaded: true,
-    grade: 'EXCELLENT' as const,
+    present: false,
+    maxAgeSeconds: 0,
+    includeSubdomains: false,
+    preloaded: false,
+    grade: 'DEFICIENT' as const,
   };
 
-  const xFrame = headers?.xFrameOptions || 'DENY';
-  const xContentType = headers?.xContentTypeOptionsNosniff ?? true;
-  const referrerPolicy = headers?.referrerPolicy || 'strict-origin-when-cross-origin';
-  const permissionsPolicy = headers?.permissionsPolicy || 'geolocation=(), microphone=(), camera=()';
+  const xFrame = headers?.xFrameOptions || 'MISSING';
+  const xContentType = headers?.xContentTypeOptionsNosniff ?? false;
+  const referrerPolicy = headers?.referrerPolicy || 'Not Set';
+  const permissionsPolicy = headers?.permissionsPolicy || 'Not Set';
 
   const handleCopy = async (text: string, id: string) => {
     try {
@@ -152,7 +152,7 @@ export const HttpHeadersModule: React.FC<HttpHeadersModuleProps> = ({
           {defensiveHeaders.map((hdr) => (
             <div
               key={hdr.name}
-              className="p-5 rounded-2xl bg-[#0D1410] border border-shield-border/60 space-y-3 text-left"
+              className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 space-y-3 text-left transition-all"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">

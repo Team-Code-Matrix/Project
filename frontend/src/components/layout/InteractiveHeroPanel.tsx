@@ -172,6 +172,7 @@ export const InteractiveHeroPanel: React.FC = () => {
       */}
       <div
         ref={panelRef}
+        id="hero-interactive-panel"
         className="w-full max-w-[860px] mb-6 text-left rounded-2xl relative select-none animate-hero-entrance"
         style={{
           transformStyle: 'preserve-3d',
@@ -205,24 +206,34 @@ export const InteractiveHeroPanel: React.FC = () => {
             className="absolute inset-0 pointer-events-none transition-opacity duration-500 opacity-0 z-0"
           />
 
-          {/* Technical Blueprint Header Metadata Row */}
-          <div className="px-4 sm:px-5 py-2 sm:py-2.5 border-b border-[rgba(120,135,124,0.2)] flex flex-wrap items-center justify-between gap-2.5 text-xs font-mono text-[#78877C] bg-[#101713]/40 relative z-10">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <span className="w-2 h-2 rounded-full bg-[#F3D081] shadow-[0_0_8px_#F3D081] animate-pulse" />
-              <span className="text-[#E9E6DC] font-bold tracking-wider text-[11px] uppercase">
-                SYS_SPEC: RFC-3986 // TS-2026-INGESTION
-              </span>
-              <span className="hidden md:inline text-[10px] text-[#78877C]">|</span>
-              <span className="hidden md:inline text-[10px] text-[#B7C4B8] tracking-widest uppercase">
-                CYBERSECURITY & WEB REPUTATION ENGINE
-              </span>
+          {/* macOS Minimalist Window Header Row */}
+          <div className="px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[rgba(120,135,124,0.2)] flex items-center justify-between gap-3 bg-[#101713]/40 relative z-10">
+            {/* macOS 3 Window Control Dots */}
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FF5F56] shadow-[0_0_6px_rgba(255,95,86,0.35)] transition-transform hover:scale-110" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E] shadow-[0_0_6px_rgba(255,189,46,0.35)] transition-transform hover:scale-110" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#27C93F] shadow-[0_0_6px_rgba(39,201,63,0.35)] transition-transform hover:scale-110" />
             </div>
-            <div className="flex items-center gap-3 text-[10px] font-mono tracking-wider">
-              <span className="text-[#B7C4B8]">
-                COORDS: <strong className="text-[#E9E6DC]">37.7749° N, 122.4194° W</strong>
-              </span>
-              <span className="text-[#F3D081] bg-[#141D18]/70 px-2 py-0.5 rounded border border-[#F3D081]/30 font-bold uppercase">
-                06 ENGINES ACTIVE
+
+            {/* Engine Status Tag */}
+            <div className="flex items-center">
+              <span
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-[6px] font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#2dd4bf] transition-all"
+                style={{
+                  backgroundColor: 'rgba(4, 31, 24, 0.85)',
+                  border: '1px solid rgba(16, 185, 129, 0.38)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  boxShadow: '0 0 18px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(52, 211, 153, 0.15)',
+                }}
+              >
+                <span
+                  className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse shrink-0"
+                  style={{
+                    boxShadow: '0 0 8px #10b981',
+                  }}
+                />
+                <span>6 THREAT ENGINES ONLINE</span>
               </span>
             </div>
           </div>
@@ -230,23 +241,15 @@ export const InteractiveHeroPanel: React.FC = () => {
           {/* Main Grotesque Typography Block (Refined compact padding: ~10% reduction) */}
           <div className="p-4 sm:p-6 md:p-7 md:py-6 relative overflow-hidden z-10">
             <div className="space-y-1 max-w-4xl animate-hero-content">
-              {/* Small-caps utilitarian section stamp */}
-              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.15em] text-[#78877C] mb-2">
-                <span className="px-1.5 py-0.5 rounded bg-[#141D18]/80 border border-[rgba(120,135,124,0.3)] text-[#F3D081] font-bold">
-                  01 // THREAT DIRECTIVE
-                </span>
-                <span>MULTI-MODEL HEURISTIC MATRIX</span>
-              </div>
-
               {/* Massive Grotesque Display Heading: 2 Rigid Lines, Tight Kerning & Leading */}
               <h1 className="swiss-hero-title">
                 <span className="block text-[#E9E6DC] tracking-[-0.045em] sm:whitespace-nowrap">
                   NOT EVERY LINK
                 </span>
-                <div className="flex items-baseline gap-2.5 sm:gap-4 mt-0.5 sm:whitespace-nowrap flex-wrap sm:flex-nowrap">
-                  <span className="text-[#E9E6DC] tracking-[-0.045em]">DESERVES</span>
+                <div className="whitespace-nowrap flex items-baseline gap-2.5 sm:gap-4 mt-0.5">
+                  <span className="text-[#E9E6DC] tracking-[-0.045em] shrink-0">DESERVES</span>
                   <span
-                    className="relative tracking-[-0.045em] inline-block font-extrabold select-none"
+                    className="relative inline-block tracking-[-0.045em] font-extrabold border-b-2 sm:border-b-4 border-[#d4af37]"
                     style={{
                       backgroundImage:
                         'linear-gradient(135deg, #D9B66F 0%, #F6D995 30%, #FFF0C2 52%, #D9B66F 72%, #C99B49 100%)',
@@ -256,41 +259,16 @@ export const InteractiveHeroPanel: React.FC = () => {
                     }}
                   >
                     YOUR TRUST.
-                    <span
-                      aria-hidden="true"
-                      className="absolute -bottom-1 left-0 right-0 h-[2.5px] md:h-[3px] rounded-full"
-                      style={{
-                        background:
-                          'linear-gradient(90deg, #D9B66F 0%, #F6D995 35%, #FFF0C2 55%, #C99B49 100%)',
-                        boxShadow: '0 1px 8px rgba(217, 182, 111, 0.28)',
-                      }}
-                    />
                   </span>
                 </div>
               </h1>
             </div>
 
-            {/* Subtitle & Structural Metadata Grid (Compact vertical spacing, ~10% reduction) */}
-            <div className="mt-5 pt-4 border-t border-[rgba(120,135,124,0.2)] grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-5 items-start animate-hero-meta">
-              <div className="md:col-span-8">
-                <p className="text-xs sm:text-sm md:text-[15px] text-[#B7C4B8] font-normal leading-relaxed tracking-normal max-w-xl">
-                  Go beyond the lock icon. Analyse websites through multiple security intelligence models and understand the risks before you interact.
-                </p>
-              </div>
-              <div className="md:col-span-4 flex flex-col gap-1.5 font-mono text-[11px] text-[#78877C] md:border-l md:border-[rgba(120,135,124,0.2)] md:pl-4">
-                <div className="flex items-center justify-between">
-                  <span className="uppercase tracking-wider text-[10px]">ANALYSIS LATENCY:</span>
-                  <span className="text-[#F3D081] font-bold">&lt; 1400ms</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="uppercase tracking-wider text-[10px]">INSPECTION MODE:</span>
-                  <span className="text-[#E9E6DC]">PASSIVE AIR-GAP</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="uppercase tracking-wider text-[10px]">VETO OVERRIDE:</span>
-                  <span className="text-rose-400 font-bold">ZERO TOLERANCE</span>
-                </div>
-              </div>
+            {/* Subtitle */}
+            <div className="mt-5 pt-4 border-t border-[rgba(120,135,124,0.2)] animate-hero-meta">
+              <p className="text-xs sm:text-sm md:text-base text-[#B7C4B8] font-normal leading-relaxed tracking-normal max-w-2xl">
+                Go beyond the lock icon. Analyse websites through multiple security intelligence models and understand the risks before you interact.
+              </p>
             </div>
           </div>
         </div>

@@ -19,19 +19,18 @@ export interface FormsCredentialsModuleProps {
 }
 
 export const FormsCredentialsModule: React.FC<FormsCredentialsModuleProps> = ({
-  result,
+  result: _result,
   extendedReport,
 }) => {
   const dom = extendedReport?.phishingDetonation.domHeuristics;
-  const isPhishing = result.hostname.includes('micros0ft') || result.hostname.includes('auth');
 
-  const passwordFields = dom?.passwordInputsCount || (isPhishing ? 2 : 0);
-  const paymentFields = dom?.paymentFieldsCount || 0;
-  const otpFields = dom?.otpFieldsCount || (isPhishing ? 1 : 0);
-  const bitbDetected = dom?.browserInTheBrowserDetected || isPhishing;
-  const hiddenIframes = dom?.hiddenIframesCount || (isPhishing ? 1 : 0);
-  const devToolsBlocker = dom?.devToolsBlockerDetected || isPhishing;
-  const crossOriginTarget = dom?.crossOriginSubmissionTarget || (isPhishing ? 'https://exfil-c2-collector.ru/drop.php' : undefined);
+  const passwordFields = dom?.passwordInputsCount ?? 0;
+  const paymentFields = dom?.paymentFieldsCount ?? 0;
+  const otpFields = dom?.otpFieldsCount ?? 0;
+  const bitbDetected = dom?.browserInTheBrowserDetected ?? false;
+  const hiddenIframes = dom?.hiddenIframesCount ?? 0;
+  const devToolsBlocker = dom?.devToolsBlockerDetected ?? false;
+  const crossOriginTarget = dom?.crossOriginSubmissionTarget;
 
   return (
     <div className="space-y-6 text-left">
@@ -39,11 +38,11 @@ export const FormsCredentialsModule: React.FC<FormsCredentialsModuleProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">Password Inputs</div>
-          <div className={`text-2xl font-black ${isPhishing ? 'text-rose-400' : 'text-shield-text-primary'}`}>
+          <div className={`text-2xl font-black ${passwordFields > 0 ? 'text-amber-400' : 'text-shield-text-primary'}`}>
             {passwordFields} Fields
           </div>
           <div className="text-[11px] font-mono text-shield-text-muted mt-1">
-            {isPhishing ? 'Exposed on unverified origin' : 'No credential form on root'}
+            {passwordFields > 0 ? 'Authentication inputs identified' : 'No credential inputs detected'}
           </div>
         </div>
 
@@ -102,7 +101,7 @@ export const FormsCredentialsModule: React.FC<FormsCredentialsModuleProps> = ({
         </div>
 
         <div className="space-y-3 font-mono text-xs">
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <div className="space-y-0.5">
               <span className="font-bold text-shield-text-primary">OTP / Multi-Factor Auth Harvester:</span>
               <p className="text-[11px] text-shield-text-muted">Probes whether page intercepts TOTP or SMS verification codes</p>
@@ -112,7 +111,7 @@ export const FormsCredentialsModule: React.FC<FormsCredentialsModuleProps> = ({
             </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <div className="space-y-0.5">
               <span className="font-bold text-shield-text-primary">Browser-in-the-Browser (BitB) Cloak:</span>
               <p className="text-[11px] text-shield-text-muted">Checks for canvas or CSS-simulated OS window bars imitating Google/Microsoft OAuth</p>
@@ -122,7 +121,7 @@ export const FormsCredentialsModule: React.FC<FormsCredentialsModuleProps> = ({
             </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <div className="space-y-0.5">
               <span className="font-bold text-shield-text-primary">Anti-Analysis DevTools Blocker:</span>
               <p className="text-[11px] text-shield-text-muted">Detects infinite debugger loops or resize listeners disabling F12 developer console</p>
@@ -132,7 +131,7 @@ export const FormsCredentialsModule: React.FC<FormsCredentialsModuleProps> = ({
             </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <div className="space-y-0.5">
               <span className="font-bold text-shield-text-primary">Hidden IFrames & Clickjack Overlays:</span>
               <p className="text-[11px] text-shield-text-muted">Screens for 0-opacity or off-screen iframes intercepting mouse clicks</p>

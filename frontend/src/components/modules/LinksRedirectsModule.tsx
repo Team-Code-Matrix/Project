@@ -21,9 +21,6 @@ export const LinksRedirectsModule: React.FC<LinksRedirectsModuleProps> = ({
   result,
   extendedReport,
 }) => {
-  const isShortener = result.hostname.includes('bit.ly');
-  const isPhishing = result.hostname.includes('micros0ft') || result.hostname.includes('auth');
-
   // Traversal chain
   const redirectChain = extendedReport?.phishingDetonation.redirectChain || [
     {
@@ -31,13 +28,12 @@ export const LinksRedirectsModule: React.FC<LinksRedirectsModuleProps> = ({
       url: result.submittedUrl,
       type: 'Direct' as const,
       statusCode: 200,
-      destinationIp: result.resolvedIp || '140.82.121.4',
-      asn: 'AS36459',
+      destinationIp: result.resolvedIp || 'Pending IP',
+      asn: result.asn || 'Pending ASN',
     },
   ];
 
-  const internalLinks = isShortener ? 0 : 42;
-  const externalLinks = isShortener ? 1 : 12;
+  const hasMultipleHops = redirectChain.length > 1;
 
   return (
     <div className="space-y-6 text-left">
@@ -55,20 +51,20 @@ export const LinksRedirectsModule: React.FC<LinksRedirectsModuleProps> = ({
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">Internal Site Links</div>
-          <div className="text-2xl font-black text-emerald-400">{internalLinks} Links</div>
-          <div className="text-[11px] font-mono text-shield-text-muted mt-1">Same-origin anchors</div>
+          <div className="text-2xl font-black text-shield-text-primary">Direct</div>
+          <div className="text-[11px] font-mono text-shield-text-muted mt-1">Single landing origin</div>
         </div>
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">Outbound External Links</div>
-          <div className="text-2xl font-black text-shield-text-primary">{externalLinks} Outbound</div>
-          <div className="text-[11px] font-mono text-shield-text-muted mt-1">Third-party references</div>
+          <div className="text-2xl font-black text-shield-text-primary">Inspected</div>
+          <div className="text-[11px] font-mono text-shield-text-muted mt-1">Destination validation</div>
         </div>
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
-          <div className="text-xs font-mono text-shield-text-muted mb-1">Domain Mismatch Alert</div>
-          <div className={`text-2xl font-black ${isShortener || isPhishing ? 'text-amber-400' : 'text-emerald-400'}`}>
-            {isShortener ? 'SHORTENER' : isPhishing ? 'CLOAKED' : 'ALIGNED'}
+          <div className="text-xs font-mono text-shield-text-muted mb-1">Domain Alignment</div>
+          <div className={`text-2xl font-black ${hasMultipleHops ? 'text-amber-400' : 'text-emerald-400'}`}>
+            {hasMultipleHops ? 'REDIRECTED' : 'ALIGNED'}
           </div>
           <div className="text-[11px] font-mono text-shield-text-muted mt-1">
             Submitted vs Landing domain
@@ -87,7 +83,7 @@ export const LinksRedirectsModule: React.FC<LinksRedirectsModuleProps> = ({
           {redirectChain.map((hop, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-2xl bg-[#0D1410] border border-shield-border/60 space-y-2 text-xs font-mono"
+              className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all space-y-2 text-xs font-mono"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">

@@ -126,7 +126,7 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
             </button>
 
             {isExpanded && (
-              <div className="mt-2.5 p-3 rounded-xl bg-[#090E0C] border border-shield-border/70 font-mono text-[11px] text-shield-text-secondary space-y-1.5 animate-fadeIn">
+              <div className="mt-2.5 p-3 rounded-xl bg-[#080B09]/70 backdrop-blur-[2px] border border-shield-border/70 font-mono text-[11px] text-shield-text-secondary space-y-1.5 animate-fadeIn">
                 {model.evidence.map((line, idx) => (
                   <div key={idx} className="flex items-start gap-2">
                     <span className="text-shield-accent-light shrink-0">&gt;</span>

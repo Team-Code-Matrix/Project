@@ -19,86 +19,27 @@ export interface TechDetectionModuleProps {
 }
 
 export const TechDetectionModule: React.FC<TechDetectionModuleProps> = ({
-  result,
+  result: _result,
   extendedReport,
 }) => {
-  const domain = result.hostname;
-  const isGithub = domain.includes('github');
-  const isPhishing = domain.includes('micros0ft') || domain.includes('auth');
+  const passive = extendedReport?.webSecurityAudit.passiveExposure;
+  const tls = extendedReport?.webSecurityAudit.tlsFingerprints;
+
+  const serverItems = [
+    ...(passive?.serverBanner ? [{ name: passive.serverBanner, version: 'Detected', confidence: 100, category: 'Web Server' }] : []),
+    ...(passive?.xPoweredBy ? [{ name: passive.xPoweredBy, version: 'Detected', confidence: 100, category: 'Runtime' }] : []),
+  ];
+
+  const tlsItems = [
+    ...(tls?.ja4sHash ? [{ name: 'JA4+ TLS Fingerprint', version: tls.ja4sHash, confidence: 100, category: 'Cryptographic Hash' }] : []),
+    ...(tls?.negotiatedCipher ? [{ name: 'Negotiated Cipher', version: tls.negotiatedCipher, confidence: 100, category: 'Cipher Spec' }] : []),
+    ...(tls?.negotiatedProtocol ? [{ name: 'Negotiated TLS Protocol', version: tls.negotiatedProtocol, confidence: 100, category: 'Protocol' }] : []),
+  ];
 
   // Technology Stack Categories
   const techStack = [
-    {
-      category: 'Web Server & Gateway',
-      icon: Server,
-      items: isGithub
-        ? [
-            { name: 'GitHub Unicorn / Envoy', version: '2.4.1', confidence: 99, category: 'Reverse Proxy' },
-            { name: 'HTTP/2 & HTTP/3 (QUIC)', version: 'Enabled', confidence: 100, category: 'Protocol' },
-          ]
-        : isPhishing
-        ? [
-            { name: 'Nginx', version: '1.18.0 (Ubuntu)', confidence: 95, category: 'Web Server' },
-            { name: 'PHP Built-in Server', version: '8.1.2', confidence: 90, category: 'Phishing Kit Backend' },
-          ]
-        : [
-            { name: 'Cloudflare Edge Gateway', version: '2026.3', confidence: 100, category: 'CDN / Proxy' },
-          ],
-    },
-    {
-      category: 'Frontend & UI Frameworks',
-      icon: Layers,
-      items: isGithub
-        ? [
-            { name: 'React', version: '18.3.1', confidence: 98, category: 'UI Library' },
-            { name: 'Primer CSS / Primer ViewComponents', version: 'v36.0', confidence: 95, category: 'Design System' },
-            { name: 'Turbo / Stimulus', version: 'Hotwire', confidence: 90, category: 'Micro-Framework' },
-          ]
-        : isPhishing
-        ? [
-            { name: 'Bootstrap', version: '4.5.2', confidence: 88, category: 'CSS Framework' },
-            { name: 'jQuery', version: '3.5.1', confidence: 92, category: 'Legacy Library' },
-          ]
-        : [
-            { name: 'Next.js', version: '14.2', confidence: 94, category: 'React Framework' },
-          ],
-    },
-    {
-      category: 'CDN, Edge & DDoS Protection',
-      icon: Globe2,
-      items: isGithub
-        ? [
-            { name: 'Fastly Edge Cloud', version: 'Varnish / VCL', confidence: 95, category: 'Edge CDN' },
-            { name: 'AWS CloudFront Anycast', version: 'Global', confidence: 90, category: 'Media Distribution' },
-          ]
-        : [
-            { name: 'Cloudflare DDoS Shield', version: 'Active', confidence: 98, category: 'WAF / Anycast' },
-          ],
-    },
-    {
-      category: 'Cryptographic Fingerprints & TLS Stack',
-      icon: Fingerprint,
-      items: [
-        {
-          name: 'JA4+ TLS Fingerprint',
-          version: extendedReport?.webSecurityAudit.tlsFingerprints.ja4sHash || 't13d1516h2_8daaf6152771_48346e0895c3',
-          confidence: 100,
-          category: 'Cryptographic Hash',
-        },
-        {
-          name: 'Negotiated Cipher Suite',
-          version: extendedReport?.webSecurityAudit.tlsFingerprints.negotiatedCipher || 'TLS_AES_128_GCM_SHA256 (256-bit)',
-          confidence: 100,
-          category: 'Cipher Spec',
-        },
-        {
-          name: 'Negotiated TLS Protocol',
-          version: extendedReport?.webSecurityAudit.tlsFingerprints.negotiatedProtocol || 'TLS 1.3',
-          confidence: 100,
-          category: 'Protocol',
-        },
-      ],
-    },
+    ...(serverItems.length > 0 ? [{ category: 'Web Server & Gateway', icon: Server, items: serverItems }] : []),
+    ...(tlsItems.length > 0 ? [{ category: 'Cryptographic Fingerprints & TLS Stack', icon: Fingerprint, items: tlsItems }] : []),
   ];
 
   // Matched CVEs
@@ -165,7 +106,7 @@ export const TechDetectionModule: React.FC<TechDetectionModuleProps> = ({
                 {cat.items.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between text-xs font-mono"
+                    className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-shield-border/60 hover:border-[#F3D081]/30 transition-all flex items-center justify-between text-xs font-mono"
                   >
                     <div>
                       <div className="font-bold text-shield-text-primary flex items-center gap-2">
@@ -178,7 +119,7 @@ export const TechDetectionModule: React.FC<TechDetectionModuleProps> = ({
                         {item.version}
                       </div>
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-500/30">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#2A2111]/80 text-[#F3D081] border border-[#F3D081]/30">
                       {item.confidence}% Match
                     </span>
                   </div>
@@ -203,7 +144,7 @@ export const TechDetectionModule: React.FC<TechDetectionModuleProps> = ({
             {cves.map((cve) => (
               <div
                 key={cve.cveId}
-                className="p-4 rounded-2xl bg-[#0D1410] border border-rose-500/30 space-y-1.5 text-xs font-mono"
+                className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-rose-500/30 space-y-1.5 text-xs font-mono"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-rose-300">{cve.cveId}</span>

@@ -45,9 +45,9 @@ export const SecurityReportsModule: React.FC<SecurityReportsModuleProps> = ({
   return (
     <div className="space-y-6 text-left">
       {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0D1410] border border-shield-border/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] hover:border-[#F3D081]/40 transition-all">
         <div>
-          <span className="text-xs font-mono text-shield-accent-light uppercase tracking-wider">
+          <span className="text-xs font-mono text-[#F3D081] uppercase tracking-wider">
             Consolidated Security Report
           </span>
           <h2 className="text-lg md:text-xl font-bold text-shield-text-primary">
@@ -109,7 +109,7 @@ export const SecurityReportsModule: React.FC<SecurityReportsModuleProps> = ({
           {result.findings.map((f) => (
             <div
               key={f.id}
-              className="p-4 rounded-2xl bg-[#0D1410] border border-shield-border/60 space-y-2"
+              className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-shield-border/60 hover:border-[#F3D081]/30 transition-all space-y-2"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <span className="font-bold text-sm text-shield-text-primary">{f.title}</span>
@@ -122,7 +122,7 @@ export const SecurityReportsModule: React.FC<SecurityReportsModuleProps> = ({
               </div>
               <p className="text-xs text-shield-text-secondary leading-relaxed">{f.description}</p>
               {f.recommendation && (
-                <div className="p-2.5 rounded-xl bg-shield-surface text-[11px] text-shield-accent-light border border-shield-border/40">
+                <div className="p-2.5 rounded-xl bg-shield-surface text-[11px] text-[#F3D081] border border-shield-border/40">
                   Recommendation: {f.recommendation}
                 </div>
               )}
@@ -136,8 +136,8 @@ export const SecurityReportsModule: React.FC<SecurityReportsModuleProps> = ({
         <h3 className="text-base font-bold text-shield-text-primary">Recommended Protective Actions</h3>
         <div className="space-y-2 font-mono text-xs">
           {result.recommendedActions.map((act, i) => (
-            <div key={i} className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/50 flex items-start gap-2.5">
-              <span className="text-emerald-400 font-bold shrink-0 mt-0.5">#{i + 1}</span>
+            <div key={i} className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-shield-border/50 flex items-start gap-2.5">
+              <span className="text-[#F3D081] font-bold shrink-0 mt-0.5">#{i + 1}</span>
               <span className="text-shield-text-secondary">
                 <strong className="text-shield-text-primary">{act.title}:</strong> {act.detail}
               </span>

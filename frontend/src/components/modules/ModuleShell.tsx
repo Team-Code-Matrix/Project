@@ -4,7 +4,6 @@ import {
   Shield,
   Search,
   Globe,
-  Sparkles,
   ClipboardPaste,
   AlertTriangle,
   RefreshCw,
@@ -45,33 +44,6 @@ export const ModuleShell: React.FC<ModuleShellProps> = ({
 }) => {
   const [quickInput, setQuickInput] = useState('');
 
-  const demoScenarios = [
-    {
-      label: 'github.com',
-      badge: '94/100 Safe',
-      url: 'https://github.com',
-      color: 'hover:border-emerald-500/50 text-emerald-400',
-    },
-    {
-      label: 'login.micros0ft-support-auth.com',
-      badge: '14/100 Phishing',
-      url: 'https://login.micros0ft-support-auth.com/verify',
-      color: 'hover:border-rose-500/50 text-rose-400',
-    },
-    {
-      label: 'bit.ly/secure-account-verify',
-      badge: '38/100 High Risk',
-      url: 'https://bit.ly/secure-account-verify-302',
-      color: 'hover:border-amber-500/50 text-amber-400',
-    },
-    {
-      label: 'expired-tls.untrusted-cdn.org',
-      badge: '62/100 Caution',
-      url: 'https://expired-tls.untrusted-cdn-assets.org',
-      color: 'hover:border-yellow-500/50 text-yellow-400',
-    },
-  ];
-
   const handleQuickSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (quickInput.trim() && !isScanning) {
@@ -98,7 +70,7 @@ export const ModuleShell: React.FC<ModuleShellProps> = ({
           <button
             type="button"
             onClick={onBackToOverview}
-            className="p-2.5 rounded-xl bg-[#101713] border border-[rgba(120,135,124,0.3)] text-[#B7C4B8] hover:text-[#F3D081] hover:border-[#F3D081]/50 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+            className="p-2.5 rounded-xl bg-[#101713]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.3)] text-[#B7C4B8] hover:text-[#F3D081] hover:border-[#F3D081]/50 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
             title="Return to Main Overview"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -120,11 +92,11 @@ export const ModuleShell: React.FC<ModuleShellProps> = ({
           </div>
         </div>
 
-        {/* Active Scan Target Badge */}
+        {/* Active Scan Target Badge / Status Indicator */}
         {hostname ? (
-          <div className="flex items-center gap-3 p-2 px-3.5 rounded-xl bg-[#101713] border border-[rgba(120,135,124,0.3)] shadow-sm">
+          <div className="bg-black/40 backdrop-blur-md border border-[#d4af37]/30 px-3.5 py-1.5 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#F3D081] animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-pulse" />
               <span className="text-xs font-mono text-[#78877C]">Target:</span>
               <span className="text-xs font-mono font-bold text-[#E9E6DC] truncate max-w-[180px] sm:max-w-[240px]">
                 {hostname}
@@ -141,53 +113,45 @@ export const ModuleShell: React.FC<ModuleShellProps> = ({
               type="button"
               onClick={() => targetUrl && onStartScan(targetUrl)}
               disabled={isScanning}
-              className="p-1.5 rounded-lg text-[#78877C] hover:text-[#F3D081] transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-[#78877C] hover:text-[#d4af37] transition-colors cursor-pointer"
               title="Re-evaluate target URL"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin text-[#F3D081]' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin text-[#d4af37]' : ''}`} />
             </button>
           </div>
         ) : (
-          <div className="text-xs font-mono text-[#78877C] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#F3D081]" />
-            <span>No Target Evaluated Yet</span>
+          <div className="bg-black/40 backdrop-blur-md border border-[#d4af37]/30 px-3.5 py-1.5 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-pulse" />
+            <span className="text-xs font-mono font-medium text-[#E9E6DC]">No Target Evaluated Yet</span>
           </div>
         )}
       </div>
 
-      {/* Module Description & Telemetry Metadata Banner */}
-      <div className="p-4 rounded-xl bg-[#101713]/85 border border-[rgba(120,135,124,0.25)] text-xs text-[#B7C4B8] leading-relaxed flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <p className="max-w-3xl font-sans">{description}</p>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="px-2 py-0.5 rounded bg-[#080B09] text-[10px] font-mono text-[#F3D081] border border-[rgba(120,135,124,0.3)] uppercase font-semibold">
-            Passive Telemetry
-          </span>
-          <span className="px-2 py-0.5 rounded bg-[#080B09] text-[10px] font-mono text-[#78877C] border border-[rgba(120,135,124,0.3)] uppercase">
-            Engine v2.4
-          </span>
-        </div>
+      {/* Module Description */}
+      <div className="p-4 rounded-xl bg-gradient-to-br from-white/[0.03] via-[#101713]/40 to-[#080B09]/45 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] text-xs text-[#B7C4B8] leading-relaxed">
+        <p className="max-w-4xl font-sans">{description}</p>
       </div>
 
       {/* Main Content Area OR Empty State if no scan is loaded */}
       {result ? (
         <div className="space-y-6">{children}</div>
       ) : (
-        <div className="rounded-2xl p-8 md:p-12 text-center bg-[#101713]/90 border border-[rgba(120,135,124,0.3)] space-y-8 animate-fadeIn shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+        <div className="rounded-2xl p-8 md:p-12 text-center bg-gradient-to-br from-white/[0.04] via-[#101713]/40 to-[#080B09]/45 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] hover:border-[#F3D081]/40 space-y-6 animate-fadeIn shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
           <div className="max-w-md mx-auto space-y-3">
-            <div className="w-14 h-14 rounded-xl bg-[#141D18] border border-[rgba(120,135,124,0.3)] text-[#F3D081] flex items-center justify-center mx-auto shadow-sm">
+            <div className="w-14 h-14 rounded-xl bg-[#141D18]/70 backdrop-blur-[2px] border border-[rgba(120,135,124,0.3)] text-[#F3D081] flex items-center justify-center mx-auto shadow-sm">
               <Icon className="w-7 h-7 text-[#F3D081]" />
             </div>
             <h3 className="text-lg md:text-xl font-bold font-sans uppercase tracking-tight text-[#E9E6DC]">
               No Active Target Selected for {moduleName}
             </h3>
             <p className="text-xs md:text-sm text-[#B7C4B8]">
-              Enter any website URL or domain below, or pick a benchmark security scenario to populate real-time {moduleName.toLowerCase()} intelligence.
+              Enter a website URL or domain below to run live inspection and populate {moduleName.toLowerCase()} intelligence.
             </p>
           </div>
 
           {/* Inline Quick URL Input */}
           <form onSubmit={handleQuickSubmit} className="max-w-xl mx-auto flex gap-2">
-            <div className="relative flex-1 flex items-center rounded-xl bg-[#080B09] border border-[rgba(120,135,124,0.35)] focus-within:border-[#F3D081]/70 px-3.5 py-2.5 text-xs font-mono">
+            <div className="relative flex-1 flex items-center rounded-xl bg-[#080B09]/70 backdrop-blur-[3px] border border-[rgba(120,135,124,0.35)] focus-within:border-[#F3D081]/70 px-3.5 py-2.5 text-xs font-mono">
               <Globe className="w-4 h-4 text-[#78877C] mr-2.5 shrink-0" />
               <input
                 type="text"
@@ -214,31 +178,6 @@ export const ModuleShell: React.FC<ModuleShellProps> = ({
               <span>{isScanning ? 'Evaluating...' : 'Assess'}</span>
             </button>
           </form>
-
-          {/* Quick Select Benchmark Scenarios */}
-          <div className="max-w-3xl mx-auto pt-6 border-t border-[rgba(120,135,124,0.25)] space-y-3">
-            <div className="text-xs font-mono text-[#78877C] flex items-center justify-center gap-1.5 uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-[#F3D081]" />
-              <span>Or click a benchmark scenario to evaluate:</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-              {demoScenarios.map((scen) => (
-                <button
-                  key={scen.url}
-                  type="button"
-                  onClick={() => onStartScan(scen.url)}
-                  disabled={isScanning}
-                  className="text-left p-3 rounded-xl bg-[#080B09] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/50 hover:bg-[#141D18] transition-all flex flex-col justify-between group cursor-pointer"
-                >
-                  <span className="text-xs font-mono font-medium truncate w-full text-[#E9E6DC] group-hover:text-[#F3D081] transition-colors">
-                    {scen.label}
-                  </span>
-                  <span className="text-[10px] font-mono mt-1 text-[#B7C4B8]">{scen.badge}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       )}
     </div>

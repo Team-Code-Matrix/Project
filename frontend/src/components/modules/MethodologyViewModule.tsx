@@ -106,19 +106,19 @@ export const MethodologyViewModule: React.FC = () => {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-          <div className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60">
+          <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all">
             <span className="text-rose-400 font-bold">1. Confirmed Phishing Kit:</span>
             <p className="text-shield-text-muted mt-1 text-[11px]">Caps score at &le; 15/100 and enforces MALICIOUS verdict.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60">
+          <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all">
             <span className="text-purple-400 font-bold">2. Revoked / Rogue CA Certificate:</span>
             <p className="text-shield-text-muted mt-1 text-[11px]">Caps score at &le; 25/100 and flags PKI_TRUST_COMPROMISED.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60">
+          <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all">
             <span className="text-amber-400 font-bold">3. Multi-Hop Malicious Redirect:</span>
             <p className="text-shield-text-muted mt-1 text-[11px]">Caps score at &le; 40/100 when landing URL diverges from submitted target.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#0D1410] border border-shield-border/60">
+          <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all">
             <span className="text-yellow-400 font-bold">4. Expired TLS Certificate:</span>
             <p className="text-shield-text-muted mt-1 text-[11px]">Caps score at &le; 65/100 and triggers prominent security warning.</p>
           </div>

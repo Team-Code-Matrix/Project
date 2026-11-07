@@ -22,11 +22,11 @@ export const ScanHistoryDrawer: React.FC<ScanHistoryDrawerProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md animate-fadeIn"
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-md h-full bg-[#0D1410] border-l border-shield-border shadow-2xl p-6 flex flex-col justify-between text-left font-mono">
+      <div className="w-full max-w-md h-full bg-[#0B100E]/92 backdrop-blur-2xl border-l border-white/[0.08] shadow-2xl p-6 flex flex-col justify-between text-left font-mono">
         {/* Drawer Header */}
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-4 border-b border-shield-border/60">

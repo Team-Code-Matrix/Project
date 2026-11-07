@@ -173,39 +173,8 @@ export class MockScanService implements IScanService {
       // Fallback
     }
 
-    // Default seeded history
-    return [
-      {
-        scanId: 'scn_gh_982410a7',
-        hostname: 'github.com',
-        submittedUrl: 'https://github.com',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        verdict: 'CLEAN',
-        riskScore: 6,
-        trustScore: 94,
-        resolvedIp: '140.82.121.4',
-      },
-      {
-        scanId: 'scn_phish_3914bc82',
-        hostname: 'login.micros0ft-support-auth.com',
-        submittedUrl: 'https://login.micros0ft-support-auth.com/verify',
-        timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-        verdict: 'MALICIOUS',
-        riskScore: 86,
-        trustScore: 14,
-        resolvedIp: '185.220.101.45',
-      },
-      {
-        scanId: 'scn_cert_182944b1',
-        hostname: 'expired-tls.untrusted-cdn-assets.org',
-        submittedUrl: 'https://expired-tls.untrusted-cdn-assets.org',
-        timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
-        verdict: 'PKI_TRUST_COMPROMISED',
-        riskScore: 92,
-        trustScore: 8,
-        resolvedIp: '198.51.100.89',
-      },
-    ];
+    // No seeded mock history — empty by default until real scans are performed
+    return [];
   }
 
   saveScanHistory(item: ScanHistoryItem): void {

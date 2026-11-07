@@ -28,9 +28,9 @@ export const SettingsModule: React.FC = () => {
   return (
     <div className="space-y-6 text-left">
       {/* Top Banner */}
-      <div className="p-5 rounded-2xl bg-[#0D1410] border border-shield-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] hover:border-[#F3D081]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-mono text-shield-accent-light uppercase tracking-wider">
+          <span className="text-xs font-mono text-[#F3D081] uppercase tracking-wider">
             Configuration & Preferences
           </span>
           <h2 className="text-lg md:text-xl font-bold text-shield-text-primary">
@@ -41,7 +41,7 @@ export const SettingsModule: React.FC = () => {
         <button
           type="button"
           onClick={handleSave}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-[#080B09] font-mono font-bold text-xs flex items-center gap-2 cursor-pointer shadow-clay-sm hover:scale-[1.02] active:scale-[0.98] transition-all self-start sm:self-auto"
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] text-[#080B09] font-mono font-bold text-xs flex items-center gap-2 cursor-pointer shadow-clay-sm hover:scale-[1.02] active:scale-[0.98] transition-all self-start sm:self-auto"
         >
           {savedNotice ? <Check className="w-4 h-4 text-[#080B09]" /> : <RefreshCw className="w-4 h-4 text-[#080B09]" />}
           <span>{savedNotice ? 'Saved!' : 'Save Preferences'}</span>
@@ -157,7 +157,7 @@ export const SettingsModule: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
-            <div className="p-4 rounded-2xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-shield-border/60 hover:border-[#F3D081]/30 transition-all flex items-center justify-between">
               <div>
                 <span className="font-bold text-shield-text-primary">Fast-Path Synchronous Lane:</span>
                 <p className="text-[11px] text-shield-text-muted mt-0.5">Sub-150ms Bloom filter pre-evaluation</p>
@@ -166,18 +166,18 @@ export const SettingsModule: React.FC = () => {
                 type="button"
                 onClick={() => setFastPathEnabled(!fastPathEnabled)}
                 className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                  fastPathEnabled ? 'bg-emerald-500' : 'bg-zinc-700'
+                  fastPathEnabled ? 'bg-[#F3D081]' : 'bg-zinc-700'
                 }`}
               >
                 <span
-                  className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
+                  className={`w-4 h-4 rounded-full bg-[#080B09] absolute top-1 transition-transform ${
                     fastPathEnabled ? 'left-6' : 'left-1'
                   }`}
                 />
               </button>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-shield-border/60 hover:border-[#F3D081]/30 transition-all flex items-center justify-between">
               <div>
                 <span className="font-bold text-shield-text-primary">Certificate Transparency CT:</span>
                 <p className="text-[11px] text-shield-text-muted mt-0.5">Verify Merkle inclusion proofs</p>
@@ -186,18 +186,18 @@ export const SettingsModule: React.FC = () => {
                 type="button"
                 onClick={() => setCtLogsValidation(!ctLogsValidation)}
                 className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                  ctLogsValidation ? 'bg-emerald-500' : 'bg-zinc-700'
+                  ctLogsValidation ? 'bg-[#F3D081]' : 'bg-zinc-700'
                 }`}
               >
                 <span
-                  className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
+                  className={`w-4 h-4 rounded-full bg-[#080B09] absolute top-1 transition-transform ${
                     ctLogsValidation ? 'left-6' : 'left-1'
                   }`}
                 />
               </button>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#0D1410] border border-shield-border/60 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-shield-border/60 hover:border-[#F3D081]/30 transition-all flex items-center justify-between">
               <div>
                 <span className="font-bold text-shield-text-primary">Passive Port Assessment:</span>
                 <p className="text-[11px] text-shield-text-muted mt-0.5">Query authorized edge survey telemetry</p>
@@ -206,11 +206,11 @@ export const SettingsModule: React.FC = () => {
                 type="button"
                 onClick={() => setPassivePorts(!passivePorts)}
                 className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                  passivePorts ? 'bg-emerald-500' : 'bg-zinc-700'
+                  passivePorts ? 'bg-[#F3D081]' : 'bg-zinc-700'
                 }`}
               >
                 <span
-                  className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
+                  className={`w-4 h-4 rounded-full bg-[#080B09] absolute top-1 transition-transform ${
                     passivePorts ? 'left-6' : 'left-1'
                   }`}
                 />

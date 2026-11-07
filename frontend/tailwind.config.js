@@ -59,8 +59,8 @@ export default {
         'clay-button-active': 'inset 0 3px 6px rgba(0, 0, 0, 0.5), inset 0 -1px 1px rgba(255, 255, 255, 0.1)',
       },
       animation: {
-        'ticker-l2r': 'ticker-l2r 40s linear infinite',
-        'ticker-r2l': 'ticker-r2l 40s linear infinite',
+        'ticker-l2r': 'ticker-l2r 70s linear infinite',
+        'ticker-r2l': 'ticker-r2l 70s linear infinite',
         'pulse-subtle': 'pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {

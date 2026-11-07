@@ -60,12 +60,12 @@ export const SecurityChecksModule: React.FC<SecurityChecksModuleProps> = ({
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">Evaluated Models</div>
           <div className="text-2xl font-black text-shield-text-primary">{models.length} Models</div>
-          <div className="text-[11px] font-mono text-emerald-400 mt-1">Multi-Pillar Consensus</div>
+          <div className="text-[11px] font-mono text-[#F3D081] mt-1">Multi-Pillar Consensus</div>
         </div>
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">Checks Passed</div>
-          <div className="text-2xl font-black text-emerald-400">
+          <div className="text-2xl font-black text-[#78B58D]">
             {allChecks.filter((c) => c.status === 'PASSED').length} Passed
           </div>
           <div className="text-[11px] font-mono text-shield-text-muted mt-1">Zero security defect</div>
@@ -81,7 +81,7 @@ export const SecurityChecksModule: React.FC<SecurityChecksModuleProps> = ({
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">Critical Overrides</div>
-          <div className={`text-2xl font-black ${result.criticalOverride ? 'text-rose-400' : 'text-emerald-400'}`}>
+          <div className={`text-2xl font-black ${result.criticalOverride ? 'text-rose-400' : 'text-[#78B58D]'}`}>
             {result.criticalOverride ? '1 Triggered' : '0 Triggered'}
           </div>
           <div className="text-[11px] font-mono text-shield-text-muted mt-1">
@@ -98,12 +98,12 @@ export const SecurityChecksModule: React.FC<SecurityChecksModuleProps> = ({
             <p className="text-xs text-shield-text-secondary">Comprehensive verification status per detection engine</p>
           </div>
 
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-shield-surface-elevated border border-shield-border text-xs font-mono">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#080B09]/60 backdrop-blur-[2px] border border-[rgba(120,135,124,0.3)] text-xs font-mono">
             <button
               type="button"
               onClick={() => setFilter('all')}
               className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                filter === 'all' ? 'bg-shield-accent text-white font-bold' : 'text-shield-text-secondary'
+                filter === 'all' ? 'bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] text-[#080B09] font-bold shadow-sm' : 'text-shield-text-secondary hover:text-white'
               }`}
             >
               All ({allChecks.length})
@@ -112,7 +112,7 @@ export const SecurityChecksModule: React.FC<SecurityChecksModuleProps> = ({
               type="button"
               onClick={() => setFilter('passed')}
               className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                filter === 'passed' ? 'bg-shield-accent text-white font-bold' : 'text-shield-text-secondary'
+                filter === 'passed' ? 'bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] text-[#080B09] font-bold shadow-sm' : 'text-shield-text-secondary hover:text-white'
               }`}
             >
               Passed ({allChecks.filter((c) => c.status === 'PASSED').length})
@@ -121,7 +121,7 @@ export const SecurityChecksModule: React.FC<SecurityChecksModuleProps> = ({
               type="button"
               onClick={() => setFilter('failed')}
               className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                filter === 'failed' ? 'bg-shield-accent text-white font-bold' : 'text-shield-text-secondary'
+                filter === 'failed' ? 'bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] text-[#080B09] font-bold shadow-sm' : 'text-shield-text-secondary hover:text-white'
               }`}
             >
               Anomalies ({allChecks.filter((c) => c.status !== 'PASSED').length})
@@ -133,7 +133,7 @@ export const SecurityChecksModule: React.FC<SecurityChecksModuleProps> = ({
           {filteredChecks.map((chk) => (
             <div
               key={chk.id}
-              className="p-5 rounded-2xl bg-[#0D1410] border border-shield-border/60 space-y-3 text-left transition-all hover:border-shield-border"
+              className="p-5 rounded-2xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] hover:border-[#F3D081]/40 space-y-3 text-left transition-all"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
