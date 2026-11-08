@@ -281,6 +281,24 @@ def compute_security_assessment(
             "source": "Pillar 3: Web Security Telemetry",
         })
 
+    # URL Shorteners with Deceptive Keywords
+    if lexical_data.get("is_shortener"):
+        if lexical_data.get("contains_auth_keyword"):
+            accumulated_risk += 47
+            reasons.append("Shortened link concealing redirect destination with deceptive keywords")
+            findings.append({
+                "id": "fnd_shortener_auth",
+                "title": "Obfuscated URL Shortener with Credential Keywords",
+                "severity": "high",
+                "category": "PHISHING",
+                "description": f"URL shortener ({hostname}) masks downstream destination with deceptive path keywords.",
+                "recommendation": "Expand shortened destination via safe pre-detonation preview.",
+                "source": "Pillar 1: Lexical Obfuscation Guard",
+            })
+        else:
+            accumulated_risk += 20
+            reasons.append("Shortened link conceals final destination host")
+
     # Newly Registered Domain (< 30 days)
     if is_newly_registered and domain_age_days is not None:
         accumulated_risk += 25
@@ -346,6 +364,15 @@ def compute_security_assessment(
         override = True
         override_reason = "Leaf certificate invalid, expired, or rejected by global trust stores."
         summary = f"PKI TRUST FAILURE: Transport security compromised on {hostname}. Leaf certificate failed validation."
+
+    elif accumulated_risk >= 55:
+        backend_verdict = "SUSPICIOUS"
+        final_risk = max(55, min(75, accumulated_risk))
+        final_trust = max(25, min(45, 100 - final_risk))
+        risk_level = "high"
+        override = False
+        override_reason = None
+        summary = f"HIGH RISK SUSPICIOUS SIGNALS: Obfuscated routing, URL masking, or deceptive indicators detected for {hostname}."
 
     elif accumulated_risk >= 35 or is_typosquat or (ml_pred == "PHISHING" and ml_phish_prob >= 0.50):
         backend_verdict = "SUSPICIOUS"

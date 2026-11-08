@@ -291,7 +291,7 @@ export function App() {
                         Executive Analysis Summary
                       </span>
                       <span className="text-xs font-mono text-shield-text-muted">
-                        Engine v2.4 (Dual-Lane Deep Detonation)
+                        Engine v2.4
                       </span>
                     </div>
 

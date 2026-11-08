@@ -35,9 +35,6 @@ export const FastPathVerdictCard: React.FC<FastPathVerdictCardProps> = ({
             <span className="text-xs font-mono uppercase tracking-wider text-[#F3D081] font-bold">
               FAST-PATH SYNCHRONOUS LANE
             </span>
-            <span className="text-xs text-[#78877C] ml-2 font-mono">
-              (&lt;150ms Pre-Detonation Verdict)
-            </span>
           </div>
         </div>
 

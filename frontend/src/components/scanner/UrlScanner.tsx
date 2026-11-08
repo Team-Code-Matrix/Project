@@ -13,15 +13,15 @@ import { NormalizationPrompt } from './NormalizationPrompt';
 
 const PRESET_SCENARIOS = [
   {
-    label: 'github.com',
-    url: 'https://github.com',
-    badge: '94/100 (Safe)',
+    label: 'youtube.com',
+    url: 'https://youtube.com',
+    badge: '98/100 (Safe)',
     badgeClass: 'text-emerald-400 bg-emerald-950/40 border-emerald-500/30',
   },
   {
     label: 'login.micros0ft-support-auth.com',
     url: 'https://login.micros0ft-support-auth.com',
-    badge: '14/100 (Phishing)',
+    badge: '0/100 (Phishing)',
     badgeClass: 'text-rose-400 bg-rose-950/40 border-rose-500/30',
   },
   {
@@ -33,7 +33,7 @@ const PRESET_SCENARIOS = [
   {
     label: 'expired-tls-test.badssl.com',
     url: 'https://expired-tls-test.badssl.com',
-    badge: '62/100 (Caution)',
+    badge: '20/100 (Expired TLS)',
     badgeClass: 'text-yellow-400 bg-yellow-950/40 border-yellow-500/30',
   },
 ];

@@ -23,7 +23,7 @@ describe('MockScanService', () => {
 
     expect(result.criticalOverride).toBe(true);
     expect(result.riskLevel).toBe('critical');
-    expect(result.score).toBe(14);
+    expect(result.score).toBe(0);
     expect(result.overrideReason).toContain('CRITICAL SECURITY THREAT DETECTED');
     expect(result.findings.some((f) => f.severity === 'critical')).toBe(true);
   });
