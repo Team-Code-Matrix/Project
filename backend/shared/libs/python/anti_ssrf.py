@@ -57,12 +57,19 @@ def is_ip_prohibited(ip_obj: ipaddress.IPv4Address | ipaddress.IPv6Address) -> b
     if isinstance(ip_obj, ipaddress.IPv6Address) and ip_obj.ipv4_mapped:
         ip_obj = ip_obj.ipv4_mapped
 
+    # Check for RFC 6052 / RFC 6146 NAT64 prefix (64:ff9b::/96)
+    if isinstance(ip_obj, ipaddress.IPv6Address) and ip_obj in ipaddress.ip_network("64:ff9b::/96"):
+        embedded_ipv4 = ipaddress.IPv4Address(ip_obj.packed[-4:])
+        return is_ip_prohibited(embedded_ipv4)
+
     # Check against known cloud metadata literal IPs
     str_ip = str(ip_obj)
     if str_ip in ("169.254.169.254", "100.100.100.200", "fd00:ec2::254"):
         return True
 
     for network in PROHIBITED_NETWORKS:
+        if network == ipaddress.ip_network("64:ff9b::/96"):
+            continue
         if ip_obj in network:
             return True
 

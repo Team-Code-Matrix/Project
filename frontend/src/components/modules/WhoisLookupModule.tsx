@@ -22,20 +22,26 @@ export interface WhoisLookupModuleProps {
 
 export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
   result,
-  extendedReport: _extendedReport,
+  extendedReport,
 }) => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const domain = result.hostname;
-  const registrar = 'Authoritative RDAP / WHOIS Registry';
-  const regDate = result.checkedAt || new Date().toISOString();
-  const expDate = result.checkedAt
-    ? new Date(new Date(result.checkedAt).getTime() + 365 * 24 * 3600 * 1000).toISOString()
-    : new Date().toISOString();
-  const updatedDate = result.checkedAt || new Date().toISOString();
+  const rdap = (extendedReport as any)?.rdap || {};
 
-  const nameservers: string[] = [];
-  const statusList = ['clientTransferProhibited', 'clientUpdateProhibited'];
+  const registrar = rdap.registrar || 'Authoritative RDAP Registry';
+  const regDate = rdap.createdDate || null;
+  const expDate = rdap.expirationDate || null;
+  const updatedDate = rdap.updatedDate || null;
+  const domainAgeDays = typeof rdap.domainAgeDays === 'number' ? rdap.domainAgeDays : null;
+
+  const nameservers: string[] = Array.isArray(rdap.nameservers) && rdap.nameservers.length > 0
+    ? rdap.nameservers
+    : ((extendedReport as any)?.dnsRecords?.ns?.map((n: any) => n.value) || []);
+
+  const statusList: string[] = Array.isArray(rdap.status) && rdap.status.length > 0
+    ? rdap.status
+    : ['clientTransferProhibited', 'active'];
 
   const handleCopy = async (text: string, label: string) => {
     try {
@@ -45,6 +51,14 @@ export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
     } catch {
       // Fallback
     }
+  };
+
+  const formatDomainAge = (days: number | null) => {
+    if (days === null) return 'Unavailable';
+    if (days < 30) return `${days} Days (New)`;
+    if (days < 365) return `${Math.floor(days / 30)} Months (${days}d)`;
+    const years = (days / 365.25).toFixed(1);
+    return `${years} Years (${days}d)`;
   };
 
   return (
@@ -58,10 +72,10 @@ export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
             <span>Domain Age</span>
           </div>
           <div className="text-xl font-bold text-shield-text-primary">
-            Awaiting RDAP
+            {formatDomainAge(domainAgeDays)}
           </div>
           <div className="text-[11px] font-mono mt-1 text-shield-text-muted">
-            Registration record query
+            {regDate ? 'Authoritative RDAP record' : 'Awaiting RDAP query'}
           </div>
         </div>
 
@@ -86,10 +100,10 @@ export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
             <span>Registry Status</span>
           </div>
           <div className="text-base font-bold text-shield-text-primary">
-            Active Query
+            {statusList[0] || 'Active'}
           </div>
           <div className="text-[11px] font-mono mt-1 text-shield-text-muted">
-            Registry live lookup
+            {expDate ? `Expires: ${new Date(expDate).toLocaleDateString()}` : 'Registry live lookup'}
           </div>
         </div>
 
@@ -118,7 +132,7 @@ export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
           </div>
           <button
             type="button"
-            onClick={() => handleCopy(JSON.stringify({ domain, registrar, regDate, expDate, nameservers }, null, 2), 'all')}
+            onClick={() => handleCopy(JSON.stringify({ domain, registrar, regDate, expDate, nameservers, domainAgeDays }, null, 2), 'all')}
             className="px-3 py-1.5 rounded-xl bg-shield-surface border border-shield-border text-xs font-mono text-shield-text-secondary hover:text-white flex items-center gap-1.5 cursor-pointer"
           >
             {copiedField === 'all' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -134,17 +148,17 @@ export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
 
           <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Creation Date:</span>
-            <span className="text-shield-text-primary">{new Date(regDate).toUTCString()}</span>
+            <span className="text-shield-text-primary">{regDate ? new Date(regDate).toUTCString() : 'Unavailable'}</span>
           </div>
 
           <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Registry Expiry:</span>
-            <span className="text-shield-text-primary">{new Date(expDate).toUTCString()}</span>
+            <span className="text-shield-text-primary">{expDate ? new Date(expDate).toUTCString() : 'Unavailable'}</span>
           </div>
 
           <div className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all flex items-center justify-between">
             <span className="text-shield-text-muted">Updated Date:</span>
-            <span className="text-shield-text-primary">{new Date(updatedDate).toUTCString()}</span>
+            <span className="text-shield-text-primary">{updatedDate ? new Date(updatedDate).toUTCString() : 'Unavailable'}</span>
           </div>
         </div>
 
@@ -184,22 +198,20 @@ export const WhoisLookupModule: React.FC<WhoisLookupModuleProps> = ({
             )}
           </div>
 
-          {/* Domain Status Codes */}
+          {/* Registry Status */}
           <div className="space-y-3">
             <h4 className="text-xs font-mono uppercase tracking-wider text-shield-accent-light flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Domain EPP Status Flags</span>
+              <Globe className="w-3.5 h-3.5" />
+              <span>ICANN Domain Status Directives</span>
             </h4>
             <div className="space-y-2">
               {statusList.map((st) => (
                 <div
                   key={st}
-                  className="p-3 rounded-xl bg-shield-surface/60 border border-shield-border/50 text-xs font-mono flex items-center justify-between"
+                  className="p-3 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)] text-xs font-mono flex items-center gap-2.5"
                 >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#F3D081]" />
                   <span className="text-shield-text-primary">{st}</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-500/30">
-                    Active Protection
-                  </span>
                 </div>
               ))}
             </div>

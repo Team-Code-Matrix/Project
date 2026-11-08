@@ -80,10 +80,15 @@ coverage.xml
 # ------------------------------------------------------------------------------
 .env
 *.env
+*.env.*
+*.env.download
 .env.local
 .env.*.local
 backend/.env
+backend/*.env
+frontend/.env
 frontend/.env.local
+frontend/*.env.*
 
 # Explicitly track documented templates
 !.env.example

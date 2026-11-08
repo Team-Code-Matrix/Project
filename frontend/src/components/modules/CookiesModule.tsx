@@ -38,7 +38,7 @@ export const CookiesModule: React.FC<CookiesModuleProps> = ({
     sameSite: string;
     expires: string;
     purpose: string;
-  }[] = [];
+  }[] = (cookieData as any)?.cookies || [];
 
   return (
     <div className="space-y-6 text-left">

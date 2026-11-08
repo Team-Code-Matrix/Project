@@ -1,4 +1,4 @@
-import type { FindingSeverity } from './scan';
+import type { FindingSeverity, RiskLevel } from './scan';
 
 /**
  * Backend deterministic verdicts as specified in the architecture document:
@@ -321,18 +321,32 @@ export interface ExtendedScanReport {
   backendVerdict: BackendVerdict;
   backendRiskScore: number; // 0 (min risk) to 100 (max risk)
   uiTrustScore: number; // 100 (max trust) to 0 (min trust)
+  riskLevel?: RiskLevel;
+  score?: number;
   criticalOverride?: boolean;
-  overrideReason?: string;
-  riskLevel?: 'low' | 'caution' | 'high' | 'critical' | 'insufficient_data';
   resolvedIp?: string;
   asn?: string;
   country?: string;
-  primaryScheme?: string;
-  modelConsensus?: string;
-  checksCompleted?: number;
-  checksSkipped?: number;
-  checksErrored?: number;
-  models?: any[];
+  dnsRecords?: {
+    a?: { type: string; name: string; value: string; ttl: number }[];
+    aaaa?: { type: string; name: string; value: string; ttl: number }[];
+    cname?: { type: string; name: string; value: string; ttl: number }[];
+    mx?: { type: string; priority: number; value: string; ttl: number }[];
+    ns?: { type: string; value: string; ttl: number }[];
+    txt?: { type: string; name?: string; key?: string; value: string; ttl: number }[];
+    soa?: {
+      primaryNs: string;
+      hostmaster: string;
+      serial: number;
+      refresh: number;
+      retry: number;
+      expire: number;
+      minTtl: number;
+    } | null;
+    dnssec?: boolean;
+  };
+  rdap?: any;
+  crtsh?: any;
   summary: string;
   analystReasonCodes: string[];
   fastPath: FastPathVerdict;

@@ -18,19 +18,23 @@ export interface GeoLocationsModuleProps {
 
 export const GeoLocationsModule: React.FC<GeoLocationsModuleProps> = ({
   result,
-  extendedReport: _extendedReport,
+  extendedReport,
 }) => {
+  const resolvedIp = result.resolvedIp || (extendedReport?.resolvedIp && extendedReport.resolvedIp !== 'Unresolved (NXDOMAIN)' ? extendedReport.resolvedIp : null);
+  const country = result.country || extendedReport?.country || 'Global Anycast / Pending';
+  const asn = result.asn || extendedReport?.asn || 'Pending ASN Resolution';
+
   const geo = {
-    ip: result.resolvedIp || 'Awaiting IP resolution',
-    country: result.country || 'Global Anycast / Pending',
-    countryCode: result.country ? result.country.slice(0, 2).toUpperCase() : '—',
+    ip: resolvedIp || 'Awaiting IP resolution',
+    country: country,
+    countryCode: country !== 'Global Anycast / Pending' ? country.slice(0, 2).toUpperCase() : '—',
     city: 'Edge POP Location',
-    region: 'Anycast Network Edge',
+    region: country !== 'Global Anycast / Pending' ? `Region: ${country}` : 'Anycast Network Edge',
     postalCode: '—',
     coordinates: 'Routing Coordinate Dependent',
-    asn: result.asn || 'Pending ASN Resolution',
-    org: result.asn || 'Authoritative Network Provider',
-    isp: 'Anycast Transit Provider',
+    asn: asn,
+    org: asn,
+    isp: asn !== 'Pending ASN Resolution' ? asn : 'Anycast Transit Provider',
     threatScore: result.score !== null ? 100 - result.score : 0,
   };
 

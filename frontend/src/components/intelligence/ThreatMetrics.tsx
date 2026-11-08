@@ -1,5 +1,6 @@
-import React from 'react';
-import type { ThreatFeedMetrics } from '../../types/threatIntel';
+import React, { useState, useEffect } from 'react';
+import type { ThreatFeedMetrics, ThreatProviderStatus } from '../../types/threatIntel';
+import { fetchThreatProvidersStatus } from '../../services/threatIntelService';
 import {
   ResponsiveContainer,
   BarChart,
@@ -9,13 +10,20 @@ import {
   Tooltip,
   Cell,
 } from 'recharts';
-import { ShieldAlert, Users, Radio, Activity } from 'lucide-react';
+import { ShieldAlert, Users, Radio, Activity, Globe2, ShieldCheck, AlertCircle } from 'lucide-react';
 
 interface ThreatMetricsProps {
   metrics: ThreatFeedMetrics;
 }
 
 export const ThreatMetrics: React.FC<ThreatMetricsProps> = ({ metrics }) => {
+  const [providers, setProviders] = useState<ThreatProviderStatus[]>([]);
+
+  useEffect(() => {
+    fetchThreatProvidersStatus().then((list) => {
+      if (list && list.length > 0) setProviders(list);
+    });
+  }, [metrics.totalThreatsMonitored]);
   if (!metrics || (metrics.totalThreatsMonitored === 0 && metrics.categoryBreakdown.length === 0)) {
     return (
       <div className="rounded-2xl p-8 md:p-12 text-center bg-gradient-to-br from-white/[0.04] via-[#101713]/40 to-[#080B09]/45 backdrop-blur-[3px] border border-[rgba(120,135,124,0.28)] shadow-[0_20px_50px_rgba(0,0,0,0.55)] space-y-4">
@@ -76,7 +84,7 @@ export const ThreatMetrics: React.FC<ThreatMetricsProps> = ({ metrics }) => {
           <div className="text-2xl md:text-3xl font-extrabold text-shield-danger font-mono tabular-nums">
             {metrics.verifiedMaliciousDomains.toLocaleString()}
           </div>
-          <div className="text-[11px] text-shield-text-muted mt-1">Takedown Notices Sent</div>
+          <div className="text-[11px] text-shield-text-muted mt-1">Confirmed by Threat Intelligence</div>
         </div>
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/70">
@@ -99,7 +107,7 @@ export const ThreatMetrics: React.FC<ThreatMetricsProps> = ({ metrics }) => {
               Observed Threat Vector Distribution
             </h3>
             <p className="text-xs text-shield-text-secondary">
-              Relative frequency of identified malicious schemes over the last 30 days
+              Unique Indicators of Compromise (IOCs) ingested within the last 30 days
             </p>
           </div>
         </div>
@@ -141,6 +149,61 @@ export const ThreatMetrics: React.FC<ThreatMetricsProps> = ({ metrics }) => {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* 8 Global Threat Intelligence Providers Transparency Grid */}
+      {providers.length > 0 && (
+        <div className="clay-card rounded-2xl p-6 border border-shield-border/70 space-y-4">
+          <div>
+            <h3 className="text-base md:text-lg font-bold text-shield-text-primary">
+              Federated Threat Intelligence Providers (Source Transparency)
+            </h3>
+            <p className="text-xs text-shield-text-secondary">
+              Real-time synchronization status and API connectivity across official external cybersecurity intelligence feeds
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
+            {providers.map((p) => (
+              <div
+                key={p.providerId}
+                className="p-3.5 rounded-xl bg-[#080B09]/60 backdrop-blur-[2px] border border-[rgba(120,135,124,0.25)] hover:border-[#F3D081]/40 transition-all space-y-1.5"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-shield-text-primary uppercase text-[11px] truncate">
+                    {p.providerId.replace('_', ' ')}
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      p.status === 'ONLINE' || p.status === 'CONNECTED'
+                        ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-500/30'
+                        : p.status === 'SYNCING'
+                        ? 'bg-sky-950/80 text-sky-400 border border-sky-500/30 animate-pulse'
+                        : p.status === 'NOT_CONFIGURED'
+                        ? 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
+                        : p.status === 'DEGRADED' || p.status === 'RATE_LIMITED'
+                        ? 'bg-yellow-950/60 text-yellow-300 border border-yellow-500/30'
+                        : p.status === 'STALE'
+                        ? 'bg-orange-950/60 text-orange-300 border border-orange-500/30'
+                        : 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
+                    }`}
+                  >
+                    {p.status.replace('_', ' ')}
+                  </span>
+                </div>
+                <div className="text-[10px] text-shield-text-muted truncate">
+                  {p.providerName}
+                </div>
+                <div className="text-[10px] text-shield-text-secondary pt-1 border-t border-shield-border/30 flex items-center justify-between">
+                  <span>Ingested: <strong>{p.recordsIngestedTotal}</strong></span>
+                  <span className="truncate max-w-[110px]" title={p.lastSyncTime || 'Pending'}>
+                    {p.lastSyncTime ? new Date(p.lastSyncTime).toLocaleTimeString() : (p.isConfigured ? 'Pending' : 'No API Key')}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

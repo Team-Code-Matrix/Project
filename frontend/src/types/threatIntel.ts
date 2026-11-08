@@ -21,6 +21,23 @@ export interface ThreatReport {
   corroborationCount: number;
   targetBrand?: string;
   indicators: string[];
+  provider?: string;
+  country?: string;
+  sourceUrl?: string;
+}
+
+export interface ThreatProviderStatus {
+  providerId: string;
+  providerName: string;
+  status: 'CONNECTED' | 'ONLINE' | 'SYNCING' | 'NOT_CONFIGURED' | 'RATE_LIMITED' | 'DEGRADED' | 'DISCONNECTED' | 'STALE' | 'ERROR';
+  lastSyncTime?: string | null;
+  lastError?: string | null;
+  recordsIngestedTotal: number;
+  recordsLastSync: number;
+  updateIntervalSec: number;
+  requiresApiKey: boolean;
+  isConfigured: boolean;
+  description?: string;
 }
 
 export interface ThreatSubmissionPayload {
@@ -41,6 +58,14 @@ export interface ThreatFeedMetrics {
     name: string;
     count: number;
     percentage: number;
+  }[];
+  providerBreakdown?: {
+    provider: string;
+    count: number;
+  }[];
+  geoDistribution?: {
+    country: string;
+    count: number;
   }[];
 }
 

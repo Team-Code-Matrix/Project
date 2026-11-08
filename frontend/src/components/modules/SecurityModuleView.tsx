@@ -75,6 +75,8 @@ export interface SecurityModuleViewProps {
   onSelectScanHistory: (item: ScanHistoryItem) => void;
   onClearHistory: () => void;
   onOpenReportModal?: (url?: string) => void;
+  onRefreshFeeds?: () => void;
+  isSyncingFeeds?: boolean;
 }
 
 export const SecurityModuleView: React.FC<SecurityModuleViewProps> = ({
@@ -92,6 +94,8 @@ export const SecurityModuleView: React.FC<SecurityModuleViewProps> = ({
   onSelectScanHistory,
   onClearHistory,
   onOpenReportModal,
+  onRefreshFeeds,
+  isSyncingFeeds,
 }) => {
   const commonShellProps = {
     targetUrl,
@@ -378,6 +382,8 @@ export const SecurityModuleView: React.FC<SecurityModuleViewProps> = ({
               threats={threats || INITIAL_THREAT_FEED}
               onScanDomain={(dom) => onStartScan(dom)}
               onOpenReportModal={() => onOpenReportModal && onOpenReportModal()}
+              onRefresh={onRefreshFeeds}
+              isSyncing={isSyncingFeeds}
             />
           </div>
         </ModuleShell>

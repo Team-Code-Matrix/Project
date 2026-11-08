@@ -6,18 +6,23 @@ import {
   CheckCircle2,
   Radio,
   PlusCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 interface ThreatFeedTableProps {
   threats: ThreatReport[];
   onScanDomain?: (domain: string) => void;
   onOpenReportModal: () => void;
+  onRefresh?: () => void;
+  isSyncing?: boolean;
 }
 
 export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
   threats,
   onScanDomain,
   onOpenReportModal,
+  onRefresh,
+  isSyncing,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<'all' | ThreatCategory>('all');
@@ -78,14 +83,29 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenReportModal}
-          className="px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold text-[#080B09] bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] hover:brightness-105 active:scale-[0.98] shadow-[0_4px_16px_rgba(243,208,129,0.3)] flex items-center gap-2 self-start md:self-auto cursor-pointer transition-all"
-        >
-          <PlusCircle className="w-4 h-4 text-[#080B09]" />
-          <span>Report Suspicious URL</span>
-        </button>
+        <div className="flex items-center gap-2.5 self-start md:self-auto">
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isSyncing}
+              title="Synchronize real-time threat intelligence feeds"
+              className="px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-bold text-shield-text-secondary bg-[#141D18]/70 hover:text-[#F3D081] hover:border-[#F3D081] border border-[rgba(120,135,124,0.3)] flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-[#F3D081]' : 'text-shield-text-muted'}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync Feeds'}</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onOpenReportModal}
+            className="px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold text-[#080B09] bg-gradient-to-r from-[#FCE7B2] via-[#F3D081] to-[#D4A747] hover:brightness-105 active:scale-[0.98] shadow-[0_4px_16px_rgba(243,208,129,0.3)] flex items-center gap-2 cursor-pointer transition-all"
+          >
+            <PlusCircle className="w-4 h-4 text-[#080B09]" />
+            <span>Report Suspicious URL</span>
+          </button>
+        </div>
       </div>
 
       {threats.length === 0 ? (
@@ -139,7 +159,7 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
               <th className="py-3 px-3">Category</th>
               <th className="py-3 px-3">Target Brand</th>
               <th className="py-3 px-3">Status</th>
-              <th className="py-3 px-3">Corroborations</th>
+              <th className="py-3 px-3">Intelligence Source</th>
               <th className="py-3 px-3 text-right">Action</th>
             </tr>
           </thead>
@@ -160,6 +180,11 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
                     <div className="flex items-center gap-1.5">
                       <span className="text-rose-400">⚠</span>
                       <span className="truncate max-w-xs">{report.domain}</span>
+                      {report.country && (
+                        <span className="px-1.5 py-0.5 rounded bg-black/60 border border-[rgba(120,135,124,0.3)] text-[9px] text-[#F3D081] font-bold">
+                          {report.country}
+                        </span>
+                      )}
                     </div>
                     {report.urlPath && (
                       <div className="text-[11px] text-shield-text-muted truncate max-w-xs">
@@ -179,7 +204,14 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
                   <td className="py-3.5 px-3">{getStatusBadge(report.status)}</td>
 
                   <td className="py-3.5 px-3 text-shield-text-secondary">
-                    {report.corroborationCount} signals
+                    <div className="flex flex-col">
+                      <span className="text-shield-text-primary font-bold uppercase tracking-wider text-[11px]">
+                        {report.provider || 'Authoritative Feed'}
+                      </span>
+                      <span className="text-[10px] text-shield-text-muted">
+                        {report.confidenceScore && report.confidenceScore > 0 ? `${report.confidenceScore}% confidence` : 'Provider Verified'}
+                      </span>
+                    </div>
                   </td>
 
                   <td className="py-3.5 px-3 text-right">

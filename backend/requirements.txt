@@ -2,6 +2,9 @@
 python-dotenv>=1.0.0
 requests>=2.31.0
 urllib3>=2.0.0
+cryptography>=41.0.0
+dnspython>=2.0.0
+bcrypt>=4.0.0
 
 # Custom AI/ML Phishing Detection Engine
 numpy>=1.24.0

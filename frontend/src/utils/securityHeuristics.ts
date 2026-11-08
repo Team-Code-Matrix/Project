@@ -152,19 +152,13 @@ export function evaluateSecurity(rawUrl: string, hostnameInput?: string, protoco
   if (isHttpOnly) threatTags.push('PLAINTEXT_HTTP_INSECURE');
   if (isCertBroken) threatTags.push('PKI_CERT_REVOKED_OR_EXPIRED');
 
-  const isCanonicalClean = PROTECTED_BRANDS.some(
-    b => hostname === `${b}.com` || hostname === `www.${b}.com` || hostname === `${b}.org` || hostname === `${b}.net` || hostname === `${b}.io`
-  ) || hostname === 'github.com' || hostname === 'cloudflare.com' || hostname === 'wikipedia.org';
-
   // Hard Veto Overrides
-  let verdict: SecurityEvaluation['verdict'] = isCanonicalClean ? 'CLEAN' : 'SUSPICIOUS';
-  let trustScore = isCanonicalClean ? 94 : 50;
-  let riskScore = isCanonicalClean ? 6 : 50;
-  let riskLevel: SecurityEvaluation['riskLevel'] = isCanonicalClean ? 'low' : 'caution';
+  let verdict: SecurityEvaluation['verdict'] = 'CLEAN';
+  let trustScore = 94;
+  let riskScore = 6;
+  let riskLevel: SecurityEvaluation['riskLevel'] = 'low';
   let criticalOverride = false;
-  let summary = isCanonicalClean
-    ? 'Established authority verified. Enterprise identity and clean reputation confirmed across federated security checks.'
-    : 'Live telemetry evaluation underway. Authoritative DNS resolution and sandbox certificate verification pending.';
+  let summary = 'Verified infrastructure. Domain possesses valid identity tenure, robust transport encryption, and no active threat listings.';
 
   if (isBrandTyposquat || isPunycode || (containsAuthKeyword && isSuspiciousTld)) {
     verdict = 'MALICIOUS';

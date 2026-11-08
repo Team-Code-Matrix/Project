@@ -20,10 +20,13 @@ export interface ScanProgressEvent {
 
 export type ScanEventCallback = (event: ScanProgressEvent) => void;
 
+import { API_BASE_URL, WS_BASE_URL } from '../config/api';
+const DEFAULT_WS_URL = WS_BASE_URL;
+
 export class ScanWebSocketService {
   private subscribers: Map<string, Set<ScanEventCallback>> = new Map();
-  private ws: WebSocket | null = null;
-  private isConnected = false;
+  private threatSubscribers: Set<(threat: any) => void> = new Set();
+  private activeSockets: Map<string, WebSocket> = new Map();
 
   /**
    * Subscribes to live progress events for a specific scanId.
@@ -34,10 +37,8 @@ export class ScanWebSocketService {
     }
     this.subscribers.get(scanId)!.add(callback);
 
-    // If real backend WebSocket is active, send subscription frame
-    if (this.ws && this.isConnected) {
-      this.ws.send(JSON.stringify({ action: 'SUBSCRIBE', scanId }));
-    }
+    // Ensure a live WebSocket connection is open for this scanId
+    this.ensureSocketConnection(scanId);
 
     return () => {
       const set = this.subscribers.get(scanId);
@@ -45,56 +46,114 @@ export class ScanWebSocketService {
         set.delete(callback);
         if (set.size === 0) {
           this.subscribers.delete(scanId);
+          this.closeSocket(scanId);
         }
       }
     };
   }
 
   /**
-   * Dispatches events to registered listeners (used by both mock orchestration and live WS).
+   * Subscribes to real-time global cyber threat IOC ingestion events.
    */
-  dispatchMockEvent(event: ScanProgressEvent): void {
-    const set = this.subscribers.get(event.scanId);
-    if (set) {
-      set.forEach((cb) => cb(event));
+  subscribeToGlobalThreatFeed(callback: (threat: any) => void): () => void {
+    this.threatSubscribers.add(callback);
+    this.ensureSocketConnection('global-feed');
+
+    return () => {
+      this.threatSubscribers.delete(callback);
+      if (this.threatSubscribers.size === 0) {
+        this.closeSocket('global-feed');
+      }
+    };
+  }
+
+  /**
+   * Connects to the genuine backend WebSocket endpoint for a scan or global feed.
+   */
+  private ensureSocketConnection(scanId: string): void {
+    if (this.activeSockets.has(scanId)) return;
+
+    try {
+      const wsUrl = `${DEFAULT_WS_URL}/ws/scans/${scanId}`;
+      const ws = new WebSocket(wsUrl);
+
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload && payload.eventType === 'THREAT_INGESTED') {
+            this.threatSubscribers.forEach((cb) => {
+              try {
+                cb(payload.threat);
+              } catch {
+                // Ignore subscriber error
+              }
+            });
+          } else if (payload) {
+            this.dispatchEvent(payload as ScanProgressEvent);
+          }
+        } catch {
+          // Ignore invalid frames
+        }
+      };
+
+      ws.onclose = () => {
+        this.activeSockets.delete(scanId);
+      };
+
+      ws.onerror = () => {
+        this.activeSockets.delete(scanId);
+      };
+
+      this.activeSockets.set(scanId, ws);
+    } catch {
+      // WebSocket connection failed (graceful degradation)
+    }
+  }
+
+  private closeSocket(scanId: string): void {
+    const ws = this.activeSockets.get(scanId);
+    if (ws) {
+      try {
+        ws.close();
+      } catch {
+        // Fallback
+      }
+      this.activeSockets.delete(scanId);
     }
   }
 
   /**
-   * Connects to a live WebSocket server when configured.
+   * Dispatches events to registered listeners.
    */
-  connectLive(url: string): void {
-    try {
-      this.ws = new WebSocket(url);
-      this.ws.onopen = () => {
-        this.isConnected = true;
-      };
-      this.ws.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data) as ScanProgressEvent;
-          if (payload?.scanId) {
-            this.dispatchMockEvent(payload);
-          }
-        } catch {
-          // Ignore malformed payloads
-        }
-      };
-      this.ws.onclose = () => {
-        this.isConnected = false;
-      };
-    } catch {
-      this.isConnected = false;
+  dispatchEvent(event: ScanProgressEvent): void {
+    const set = this.subscribers.get(event.scanId);
+    if (set) {
+      set.forEach((cb) => cb(event));
+    }
+    const defaultSet = this.subscribers.get('default');
+    if (defaultSet) {
+      defaultSet.forEach((cb) => cb(event));
     }
   }
 
-  disconnect(): void {
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-    this.isConnected = false;
+  /**
+   * Backward-compatible alias for unit tests.
+   */
+  dispatchMockEvent(event: ScanProgressEvent): void {
+    this.dispatchEvent(event);
+  }
+
+  disconnectAll(): void {
+    this.activeSockets.forEach((ws) => {
+      try {
+        ws.close();
+      } catch {
+        // Fallback
+      }
+    });
+    this.activeSockets.clear();
+    this.subscribers.clear();
   }
 }
 
 export const scanWebSocketService = new ScanWebSocketService();
-

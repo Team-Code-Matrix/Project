@@ -24,7 +24,8 @@ import { SecurityModuleView } from './components/modules/SecurityModuleView';
 import { InteractiveHeroPanel } from './components/layout/InteractiveHeroPanel';
 import { useScan } from './hooks/useScan';
 import { INITIAL_THREAT_FEED, THREAT_FEED_METRICS } from './data/threatIntelData';
-import { fetchLiveThreatsAndMetrics } from './services/threatIntelService';
+import { fetchLiveThreatsAndMetrics, triggerThreatFeedSync } from './services/threatIntelService';
+import { scanWebSocketService } from './services/websocketService';
 import type { ThreatReport, ThreatFeedMetrics } from './types/threatIntel';
 import {
   Shield,
@@ -71,12 +72,53 @@ export function App() {
   // Live Threat Intelligence Feed state
   const [threats, setThreats] = useState<ThreatReport[]>(INITIAL_THREAT_FEED);
   const [threatMetrics, setThreatMetrics] = useState<ThreatFeedMetrics>(THREAT_FEED_METRICS);
+  const [isSyncingFeeds, setIsSyncingFeeds] = useState(false);
+
+  const handleSyncFeeds = async () => {
+    setIsSyncingFeeds(true);
+    try {
+      await triggerThreatFeedSync();
+      const { threats: tList, metrics: mData } = await fetchLiveThreatsAndMetrics();
+      if (tList) setThreats(tList);
+      if (mData) setThreatMetrics(mData);
+    } catch {
+      // Fallback
+    } finally {
+      setIsSyncingFeeds(false);
+    }
+  };
 
   useEffect(() => {
-    fetchLiveThreatsAndMetrics().then(({ threats: tList, metrics: mData }) => {
-      if (tList && tList.length > 0) setThreats(tList);
-      if (mData) setThreatMetrics(mData);
+    const loadData = () => {
+      fetchLiveThreatsAndMetrics().then(({ threats: tList, metrics: mData }) => {
+        if (tList) setThreats(tList);
+        if (mData) setThreatMetrics(mData);
+      });
+    };
+
+    loadData();
+
+    // Subscribe to live WebSocket threat IOC events broadcast by backend
+    const unsubscribeWs = scanWebSocketService.subscribeToGlobalThreatFeed((newThreat: ThreatReport) => {
+      setThreats((prev) => {
+        if (prev.some((t) => t.id === newThreat.id || (t.domain === newThreat.domain && t.urlPath === newThreat.urlPath))) {
+          return prev;
+        }
+        return [newThreat, ...prev.slice(0, 99)];
+      });
+      setThreatMetrics((prev) => ({
+        ...prev,
+        totalThreatsMonitored: prev.totalThreatsMonitored + 1,
+      }));
     });
+
+    // Polling fallback to keep synchronized every 30s
+    const pollInterval = setInterval(loadData, 30000);
+
+    return () => {
+      unsubscribeWs();
+      clearInterval(pollInterval);
+    };
   }, []);
 
   const scannerRef = useRef<HTMLDivElement>(null);
@@ -267,7 +309,7 @@ export function App() {
                     <div className="p-3 rounded-xl bg-[#101713]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)]">
                       <div className="text-shield-text-muted text-[11px]">Primary Scheme</div>
                       <div className="font-bold text-shield-text-primary uppercase mt-0.5">
-                        {(result as any).primaryScheme || result.protocol.replace(':', '')}
+                        {result.primaryScheme || result.protocol.replace(':', '')}
                       </div>
                     </div>
 
@@ -281,7 +323,7 @@ export function App() {
                     <div className="p-3 rounded-xl bg-[#101713]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)]">
                       <div className="text-shield-text-muted text-[11px]">Model Consensus</div>
                       <div className="font-bold text-[#F3D081] mt-0.5">
-                        {(result as any).modelConsensus || (
+                        {result.modelConsensus || (
                           result.riskLevel === 'low'
                             ? 'Consensus Clear'
                             : result.criticalOverride
@@ -406,6 +448,8 @@ export function App() {
                 handleScrollToScanner();
               }}
               onOpenReportModal={() => handleOpenReportWithUrl()}
+              onRefresh={handleSyncFeeds}
+              isSyncing={isSyncingFeeds}
             />
           </section>
         </>
@@ -426,6 +470,8 @@ export function App() {
           onSelectScanHistory={(item) => loadHistoryItem(item)}
           onClearHistory={clearHistory}
           onOpenReportModal={handleOpenReportWithUrl}
+          onRefreshFeeds={handleSyncFeeds}
+          isSyncingFeeds={isSyncingFeeds}
         />
       )}
 

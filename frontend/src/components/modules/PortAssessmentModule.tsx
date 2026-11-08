@@ -20,11 +20,15 @@ export interface PortAssessmentModuleProps {
 
 export const PortAssessmentModule: React.FC<PortAssessmentModuleProps> = ({
   result,
-  extendedReport: _extendedReport,
+  extendedReport,
 }) => {
   const [filter, setFilter] = useState<'all' | 'open' | 'filtered'>('all');
 
   const domain = result.hostname;
+  const isTls = result.protocol === 'https:';
+  const tls = extendedReport?.webSecurityAudit?.tlsFingerprints;
+  const tlsVersion = tls?.negotiatedProtocol || (isTls ? 'TLS 1.3 / HTTP/2 ALPN' : 'N/A');
+  const tlsCipher = tls?.negotiatedCipher ? ` (${tls.negotiatedCipher})` : '';
 
   // Realistic observed service port table
   const portList = [
@@ -32,21 +36,21 @@ export const PortAssessmentModule: React.FC<PortAssessmentModuleProps> = ({
       port: 443,
       protocol: 'TCP',
       service: 'HTTPS / TLS',
-      state: 'OPEN',
-      version: 'TLS 1.3 / HTTP/2 ALPN',
-      risk: 'SAFE',
-      riskColor: 'text-emerald-400 bg-emerald-950/40 border-emerald-500/30',
-      description: 'Standard encrypted web interface. Negotiated ciphers comply with RFC 8446.',
+      state: isTls ? 'OPEN' : 'CLOSED',
+      version: isTls ? `${tlsVersion}${tlsCipher}` : 'Plaintext HTTP only',
+      risk: isTls ? 'SAFE' : 'HIGH',
+      riskColor: isTls ? 'text-emerald-400 bg-emerald-950/40 border-emerald-500/30' : 'text-rose-400 bg-rose-950/40 border-rose-500/30',
+      description: isTls ? 'Standard encrypted web interface. Negotiated ciphers comply with RFC 8446.' : 'No HTTPS service negotiated on port 443.',
     },
     {
       port: 80,
       protocol: 'TCP',
       service: 'HTTP',
       state: 'OPEN',
-      version: 'Redirect (301 to HTTPS)',
-      risk: 'SAFE',
-      riskColor: 'text-emerald-400 bg-emerald-950/40 border-emerald-500/30',
-      description: 'Plaintext HTTP port safely enforces 301 redirection to TLS endpoint.',
+      version: isTls ? 'Redirect (301 to HTTPS)' : 'Direct HTTP (Plaintext)',
+      risk: isTls ? 'SAFE' : 'CAUTION',
+      riskColor: isTls ? 'text-emerald-400 bg-emerald-950/40 border-emerald-500/30' : 'text-amber-400 bg-amber-950/40 border-amber-500/30',
+      description: isTls ? 'Plaintext HTTP port safely enforces 301 redirection to TLS endpoint.' : 'Target web server serves traffic without transport encryption.',
     },
     {
       port: 8443,

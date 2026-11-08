@@ -28,22 +28,41 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
 
   const domain = result.hostname;
   const ip = result.resolvedIp;
+  const dns = extendedReport?.dnsRecords;
+
+  const aRecords = dns?.a && dns.a.length > 0
+    ? dns.a
+    : (ip && ip !== 'Unresolved (NXDOMAIN)' ? [{ type: 'A', name: domain, value: ip, ttl: 300 }] : []);
+
+  const aaaaRecords = dns?.aaaa || [];
+  const mxRecords = dns?.mx || [];
+  const nsRecords = dns?.ns || [];
+
+  const txtRecords = (dns?.txt || []).map((t: any) => {
+    let key = 'TXT RECORD';
+    const val = t.value || '';
+    if (val.toLowerCase().includes('v=spf1')) key = 'SPF POLICY';
+    else if (val.toLowerCase().includes('v=dmarc1')) key = 'DMARC POLICY';
+    else if (val.toLowerCase().includes('google-site-verification')) key = 'GOOGLE VERIFICATION';
+    else if (val.toLowerCase().includes('domainkey')) key = 'DKIM POLICY';
+    else if (t.name?.includes('_dmarc')) key = 'DMARC RECORD';
+    return {
+      type: 'TXT',
+      key,
+      value: val,
+      ttl: t.ttl || 300,
+    };
+  });
+
+  const soaRecord = dns?.soa || null;
 
   const records = {
-    a: ip ? [{ type: 'A', name: domain, value: ip, ttl: 300 }] : [],
-    aaaa: [] as { type: string; name: string; value: string; ttl: number }[],
-    mx: [] as { type: string; priority: number; value: string; ttl: number }[],
-    ns: [] as { type: string; value: string; ttl: number }[],
-    txt: [] as { type: string; key?: string; value: string; ttl: number }[],
-    soa: null as {
-      primaryNs: string;
-      hostmaster: string;
-      serial: number;
-      refresh: number;
-      retry: number;
-      expire: number;
-      minTtl: number;
-    } | null,
+    a: aRecords,
+    aaaa: aaaaRecords,
+    mx: mxRecords,
+    ns: nsRecords,
+    txt: txtRecords,
+    soa: soaRecord,
   };
 
   const handleCopy = async (text: string, id: string) => {
@@ -63,11 +82,11 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">A Address Record</div>
           <div className="text-xl font-mono font-bold text-shield-text-primary truncate">
-            {records.a[0]?.value || 'Pending Resolution'}
+            {records.a[0]?.value || (ip && ip !== 'Unresolved (NXDOMAIN)' ? ip : 'Pending Resolution')}
           </div>
           <div className="text-[11px] font-mono text-[#F3D081] mt-1 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
-            {ip ? 'IPv4 Resolved' : 'Awaiting Query'}
+            {records.a.length > 0 ? `${records.a.length} IPv4 Resolved` : (ip ? 'IPv4 Resolved' : 'Awaiting Query')}
           </div>
         </div>
 
@@ -75,18 +94,20 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
           <div className="text-xs font-mono text-shield-text-muted mb-1">DNSSEC Security</div>
           <div className="text-xl font-bold text-shield-text-primary flex items-center gap-1.5">
             <ShieldCheck className="w-5 h-5 text-[#F3D081]" />
-            <span>Inspection Ready</span>
+            <span>{dns?.dnssec ? 'Active' : (records.a.length > 0 ? 'Standard DNS' : 'Inspection Ready')}</span>
           </div>
-          <div className="text-[11px] font-mono text-shield-text-muted mt-1">Awaiting RRSIG verification</div>
+          <div className="text-[11px] font-mono text-shield-text-muted mt-1">
+            {dns?.dnssec ? 'RRSIG validated' : (records.a.length > 0 ? 'Unsigned zone' : 'Awaiting RRSIG verification')}
+          </div>
         </div>
 
         <div className="clay-card rounded-2xl p-5 border border-shield-border/80">
           <div className="text-xs font-mono text-shield-text-muted mb-1">DMARC Protection</div>
           <div className="text-xl font-bold text-shield-text-primary">
-            Pending TXT Query
+            {records.txt.some(t => t.key.includes('DMARC')) ? 'DMARC Active' : (records.txt.some(t => t.key.includes('SPF')) ? 'SPF Active' : (dns ? 'Not Configured' : 'Pending TXT Query'))}
           </div>
           <div className="text-[11px] font-mono text-shield-text-muted mt-1">
-            SPF / DMARC verification
+            {records.txt.some(t => t.key.includes('DMARC')) ? 'p=reject/quarantine policy' : 'SPF / DMARC verification'}
           </div>
         </div>
 
@@ -96,7 +117,7 @@ export const DnsAnalysisModule: React.FC<DnsAnalysisModuleProps> = ({
             {records.ns.length} Nameservers
           </div>
           <div className="text-[11px] font-mono text-shield-text-muted mt-1 truncate">
-            Awaiting NS resolution
+            {records.ns[0]?.value || 'Awaiting NS resolution'}
           </div>
         </div>
       </div>

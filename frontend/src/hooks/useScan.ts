@@ -17,11 +17,15 @@ export function useScan() {
 
   // Load initial history on mount
   useEffect(() => {
-    setHistory(scanService.getScanHistory());
+    scanService.getScanHistory().then((items) => {
+      if (Array.isArray(items)) setHistory(items);
+    });
   }, []);
 
   const refreshHistory = useCallback(() => {
-    setHistory(scanService.getScanHistory());
+    scanService.getScanHistory().then((items) => {
+      if (Array.isArray(items)) setHistory(items);
+    });
   }, []);
 
   const startScan = useCallback(async (rawUrl: string) => {
