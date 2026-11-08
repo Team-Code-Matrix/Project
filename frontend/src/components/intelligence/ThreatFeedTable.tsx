@@ -7,6 +7,8 @@ import {
   Radio,
   PlusCircle,
   RefreshCw,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface ThreatFeedTableProps {
@@ -17,6 +19,8 @@ interface ThreatFeedTableProps {
   isSyncing?: boolean;
 }
 
+const ITEMS_PER_PAGE = 20;
+
 export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
   threats,
   onScanDomain,
@@ -26,6 +30,17 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<'all' | ThreatCategory>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCategoryFilter(e.target.value as any);
+    setCurrentPage(1);
+  };
 
   const filtered = threats.filter((item) => {
     const matchesSearch =
@@ -34,6 +49,28 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
     const matchesCat = categoryFilter === 'all' || item.category === categoryFilter;
     return matchesSearch && matchesCat;
   });
+
+  const totalItems = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+  const validPage = Math.min(currentPage, totalPages);
+  const startIndex = (validPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+  const paginatedThreats = filtered.slice(startIndex, endIndex);
+
+  const getPageNumbers = (current: number, total: number) => {
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    if (current <= 4) {
+      return [1, 2, 3, 4, 5, '...', total];
+    }
+    if (current >= total - 3) {
+      return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+    }
+    return [1, '...', current - 1, current, current + 1, '...', total];
+  };
+
+  const pageNumbers = getPageNumbers(validPage, totalPages);
 
   const getStatusBadge = (status: ThreatReport['status']) => {
     switch (status) {
@@ -124,114 +161,172 @@ export const ThreatFeedTable: React.FC<ThreatFeedTableProps> = ({
         <>
           {/* Filter & Search Bar */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full flex items-center rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.3)] focus-within:border-[#F3D081]/60 px-3 py-2 text-xs font-mono">
-          <Search className="w-4 h-4 text-shield-text-muted mr-2 shrink-0" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search domain, target brand, or keyword..."
-            className="w-full bg-transparent text-shield-text-primary placeholder:text-shield-text-muted/60 outline-none"
-          />
-        </div>
+            <div className="relative flex-1 w-full flex items-center rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.3)] focus-within:border-[#F3D081]/60 px-3 py-2 text-xs font-mono">
+              <Search className="w-4 h-4 text-shield-text-muted mr-2 shrink-0" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Search domain, target brand, or keyword..."
+                className="w-full bg-transparent text-shield-text-primary placeholder:text-shield-text-muted/60 outline-none"
+              />
+            </div>
 
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value as any)}
-          className="px-3 py-2 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.3)] text-xs font-mono text-shield-text-secondary outline-none cursor-pointer focus:border-[#F3D081]/60"
-        >
-          <option value="all">All Categories</option>
-          <option value="impersonation">Brand Impersonation</option>
-          <option value="phishing">Phishing</option>
-          <option value="credential_harvesting">Credential Harvesting</option>
-          <option value="crypto_drainer">Crypto Drainer</option>
-          <option value="scam">Scam / Smishing</option>
-          <option value="malware_distribution">Malware Distribution</option>
-        </select>
-      </div>
+            <select
+              value={categoryFilter}
+              onChange={handleCategoryChange}
+              className="px-3 py-2 rounded-xl bg-[#080B09]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.3)] text-xs font-mono text-shield-text-secondary outline-none cursor-pointer focus:border-[#F3D081]/60"
+            >
+              <option value="all">All Categories</option>
+              <option value="impersonation">Brand Impersonation</option>
+              <option value="phishing">Phishing</option>
+              <option value="credential_harvesting">Credential Harvesting</option>
+              <option value="crypto_drainer">Crypto Drainer</option>
+              <option value="scam">Scam / Smishing</option>
+              <option value="malware_distribution">Malware Distribution</option>
+            </select>
+          </div>
 
-      {/* Feed Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs font-mono">
-          <thead>
-            <tr className="border-b border-shield-border/60 text-shield-text-muted uppercase tracking-wider text-[11px]">
-              <th className="py-3 px-3">Reported Domain</th>
-              <th className="py-3 px-3">Category</th>
-              <th className="py-3 px-3">Target Brand</th>
-              <th className="py-3 px-3">Status</th>
-              <th className="py-3 px-3">Intelligence Source</th>
-              <th className="py-3 px-3 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-shield-border/30">
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-8 text-center text-shield-text-muted">
-                  No threat reports match your search query.
-                </td>
-              </tr>
-            ) : (
-              filtered.map((report) => (
-                <tr
-                  key={report.id}
-                  className="hover:bg-white/[0.04] transition-colors"
-                >
-                  <td className="py-3.5 px-3 font-semibold text-shield-text-primary">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-rose-400">⚠</span>
-                      <span className="truncate max-w-xs">{report.domain}</span>
-                      {report.country && (
-                        <span className="px-1.5 py-0.5 rounded bg-black/60 border border-[rgba(120,135,124,0.3)] text-[9px] text-[#F3D081] font-bold">
-                          {report.country}
-                        </span>
-                      )}
-                    </div>
-                    {report.urlPath && (
-                      <div className="text-[11px] text-shield-text-muted truncate max-w-xs">
-                        {report.urlPath}
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="py-3.5 px-3 text-shield-text-secondary uppercase">
-                    {report.category.replace('_', ' ')}
-                  </td>
-
-                  <td className="py-3.5 px-3 text-[#F3D081]">
-                    {report.targetBrand || '—'}
-                  </td>
-
-                  <td className="py-3.5 px-3">{getStatusBadge(report.status)}</td>
-
-                  <td className="py-3.5 px-3 text-shield-text-secondary">
-                    <div className="flex flex-col">
-                      <span className="text-shield-text-primary font-bold uppercase tracking-wider text-[11px]">
-                        {report.provider || 'Authoritative Feed'}
-                      </span>
-                      <span className="text-[10px] text-shield-text-muted">
-                        {report.confidenceScore && report.confidenceScore > 0 ? `${report.confidenceScore}% confidence` : 'Provider Verified'}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td className="py-3.5 px-3 text-right">
-                    {onScanDomain && (
-                      <button
-                        type="button"
-                        onClick={() => onScanDomain(`https://${report.domain}${report.urlPath || ''}`)}
-                        className="px-2.5 py-1 rounded-lg text-[11px] font-mono text-[#F3D081] bg-[#141D18]/70 hover:bg-[#F3D081] hover:text-[#080B09] border border-[#F3D081]/30 transition-all cursor-pointer font-bold"
-                      >
-                        Inspect
-                      </button>
-                    )}
-                  </td>
+          {/* Feed Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-mono">
+              <thead>
+                <tr className="border-b border-shield-border/60 text-shield-text-muted uppercase tracking-wider text-[11px]">
+                  <th className="py-3 px-3">Reported Domain</th>
+                  <th className="py-3 px-3">Category</th>
+                  <th className="py-3 px-3">Target Brand</th>
+                  <th className="py-3 px-3">Status</th>
+                  <th className="py-3 px-3">Intelligence Source</th>
+                  <th className="py-3 px-3 text-right">Action</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      </>
+              </thead>
+              <tbody className="divide-y divide-shield-border/30">
+                {paginatedThreats.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-shield-text-muted">
+                      No threat reports match your search query.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedThreats.map((report) => (
+                    <tr
+                      key={report.id}
+                      className="hover:bg-white/[0.04] transition-colors"
+                    >
+                      <td className="py-3.5 px-3 font-semibold text-shield-text-primary">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-rose-400">⚠</span>
+                          <span className="truncate max-w-xs">{report.domain}</span>
+                          {report.country && (
+                            <span className="px-1.5 py-0.5 rounded bg-black/60 border border-[rgba(120,135,124,0.3)] text-[9px] text-[#F3D081] font-bold">
+                              {report.country}
+                            </span>
+                          )}
+                        </div>
+                        {report.urlPath && (
+                          <div className="text-[11px] text-shield-text-muted truncate max-w-xs">
+                            {report.urlPath}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-3 text-shield-text-secondary uppercase">
+                        {report.category.replace('_', ' ')}
+                      </td>
+
+                      <td className="py-3.5 px-3 text-[#F3D081]">
+                        {report.targetBrand || '—'}
+                      </td>
+
+                      <td className="py-3.5 px-3">{getStatusBadge(report.status)}</td>
+
+                      <td className="py-3.5 px-3 text-shield-text-secondary">
+                        <div className="flex flex-col">
+                          <span className="text-shield-text-primary font-bold uppercase tracking-wider text-[11px]">
+                            {report.provider || 'Authoritative Feed'}
+                          </span>
+                          <span className="text-[10px] text-shield-text-muted">
+                            {report.confidenceScore && report.confidenceScore > 0 ? `${report.confidenceScore}% confidence` : 'Provider Verified'}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-3 text-right">
+                        {onScanDomain && (
+                          <button
+                            type="button"
+                            onClick={() => onScanDomain(`https://${report.domain}${report.urlPath || ''}`)}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-mono text-[#F3D081] bg-[#141D18]/70 hover:bg-[#F3D081] hover:text-[#080B09] border border-[#F3D081]/30 transition-all cursor-pointer font-bold"
+                          >
+                            Inspect
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Control Bar */}
+          {filtered.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-shield-border/50 text-xs font-mono">
+              <div className="text-shield-text-muted">
+                Showing{' '}
+                <span className="text-[#F3D081] font-bold">
+                  {totalItems === 0 ? 0 : startIndex + 1}–{endIndex}
+                </span>{' '}
+                of <span className="text-shield-text-primary font-bold">{totalItems}</span> threats
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={validPage === 1}
+                  className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-shield-text-secondary bg-[#141D18]/70 hover:text-[#F3D081] hover:border-[#F3D081]/40 border border-[rgba(120,135,124,0.3)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Previous</span>
+                </button>
+
+                <div className="flex items-center gap-1 px-1">
+                  {pageNumbers.map((p, idx) =>
+                    p === '...' ? (
+                      <span key={`ellipsis-${idx}`} className="px-1.5 text-shield-text-muted">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={`page-${p}`}
+                        type="button"
+                        onClick={() => setCurrentPage(p as number)}
+                        className={`w-7 h-7 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                          validPage === p
+                            ? 'bg-gradient-to-r from-[#FCE7B2] to-[#F3D081] text-[#080B09] shadow-[0_2px_8px_rgba(243,208,129,0.3)]'
+                            : 'text-shield-text-secondary bg-[#141D18]/50 hover:text-[#F3D081] border border-[rgba(120,135,124,0.2)]'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={validPage === totalPages}
+                  className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-shield-text-secondary bg-[#141D18]/70 hover:text-[#F3D081] hover:border-[#F3D081]/40 border border-[rgba(120,135,124,0.3)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

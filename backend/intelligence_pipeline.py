@@ -560,7 +560,7 @@ def evaluate_multimodal_security(
             "name": "Phishing & Impersonation Detection",
             "category": "Brand & Form Integrity",
             "description": "Evaluates visual mimicry, brand asset similarity, and unauthorized credential intake endpoints.",
-            "verdict": "malicious" if is_brand_typosquat else ("suspicious" if contains_auth_keyword else "clear"),
+            "verdict": "malicious" if is_brand_typosquat else ("suspicious" if (contains_auth_keyword and not is_verified_infrastructure(hostname)) else "clear"),
             "confidence": int(ml_data.get("confidence", 0.95) * 100),
             "summary": f"Deceptive brand divergence targeting {impersonated_brand.title()}." if is_brand_typosquat else "DOM and authentication form structures conform to safe baseline profiles.",
             "evidence": [f"Brand token '{impersonated_brand}' divergence detected"] if is_brand_typosquat else ["Clean form actions", "No BitB OAuth frames detected"],
