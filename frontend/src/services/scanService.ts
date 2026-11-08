@@ -324,9 +324,20 @@ export class HybridScanService implements IScanService {
         scanId: backendReport.scanId,
         score: backendReport.uiTrustScore,
         criticalOverride: backendReport.criticalOverride ?? (backendReport.uiTrustScore <= 18),
+        overrideReason: (backendReport as any).overrideReason,
+        riskLevel: (backendReport as any).riskLevel || (backendReport.uiTrustScore <= 39 ? 'critical' : backendReport.uiTrustScore <= 69 ? 'caution' : 'low'),
         summary: backendReport.summary,
-        resolvedIp: backendReport.resolvedIp || dynamicBase.resolvedIp,
-      };
+        resolvedIp: backendReport.resolvedIp,
+        asn: (backendReport as any).asn || dynamicBase.asn,
+        country: (backendReport as any).country || dynamicBase.country,
+        checksCompleted: (backendReport as any).checksCompleted !== undefined ? (backendReport as any).checksCompleted : dynamicBase.checksCompleted,
+        checksSkipped: (backendReport as any).checksSkipped !== undefined ? (backendReport as any).checksSkipped : dynamicBase.checksSkipped,
+        checksErrored: (backendReport as any).checksErrored !== undefined ? (backendReport as any).checksErrored : dynamicBase.checksErrored,
+        models: (backendReport as any).models || dynamicBase.models,
+        findings: (backendReport as any).findings || dynamicBase.findings,
+        modelConsensus: (backendReport as any).modelConsensus,
+        primaryScheme: (backendReport as any).primaryScheme,
+      } as ScanResult;
       this.saveScanHistory({
         scanId: backendReport.scanId,
         hostname: backendReport.hostname,
@@ -335,7 +346,7 @@ export class HybridScanService implements IScanService {
         verdict: backendReport.backendVerdict,
         riskScore: backendReport.backendRiskScore,
         trustScore: backendReport.uiTrustScore,
-        resolvedIp: backendReport.resolvedIp || '127.0.0.1',
+        resolvedIp: backendReport.resolvedIp || 'None',
       });
     } else {
       result = await this.mockFallback.initiateScan(rawUrl);

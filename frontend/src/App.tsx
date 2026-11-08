@@ -267,7 +267,7 @@ export function App() {
                     <div className="p-3 rounded-xl bg-[#101713]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)]">
                       <div className="text-shield-text-muted text-[11px]">Primary Scheme</div>
                       <div className="font-bold text-shield-text-primary uppercase mt-0.5">
-                        {result.protocol.replace(':', '')}
+                        {(result as any).primaryScheme || result.protocol.replace(':', '')}
                       </div>
                     </div>
 
@@ -281,11 +281,13 @@ export function App() {
                     <div className="p-3 rounded-xl bg-[#101713]/60 backdrop-blur-[3px] border border-[rgba(120,135,124,0.25)]">
                       <div className="text-shield-text-muted text-[11px]">Model Consensus</div>
                       <div className="font-bold text-[#F3D081] mt-0.5">
-                        {result.riskLevel === 'low'
-                          ? 'Consensus Clear'
-                          : result.criticalOverride
-                          ? 'Override Active'
-                          : 'Anomalies Noted'}
+                        {(result as any).modelConsensus || (
+                          result.riskLevel === 'low'
+                            ? 'Consensus Clear'
+                            : result.criticalOverride
+                            ? 'Override Active'
+                            : 'Anomalies Noted'
+                        )}
                       </div>
                     </div>
                   </div>

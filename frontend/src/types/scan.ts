@@ -85,6 +85,8 @@ export interface ScanResult {
   resolvedIp?: string;
   asn?: string;
   country?: string;
+  primaryScheme?: string;
+  modelConsensus?: string;
 }
 
 export interface ScanProgressStage {

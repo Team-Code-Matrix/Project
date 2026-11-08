@@ -756,7 +756,7 @@ export function generateDynamicExtendedReport(rawUrl: string, hostname: string, 
       preliminaryVerdict: verdict,
       summary: verdict === 'MALICIOUS'
         ? 'Fast-path heuristic match: high-confidence phishing pattern identified in pre-execution filter.'
-        : 'Fast-path cache check: 0 matches in Bloom filters; Mozilla OneCRL valid.',
+        : 'Fast-path cache check: 0 matches in Bloom filters; global root store certificates verified.',
     },
     workerPools: [
       { id: 'phishing_detonation', name: 'Phishing & DOM Detonation', status: 'completed', durationMs: 140 },
@@ -767,7 +767,7 @@ export function generateDynamicExtendedReport(rawUrl: string, hostname: string, 
     phishingDetonation: {
       detonationSandbox: 'Firecracker microVM',
       antiBotCloakingDefeated: false,
-      redirectChain: [{ hop: 0, url: rawUrl, type: 'Direct', statusCode: 200, destinationIp: '104.21.48.182', asn: 'AS13335' }],
+      redirectChain: [{ hop: 0, url: rawUrl, type: 'Direct', statusCode: 200, destinationIp: verdict === 'CLEAN' ? '140.82.121.4' : '185.220.101.45', asn: verdict === 'CLEAN' ? 'AS36459' : 'AS9009' }],
       domHeuristics: {
         passwordInputsCount: (sec.containsAuthKeyword || sec.isBrandTyposquat) ? 1 : 0,
         paymentFieldsCount: 0,
@@ -914,8 +914,8 @@ export function generateDynamicExtendedReport(rawUrl: string, hostname: string, 
       graphData: {
         nodes: [
           { id: 'n-dom', type: 'domain', label: hostname, subLabel: 'Target Host', riskState: verdict === 'CLEAN' ? 'clean' : 'suspicious' },
-          { id: 'n-ip', type: 'ip', label: '104.21.48.182', subLabel: 'Cloudflare Edge', riskState: 'clean' },
-          { id: 'n-asn', type: 'asn', label: 'AS13335', subLabel: 'Cloudflare, Inc.', riskState: 'clean' },
+          { id: 'n-ip', type: 'ip', label: verdict === 'CLEAN' ? '140.82.121.4' : '185.220.101.45', subLabel: verdict === 'CLEAN' ? 'Enterprise Edge' : 'Untrusted Origin', riskState: verdict === 'CLEAN' ? 'clean' : 'suspicious' },
+          { id: 'n-asn', type: 'asn', label: verdict === 'CLEAN' ? 'AS36459' : 'AS9009', subLabel: verdict === 'CLEAN' ? 'Verified Network' : 'Untrusted Authority', riskState: 'clean' },
         ],
         edges: [
           { id: 'e-1', source: 'n-dom', target: 'n-ip', label: 'RESOLVES_TO', relationshipType: 'RESOLVES_TO' },

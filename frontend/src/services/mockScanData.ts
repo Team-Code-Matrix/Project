@@ -797,9 +797,9 @@ export function generateDynamicScanResult(rawUrl: string, hostname: string, prot
     checksSkipped: 0,
     checksErrored: 0,
     checkedAt: new Date().toISOString(),
-    resolvedIp: '104.21.48.182',
-    asn: 'AS13335 (Cloudflare, Inc.)',
-    country: 'United States',
+    resolvedIp: hostname.includes('github') ? '140.82.121.4' : (sec.verdict === 'MALICIOUS' ? '185.220.101.45' : '198.51.100.24'),
+    asn: hostname.includes('github') ? 'AS36459 (GitHub, Inc.)' : (sec.verdict === 'MALICIOUS' ? 'AS9009 (Bulletproof Hosting)' : 'AS15169 (Global Anycast)'),
+    country: hostname.includes('github') ? 'United States' : (sec.verdict === 'MALICIOUS' ? 'Russian Federation' : 'Global Anycast'),
     models: [
       {
         id: 'm-phish',

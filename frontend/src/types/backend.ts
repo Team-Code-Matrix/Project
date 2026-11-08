@@ -322,7 +322,17 @@ export interface ExtendedScanReport {
   backendRiskScore: number; // 0 (min risk) to 100 (max risk)
   uiTrustScore: number; // 100 (max trust) to 0 (min trust)
   criticalOverride?: boolean;
+  overrideReason?: string;
+  riskLevel?: 'low' | 'caution' | 'high' | 'critical' | 'insufficient_data';
   resolvedIp?: string;
+  asn?: string;
+  country?: string;
+  primaryScheme?: string;
+  modelConsensus?: string;
+  checksCompleted?: number;
+  checksSkipped?: number;
+  checksErrored?: number;
+  models?: any[];
   summary: string;
   analystReasonCodes: string[];
   fastPath: FastPathVerdict;
