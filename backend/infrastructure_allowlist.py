@@ -146,3 +146,4 @@ def is_shared_hosting_platform(hostname: str) -> bool:
             return True
 
     return False
+
