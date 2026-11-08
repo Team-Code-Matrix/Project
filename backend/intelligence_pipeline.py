@@ -46,6 +46,10 @@ from network_guard import resolve_authoritative_dns, safe_http_probe
 from tls_inspector import probe_live_tls
 from providers.aggregator import ThreatIntelligenceAggregator
 from scoring_engine import compute_security_assessment
+try:
+    from infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+except ImportError:
+    from backend.infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
 
 IS_ML_ACTIVE = True
 
@@ -211,6 +215,11 @@ def evaluate_multimodal_security(
                     break
         if is_brand_typosquat:
             break
+
+    # Verified reputable infrastructure is never a brand typosquat
+    if is_verified_infrastructure(hostname):
+        is_brand_typosquat = False
+        impersonated_brand = ""
 
     is_punycode = hostname.startswith("xn--") or ".xn--" in hostname
     is_ip_literal = bool(re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", hostname))
@@ -435,15 +444,25 @@ def evaluate_multimodal_security(
 
     # Append any community reports or threat indicators from threat_feed if matching
     if threat_feed:
+        is_shared = is_shared_hosting_platform(hostname)
+        is_verified = is_verified_infrastructure(hostname)
+        clean_low = clean_url.lower()
+        clean_low_no_slash = clean_low.rstrip("/")
+
         for t in threat_feed:
             t_dom = (t.get("domain") or "").lower()
             t_url = (t.get("url") or "").lower()
-            clean_low = clean_url.lower()
             is_match = False
-            if t_url and (t_url == clean_low or t_url == clean_low.rstrip("/") or clean_low.startswith(t_url)):
-                is_match = True
-            elif t_dom and (t_dom == hostname or t_dom in hostname or hostname in t_dom):
-                is_match = True
+
+            if is_shared or is_verified:
+                # For shared hosting or verified infrastructure, strictly require exact full URL match
+                if t_url and (t_url == clean_low or t_url == clean_low_no_slash):
+                    is_match = True
+            else:
+                if t_url and (t_url == clean_low or t_url == clean_low_no_slash or clean_low.startswith(t_url)):
+                    is_match = True
+                elif t_dom and (t_dom == hostname or t_dom == f"www.{hostname}"):
+                    is_match = True
 
             if is_match:
                 cti_results["isMalicious"] = True

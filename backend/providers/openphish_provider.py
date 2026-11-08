@@ -5,8 +5,13 @@ Audits target URLs against OpenPhish real-time phishing feed telemetry.
 import os
 import time
 import requests
+import urllib.parse
 from typing import Dict, Any, Set
 from providers.base_provider import BaseThreatProvider
+try:
+    from infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+except ImportError:
+    from backend.infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
 
 _FEED_CACHE: Set[str] = set()
 _LAST_FEED_FETCH = 0.0
@@ -74,13 +79,17 @@ class OpenPhishProvider(BaseThreatProvider):
             norm_no_slash = norm_target.rstrip("/")
 
             is_match = (norm_target in _FEED_CACHE) or (norm_no_slash in _FEED_CACHE)
-            if not is_match:
-                # Check if host matches any feed entry
+            # Only perform apex host-level check for dedicated unverified hosts; NEVER for shared/verified infrastructure
+            if not is_match and not is_shared_hosting_platform(hostname) and not is_verified_infrastructure(hostname):
                 h_lower = hostname.lower()
                 for feed_entry in _FEED_CACHE:
-                    if f"://{h_lower}" in feed_entry:
-                        is_match = True
-                        break
+                    try:
+                        p_entry = urllib.parse.urlparse(feed_entry)
+                        if p_entry.netloc.lower() == h_lower:
+                            is_match = True
+                            break
+                    except Exception:
+                        pass
 
             if is_match:
                 return self.build_result(

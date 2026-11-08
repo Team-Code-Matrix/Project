@@ -8,6 +8,10 @@ Enforces strict polarity:
 Avoids double-counting correlated findings.
 """
 from typing import Dict, Any, List, Tuple
+try:
+    from infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+except ImportError:
+    from backend.infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
 
 def compute_security_assessment(
     hostname: str,
@@ -38,16 +42,31 @@ def compute_security_assessment(
     is_cert_broken = tls_data.get("is_pki_compromised", False)
     is_http_only = target_url.lower().startswith("http://")
 
-    # Threat Intelligence Signals
-    c_malicious_hits = cti_data.get("maliciousHits", [])
-    has_threat_match = len(c_malicious_hits) > 0
+    # Infrastructure Allowlist Checks
+    is_official_domain = is_verified_infrastructure(hostname, asn=dns_data.get("asn", ""))
+    is_shared_platform = is_shared_hosting_platform(hostname)
 
     # Phishing & Brand Signals
-    is_typosquat = lexical_data.get("is_brand_typosquat", False)
-    impersonated_brand = lexical_data.get("impersonated_brand", "")
-    has_credential_exfil = bool(dom_data.get("crossOriginSubmissionTarget"))
+    is_typosquat = False if is_official_domain else lexical_data.get("is_brand_typosquat", False)
+    impersonated_brand = "" if is_official_domain else lexical_data.get("impersonated_brand", "")
+    has_credential_exfil = False if is_official_domain else bool(dom_data.get("crossOriginSubmissionTarget"))
     has_password_input = dom_data.get("passwordInputsCount", 0) > 0
     has_otp_input = dom_data.get("otpFieldsCount", 0) > 0
+
+    # Threat Intelligence Signals
+    c_malicious_hits = cti_data.get("maliciousHits", [])
+    if is_official_domain or is_shared_platform:
+        # Verified first-party or shared infrastructure ONLY matches on exact normalized URL
+        clean_low = target_url.lower().rstrip("/")
+        exact_hits = []
+        for hit in c_malicious_hits:
+            det = hit.get("details") or {}
+            ind = (det.get("indicator") or det.get("url") or det.get("source_url") or "").lower().rstrip("/")
+            if ind and (ind == clean_low or clean_low == ind):
+                exact_hits.append(hit)
+        c_malicious_hits = exact_hits
+
+    has_threat_match = len(c_malicious_hits) > 0
 
     # ML Inference Signals
     ml_pred = ml_data.get("prediction", "LEGITIMATE")
@@ -187,7 +206,7 @@ def compute_security_assessment(
         })
 
     # Machine Learning Phishing Classification
-    if ml_pred == "PHISHING" and ml_phish_prob >= 0.65:
+    if not is_official_domain and ml_pred == "PHISHING" and ml_phish_prob >= 0.65:
         accumulated_risk += 40
         reasons.append(f"Custom RandomForest ML model predicted PHISHING ({int(ml_phish_prob*100)}% probability)")
         findings.append({
@@ -303,14 +322,25 @@ def compute_security_assessment(
 
     else:
         backend_verdict = "CLEAN"
-        final_risk = max(5, min(25, accumulated_risk))
-        final_trust = max(75, min(95, 100 - final_risk))
-        risk_level = "low"
-        override = False
-        override_reason = None
-        summary = f"Verified infrastructure for {hostname}. Valid transport security, authenticated DNS resolution, clean DOM heuristics, and 0 active threat listings."
-        reasons.append("RFC 5280 certificate chain verified across global root stores")
-        reasons.append("Clean reputation confirmed across federated threat intelligence feeds")
+        if is_official_domain:
+            final_risk = min(5, accumulated_risk)
+            final_trust = max(94, min(98, 100 - final_risk))
+            risk_level = "low"
+            override = False
+            override_reason = None
+            summary = f"Verified infrastructure for {hostname}. Domain possesses valid identity tenure, robust transport encryption, and clean reputation across global threat feeds."
+            reasons.append("Verified enterprise infrastructure and authenticated autonomous system")
+            reasons.append("RFC 5280 certificate chain verified across global root stores")
+            reasons.append("Clean reputation confirmed across federated threat intelligence feeds")
+        else:
+            final_risk = max(5, min(25, accumulated_risk))
+            final_trust = max(75, min(95, 100 - final_risk))
+            risk_level = "low"
+            override = False
+            override_reason = None
+            summary = f"Verified infrastructure for {hostname}. Valid transport security, authenticated DNS resolution, clean DOM heuristics, and 0 active threat listings."
+            reasons.append("RFC 5280 certificate chain verified across global root stores")
+            reasons.append("Clean reputation confirmed across federated threat intelligence feeds")
 
     # Clean default finding if zero issues flagged
     if not findings:

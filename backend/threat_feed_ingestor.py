@@ -35,6 +35,11 @@ import urllib.parse
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple, Callable
 
+try:
+    from infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+except ImportError:
+    from backend.infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+
 # Comprehensive Brand Mappings for high-fidelity brand extraction & attribution
 BRAND_MAPPINGS: Dict[str, str] = {
     # Tech & Cloud Giants
@@ -553,31 +558,36 @@ class ThreatFeedIngestor:
         clean_url = target
         url_no_slash = clean_url.rstrip("/")
 
+        is_shared = is_shared_hosting_platform(domain)
+        is_verified = is_verified_infrastructure(domain)
+
         with self._lock:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
-                # 1. Exact match against threat_indicators
-                cursor.execute("""
-                    SELECT id, indicator, domain, indicator_type, category, provider,
-                           confidence_score, status, target_brand, threat_tags, country, source_url, ingested_at
-                    FROM threat_indicators
-                    WHERE indicator = ? 
-                       OR indicator = ? 
-                       OR domain = ?
-                       OR indicator = ?
-                       OR domain = ?
-                    LIMIT 1
-                """, (clean_url, url_no_slash, domain, domain, clean_url))
-                r = cursor.fetchone()
-                if not r and len(domain) >= 4 and "." in domain:
-                    # Domain substring or like match
+                r = None
+                if is_shared or is_verified:
+                    # STRICT EXACT URL MATCH ONLY: Shared and verified infrastructure
+                    # MUST NEVER be flagged by apex domain or substring matches!
                     cursor.execute("""
                         SELECT id, indicator, domain, indicator_type, category, provider,
                                confidence_score, status, target_brand, threat_tags, country, source_url, ingested_at
                         FROM threat_indicators
-                        WHERE domain = ? OR indicator LIKE ?
+                        WHERE indicator = ? OR indicator = ? OR indicator = ?
                         LIMIT 1
-                    """, (domain, f"%{domain}%"))
+                    """, (clean_url, url_no_slash, f"https://{domain}{parsed.path}"))
+                    r = cursor.fetchone()
+                else:
+                    # Dedicated / Untrusted domain: check exact URL or exact domain-level indicator
+                    cursor.execute("""
+                        SELECT id, indicator, domain, indicator_type, category, provider,
+                               confidence_score, status, target_brand, threat_tags, country, source_url, ingested_at
+                        FROM threat_indicators
+                        WHERE indicator = ? 
+                           OR indicator = ? 
+                           OR (domain = ? AND indicator_type = 'domain')
+                           OR indicator = ?
+                        LIMIT 1
+                    """, (clean_url, url_no_slash, domain, domain))
                     r = cursor.fetchone()
 
                 if r:
@@ -603,41 +613,52 @@ class ThreatFeedIngestor:
                         "source": "threat_indicators",
                     }
 
-                # 2. Check community threat reports
-                cursor.execute("""
-                    SELECT id, domain, threat_type, severity, description, targeted_brand, status
-                    FROM threat_reports
-                    WHERE domain = ?
-                    LIMIT 1
-                """, (domain,))
-                rep = cursor.fetchone()
-                if rep:
-                    return {
-                        "id": rep["id"],
-                        "indicator": f"https://{domain}/",
-                        "domain": rep["domain"],
-                        "indicatorType": "domain",
-                        "category": rep["threat_type"],
-                        "provider": "community",
-                        "confidenceScore": 88,
-                        "status": rep["status"] or "investigating",
-                        "targetBrand": rep["targeted_brand"],
-                        "threatTags": ["Community Incident Report"],
-                        "country": None,
-                        "sourceUrl": None,
-                        "source": "threat_reports",
-                    }
+                # 2. Check community threat reports (only for non-verified domains or exact URL)
+                if not is_verified:
+                    cursor.execute("""
+                        SELECT id, domain, threat_type, severity, description, targeted_brand, status
+                        FROM threat_reports
+                        WHERE domain = ?
+                        LIMIT 1
+                    """, (domain,))
+                    rep = cursor.fetchone()
+                    if rep:
+                        return {
+                            "id": rep["id"],
+                            "indicator": f"https://{domain}/",
+                            "domain": rep["domain"],
+                            "indicatorType": "domain",
+                            "category": rep["threat_type"],
+                            "provider": "community",
+                            "confidenceScore": 88,
+                            "status": rep["status"] or "investigating",
+                            "targetBrand": rep["targeted_brand"],
+                            "threatTags": ["Community Incident Report"],
+                            "country": None,
+                            "sourceUrl": None,
+                            "source": "threat_reports",
+                        }
 
                 # 3. Check recent scans that were flagged MALICIOUS
                 try:
-                    cursor.execute("""
-                        SELECT scan_id, submitted_url, hostname, verdict, trust_score, risk_score
-                        FROM scans
-                        WHERE (submitted_url = ? OR submitted_url = ? OR hostname = ?)
-                          AND verdict = 'MALICIOUS'
-                        ORDER BY created_at DESC
-                        LIMIT 1
-                    """, (clean_url, url_no_slash, domain))
+                    if is_verified:
+                        cursor.execute("""
+                            SELECT scan_id, submitted_url, hostname, verdict, trust_score, risk_score
+                            FROM scans
+                            WHERE (submitted_url = ? OR submitted_url = ?)
+                              AND verdict = 'MALICIOUS'
+                            ORDER BY created_at DESC
+                            LIMIT 1
+                        """, (clean_url, url_no_slash))
+                    else:
+                        cursor.execute("""
+                            SELECT scan_id, submitted_url, hostname, verdict, trust_score, risk_score
+                            FROM scans
+                            WHERE (submitted_url = ? OR submitted_url = ? OR hostname = ?)
+                              AND verdict = 'MALICIOUS'
+                            ORDER BY created_at DESC
+                            LIMIT 1
+                        """, (clean_url, url_no_slash, domain))
                     scan_row = cursor.fetchone()
                     if scan_row:
                         return {

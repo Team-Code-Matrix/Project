@@ -6,6 +6,10 @@ import os
 import requests
 from typing import Dict, Any
 from providers.base_provider import BaseThreatProvider
+try:
+    from infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+except ImportError:
+    from backend.infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
 
 class URLhausProvider(BaseThreatProvider):
     def __init__(self, timeout: float = 3.5):
@@ -50,7 +54,16 @@ class URLhausProvider(BaseThreatProvider):
                         }
                     )
                 elif q_status == "no_results":
-                    # Host query fallback to check if domain is a known malware dropper host
+                    # For verified infrastructure or shared hosts (e.g. github.com, google.com), NEVER query by apex domain
+                    if is_shared_hosting_platform(hostname) or is_verified_infrastructure(hostname):
+                        return self.build_result(
+                            "NO_MATCH",
+                            is_malicious=False,
+                            confidence=95,
+                            details={"message": "Target URL is not listed in URLhaus; host is verified shared infrastructure"}
+                        )
+
+                    # Host query fallback to check if domain is a dedicated malware dropper host
                     host_resp = requests.post(
                         "https://urlhaus-api.abuse.ch/v1/host/",
                         data={"host": hostname},
