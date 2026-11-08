@@ -19,6 +19,34 @@ class URLhausProvider(BaseThreatProvider):
         self.timeout = timeout
 
     def query(self, target_url: str, hostname: str) -> Dict[str, Any]:
+        try:
+            from infrastructure_allowlist import (
+                is_verified_infrastructure,
+                is_hard_bypass_target,
+                is_shared_hosting_platform,
+            )
+        except ImportError:
+            try:
+                from backend.infrastructure_allowlist import (
+                    is_verified_infrastructure,
+                    is_hard_bypass_target,
+                    is_shared_hosting_platform,
+                )
+            except ImportError:
+                def is_verified_infrastructure(h): return False
+                def is_hard_bypass_target(h): return False
+                def is_shared_hosting_platform(h): return False
+
+        if is_hard_bypass_target(hostname):
+            clean_low = target_url.lower()
+            if not any(clean_low.endswith(ext) for ext in [".exe", ".sh", ".elf", ".bin", ".vbs", ".bat", ".ps1", ".apk", ".dll"]):
+                return self.build_result(
+                    "NO_MATCH",
+                    is_malicious=False,
+                    confidence=98,
+                    details={"message": "Target is verified official infrastructure; bypassed URLhaus host query"}
+                )
+
         api_endpoint = "https://urlhaus-api.abuse.ch/v1/url/"
         headers = {
             "User-Agent": "TrustShield-Intelligence-Gateway/2.4",

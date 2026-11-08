@@ -7,6 +7,23 @@ import re
 import math
 import urllib.parse
 from typing import Dict, List, Optional, Any
+try:
+    from infrastructure_allowlist import (
+        is_verified_infrastructure,
+        is_hard_bypass_target,
+        get_registrable_domain,
+    )
+except ImportError:
+    try:
+        from backend.infrastructure_allowlist import (
+            is_verified_infrastructure,
+            is_hard_bypass_target,
+            get_registrable_domain,
+        )
+    except ImportError:
+        def is_verified_infrastructure(*args, **kwargs): return False
+        def is_hard_bypass_target(*args, **kwargs): return False
+        def get_registrable_domain(h): return h
 
 FEATURE_NAMES = [
     "url_length",
@@ -117,24 +134,34 @@ def extract_features(url: str, scan_payload: Optional[Dict[str, Any]] = None) ->
     tokens = re.split(r"[-._/]", full_str)
     tokens = [t for t in tokens if t]
 
+    reg_dom = get_registrable_domain(hostname)
+    is_safe_infrastructure = is_verified_infrastructure(hostname) or is_hard_bypass_target(hostname)
+
     for token in tokens:
         # Check normalized substitutions (0->o, 1->l, etc.)
         norm = token.replace("0", "o").replace("1", "l").replace("5", "s").replace("vv", "w")
         if token in PROTECTED_BRANDS or norm in PROTECTED_BRANDS:
-            # Check if this is the legitimate canonical domain
+            matched_b = token if token in PROTECTED_BRANDS else norm
+            # Check if this is the legitimate canonical domain or official subdomain
             is_canonical = (
-                hostname == f"{token}.com" or
-                hostname == f"www.{token}.com" or
-                hostname == f"{token}.org" or
-                hostname == f"{token}.net" or
-                hostname == f"{token}.io"
+                hostname == f"{matched_b}.com" or
+                hostname.endswith(f".{matched_b}.com") or
+                hostname == f"{matched_b}.org" or
+                hostname.endswith(f".{matched_b}.org") or
+                hostname == f"{matched_b}.net" or
+                hostname.endswith(f".{matched_b}.net") or
+                hostname == f"{matched_b}.io" or
+                hostname.endswith(f".{matched_b}.io") or
+                reg_dom.startswith(f"{matched_b}.") or
+                is_safe_infrastructure
             )
             if not is_canonical:
                 brand_present = True
                 break
         elif token in DECEPTIVE_KEYWORDS:
-            brand_present = True
-            break
+            if not is_safe_infrastructure:
+                brand_present = True
+                break
 
     brand_keyword_presence = 1.0 if brand_present else 0.0
 

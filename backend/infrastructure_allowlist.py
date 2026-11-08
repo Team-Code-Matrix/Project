@@ -2,30 +2,46 @@
 Trust Shield — Verified First-Party Infrastructure & Shared-Host Allowlist
 =============================================================================
 Protects legitimate high-reputation shared infrastructure (GitHub, Google,
-Cloudflare, Microsoft, AWS, Wikipedia, etc.) against false-positive domain-level
-threat blocks caused by user content, login forms, or substring matches.
+WhatsApp, Cloudflare, Microsoft, AWS, Wikipedia, etc.) against false-positive
+domain-level threat blocks caused by user content, login forms, or substring matches.
 =============================================================================
 """
 
 import urllib.parse
 from typing import Set, Optional
 
-# Trusted mainstream global platforms & registrable domains
-TRUSTED_MAINSTREAM_DOMAINS: Set[str] = {
+# Official mainstream platforms guaranteed immunity against false-positive vetoes
+HARD_BYPASS_DOMAINS: Set[str] = {
     "github.com",
+    "whatsapp.com",
     "google.com",
     "googleapis.com",
-    "cloudflare.com",
+    "youtube.com",
     "microsoft.com",
-    "apple.com",
-    "amazon.com",
+    "live.com",
+    "office.com",
+    "cloudflare.com",
     "wikipedia.org",
     "iana.org",
+    "apple.com",
+    "icloud.com",
+    "amazon.com",
+    "meta.com",
+    "facebook.com",
+    "instagram.com",
+    "linkedin.com",
+    "x.com",
+    "twitter.com",
+    "reddit.com",
+    "netflix.com",
+    "spotify.com",
+    "discord.com",
+    "telegram.org",
+    "openai.com",
+    "chatgpt.com",
     "vercel.app",
     "onrender.com",
     "supabase.co",
-    "linkedin.com",
-    "youtube.com",
     "stackoverflow.com",
     "npmjs.com",
     "pypi.org",
@@ -34,31 +50,13 @@ TRUSTED_MAINSTREAM_DOMAINS: Set[str] = {
     "debian.org",
     "oracle.com",
     "ibm.com",
-    "chatgpt.com",
-    "openai.com",
-    "twitter.com",
-    "x.com",
-    "facebook.com",
-    "meta.com",
-    "netflix.com",
     "paypal.com",
-    "chase.com",
-    "bankofamerica.com",
-    "wellsfargo.com",
-    "citi.com",
     "stripe.com",
     "anthropic.com",
-    "w3.org",
-    "mit.edu",
-    "stanford.edu",
-    "harvard.edu",
-    "python.org",
-    "golang.org",
-    "rust-lang.org",
-    "nodejs.org",
-    "docker.com",
-    "kubernetes.io",
+    "dropbox.com",
 }
+
+TRUSTED_MAINSTREAM_DOMAINS: Set[str] = HARD_BYPASS_DOMAINS
 
 # Shared platforms and CDNs where individual user file paths might be flagged
 # in threat feeds, but the apex domain and normal pages are legitimate.
@@ -103,6 +101,7 @@ VERIFIED_SHARED_HOSTS: Set[str] = {
     "herokuapp.com",
     "render.com",
     "onrender.com",
+    "whatsapp.com",
 }
 
 # Verified reputable ASNs representing global tier-1/cloud hyperscale infrastructure
@@ -120,7 +119,20 @@ REPUTABLE_ASNS: Set[str] = {
     "WIKIMEDIA",
 }
 
-# Backwards compatibility alias
+MULTI_PART_TLDS: Set[str] = {
+    "co.uk", "org.uk", "me.uk", "ltd.uk",
+    "com.au", "net.au", "org.au", "edu.au",
+    "co.in", "net.in", "org.in", "gen.in",
+    "co.za", "org.za", "net.za",
+    "co.jp", "ne.jp", "or.jp",
+    "co.nz", "net.nz", "org.nz",
+    "com.br", "net.br", "org.br",
+    "com.sg", "edu.sg",
+    "com.mx", "org.mx",
+    "com.tr", "edu.tr",
+    "co.kr", "or.kr",
+}
+
 VERIFIED_REPUTABLE_DOMAINS: Set[str] = TRUSTED_MAINSTREAM_DOMAINS
 
 
@@ -141,6 +153,55 @@ def extract_clean_hostname(url_or_hostname: str) -> str:
     return h
 
 
+def get_registrable_domain(hostname: str) -> str:
+    """
+    Extracts the apex / registrable domain from any hostname.
+    e.g.
+      'web.whatsapp.com' -> 'whatsapp.com'
+      'login.microsoft.com' -> 'microsoft.com'
+      'docs.google.co.uk' -> 'google.co.uk'
+      'github.com' -> 'github.com'
+    """
+    if not hostname:
+        return ""
+    h = extract_clean_hostname(hostname)
+    parts = h.split(".")
+    if len(parts) <= 2:
+        return h
+    last_two = f"{parts[-2]}.{parts[-1]}"
+    if last_two in MULTI_PART_TLDS:
+        if len(parts) >= 3:
+            return f"{parts[-3]}.{last_two}"
+        return h
+    return f"{parts[-2]}.{parts[-1]}"
+
+
+def is_hard_bypass_target(url_or_hostname: str) -> bool:
+    """
+    Returns True if target is an official mainstream platform / authentic subdomain
+    and NOT a direct executable binary on a raw file hosting platform.
+    """
+    if not url_or_hostname:
+        return False
+    target = url_or_hostname.strip().lower()
+    parsed = urllib.parse.urlparse(target if "://" in target else "https://" + target)
+    h = (parsed.hostname or parsed.netloc or "").split(":")[0]
+    if h.startswith("www."):
+        h = h[4:]
+    path = parsed.path.lower()
+
+    # Exclude direct raw binary downloads on raw.githubusercontent.com
+    if "raw.githubusercontent.com" in h:
+        if path.endswith((".exe", ".sh", ".elf", ".bin", ".vbs", ".bat", ".ps1", ".dll", ".apk")):
+            return False
+
+    reg_dom = get_registrable_domain(h)
+    for d in HARD_BYPASS_DOMAINS:
+        if h == d or h.endswith("." + d) or reg_dom == d:
+            return True
+    return False
+
+
 def is_verified_infrastructure(
     url_or_hostname: str,
     asn: str = "",
@@ -155,10 +216,8 @@ def is_verified_infrastructure(
     if not h:
         return False
 
-    # Check against trusted mainstream domains (exact match or subdomain)
-    for d in TRUSTED_MAINSTREAM_DOMAINS:
-        if h == d or h.endswith("." + d):
-            return True
+    if is_hard_bypass_target(h):
+        return True
 
     # Hyperscale ASN verification with anti-lookalike age protection
     if asn and not is_typosquat:
@@ -179,8 +238,9 @@ def is_shared_hosting_platform(url_or_hostname: str) -> bool:
     if not h:
         return False
 
+    reg_dom = get_registrable_domain(h)
     for s in VERIFIED_SHARED_HOSTS:
-        if h == s or h.endswith("." + s):
+        if h == s or h.endswith("." + s) or reg_dom == s:
             return True
 
     return False

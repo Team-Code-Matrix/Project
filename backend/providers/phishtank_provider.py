@@ -15,6 +15,24 @@ class PhishTankProvider(BaseThreatProvider):
         self.timeout = timeout
 
     def query(self, target_url: str, hostname: str) -> Dict[str, Any]:
+        try:
+            from infrastructure_allowlist import is_verified_infrastructure, is_hard_bypass_target
+        except ImportError:
+            try:
+                from backend.infrastructure_allowlist import is_verified_infrastructure, is_hard_bypass_target
+            except ImportError:
+                def is_verified_infrastructure(h): return False
+                def is_hard_bypass_target(h): return False
+
+        # Official platforms and their subdomains must never be flagged by unverified user submissions
+        if is_verified_infrastructure(hostname) or is_hard_bypass_target(hostname):
+            return self.build_result(
+                "NO_MATCH",
+                is_malicious=False,
+                confidence=95,
+                details={"message": "Target is verified official infrastructure; bypassed PhishTank submission queue"}
+            )
+
         api_endpoint = "https://checkurl.phishtank.com/checkurl/"
         data = {
             "url": target_url,

@@ -9,9 +9,19 @@ Avoids double-counting correlated findings.
 """
 from typing import Dict, Any, List, Tuple
 try:
-    from infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+    from infrastructure_allowlist import (
+        is_verified_infrastructure,
+        is_shared_hosting_platform,
+        is_hard_bypass_target,
+        get_registrable_domain,
+    )
 except ImportError:
-    from backend.infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+    from backend.infrastructure_allowlist import (
+        is_verified_infrastructure,
+        is_shared_hosting_platform,
+        is_hard_bypass_target,
+        get_registrable_domain,
+    )
 
 def compute_security_assessment(
     hostname: str,
@@ -43,11 +53,15 @@ def compute_security_assessment(
     is_http_only = target_url.lower().startswith("http://")
 
     # Infrastructure Allowlist Checks
-    is_official_domain = is_verified_infrastructure(
-        hostname,
-        asn=dns_data.get("asn", ""),
-        domain_age_days=rdap_data.get("domainAgeDays"),
-        is_typosquat=lexical_data.get("is_brand_typosquat", False)
+    is_official_domain = (
+        is_hard_bypass_target(hostname) or
+        is_hard_bypass_target(target_url) or
+        is_verified_infrastructure(
+            hostname,
+            asn=dns_data.get("asn", ""),
+            domain_age_days=rdap_data.get("domainAgeDays"),
+            is_typosquat=lexical_data.get("is_brand_typosquat", False)
+        )
     )
     is_shared_platform = is_shared_hosting_platform(hostname)
 

@@ -36,9 +36,19 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple, Callable
 
 try:
-    from infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+    from infrastructure_allowlist import (
+        is_verified_infrastructure,
+        is_shared_hosting_platform,
+        is_hard_bypass_target,
+        get_registrable_domain,
+    )
 except ImportError:
-    from backend.infrastructure_allowlist import is_verified_infrastructure, is_shared_hosting_platform
+    from backend.infrastructure_allowlist import (
+        is_verified_infrastructure,
+        is_shared_hosting_platform,
+        is_hard_bypass_target,
+        get_registrable_domain,
+    )
 
 # Comprehensive Brand Mappings for high-fidelity brand extraction & attribution
 BRAND_MAPPINGS: Dict[str, str] = {
@@ -558,6 +568,11 @@ class ThreatFeedIngestor:
         clean_url = target
         url_no_slash = clean_url.rstrip("/")
 
+        # Hard bypass guard for verified mainstream platforms
+        if is_hard_bypass_target(clean_url) or is_hard_bypass_target(domain):
+            if not any(clean_url.lower().endswith(ext) for ext in [".exe", ".sh", ".elf", ".bin", ".vbs", ".bat", ".ps1", ".apk", ".dll"]):
+                return None
+
         is_shared = is_shared_hosting_platform(domain)
         is_verified = is_verified_infrastructure(domain)
 
@@ -638,46 +653,6 @@ class ThreatFeedIngestor:
                             "sourceUrl": None,
                             "source": "threat_reports",
                         }
-
-                # 3. Check recent scans that were flagged MALICIOUS
-                try:
-                    if is_verified:
-                        cursor.execute("""
-                            SELECT scan_id, submitted_url, hostname, verdict, trust_score, risk_score
-                            FROM scans
-                            WHERE (submitted_url = ? OR submitted_url = ?)
-                              AND verdict = 'MALICIOUS'
-                            ORDER BY created_at DESC
-                            LIMIT 1
-                        """, (clean_url, url_no_slash))
-                    else:
-                        cursor.execute("""
-                            SELECT scan_id, submitted_url, hostname, verdict, trust_score, risk_score
-                            FROM scans
-                            WHERE (submitted_url = ? OR submitted_url = ? OR hostname = ?)
-                              AND verdict = 'MALICIOUS'
-                            ORDER BY created_at DESC
-                            LIMIT 1
-                        """, (clean_url, url_no_slash, domain))
-                    scan_row = cursor.fetchone()
-                    if scan_row:
-                        return {
-                            "id": scan_row["scan_id"],
-                            "indicator": scan_row["submitted_url"],
-                            "domain": scan_row["hostname"],
-                            "indicatorType": "url",
-                            "category": "phishing",
-                            "provider": "historical_scan",
-                            "confidenceScore": 95,
-                            "status": "verified",
-                            "targetBrand": None,
-                            "threatTags": ["Conclusively Flagged Malicious in Scan History"],
-                            "country": None,
-                            "sourceUrl": None,
-                            "source": "scans_history",
-                        }
-                except Exception:
-                    pass
 
         return None
 
