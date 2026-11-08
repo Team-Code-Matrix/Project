@@ -156,13 +156,16 @@ def extract_features(url: str, scan_payload: Optional[Dict[str, Any]] = None) ->
     # Extract from scan_payload if provided, else compute based on reputation hints
     domain_age = 0.5  # Neutral default
     if scan_payload:
-        age_days = scan_payload.get("domainAgeDays") or scan_payload.get("ageDays")
-        if age_days is not None:
-            domain_age = min(1.0, max(0.0, float(age_days) / 365.0))
-        elif scan_payload.get("rdapTenureVerified") or "RDAP_TENURE_VERIFIED" in scan_payload.get("analystReasonCodes", []):
-            domain_age = 1.0
-        elif scan_payload.get("domainRegisteredDaysAgo", 0) > 180:
-            domain_age = 0.9
+        if scan_payload.get("is_nxdomain") or scan_payload.get("dnsStatus") == "NXDOMAIN" or not scan_payload.get("is_live", True):
+            domain_age = 0.0
+        else:
+            age_days = scan_payload.get("domainAgeDays") or scan_payload.get("ageDays")
+            if age_days is not None:
+                domain_age = min(1.0, max(0.0, float(age_days) / 365.0))
+            elif scan_payload.get("rdapTenureVerified") or "RDAP_TENURE_VERIFIED" in scan_payload.get("analystReasonCodes", []):
+                domain_age = 1.0
+            elif scan_payload.get("domainRegisteredDaysAgo", 0) > 180:
+                domain_age = 0.9
     else:
         # Heuristic estimation if payload not yet available
         if is_suspicious_tld or is_ip_in_url or is_punycode:

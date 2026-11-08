@@ -290,224 +290,42 @@ def verify_access_token(token: str) -> Optional[dict]:
         return None
 
 # ============================================================================
-# 2. Custom AI/ML Phishing Detection Engine Import
+# 2. Custom AI/ML Phishing Detection & Multimodal Intelligence Import
 # ============================================================================
 try:
     from ml.predictor import predict_url, get_model_and_metadata
+    from intelligence_pipeline import (
+        evaluate_multimodal_security,
+        defang_url,
+        calculate_shannon_entropy,
+        levenshtein_distance,
+        PROTECTED_BRANDS,
+        DECEPTIVE_KEYWORDS,
+        SUSPICIOUS_TLDS,
+        URL_SHORTENERS,
+    )
     # Preload model into memory on startup
     get_model_and_metadata()
     IS_ML_ACTIVE = True
-    print("[+] Custom AI/ML Phishing Engine loaded and ready for live inference.")
+    print("[+] Custom AI/ML Multimodal Intelligence Engine loaded and ready.")
 except Exception as e:
-    print(f"[!] Warning loading ML Engine: {e}")
+    print(f"[!] Warning loading Intelligence Engine: {e}")
     IS_ML_ACTIVE = False
 
 # ============================================================================
-# 3. Deterministic Veto Scoring & Heuristic Rules
+# 3. Deterministic Veto Scoring & Multimodal Heuristic Gateway
 # ============================================================================
-PROTECTED_BRANDS = [
-    "microsoft", "office365", "google", "gmail", "paypal", "apple", "icloud",
-    "amazon", "aws", "netflix", "facebook", "instagram", "meta", "whatsapp",
-    "bankofamerica", "chase", "wellsfargo", "citibank", "coinbase", "binance",
-    "metamask", "ledger", "trezor", "kraken", "github", "gitlab", "dropbox",
-    "adobe", "docusign", "twitter", "linkedin", "steam", "telegram", "walmart",
-    "ebay", "target", "dhl", "fedex", "usps", "ups"
-]
-
-DECEPTIVE_KEYWORDS = [
-    "login", "signin", "sign-in", "log-in", "verify", "verification",
-    "secure", "security", "update", "account", "banking", "wallet",
-    "recover", "recovery", "auth", "authenticate", "portal", "support",
-    "billing", "confirm", "validation", "service", "helpdesk", "resolve",
-    "webscr", "cmd", "session", "password", "credential", "suspend"
-]
-
-SUSPICIOUS_TLDS = {
-    "icu", "top", "xyz", "tk", "zip", "cc", "cf", "ga", "gq", "ml",
-    "buzz", "work", "cn", "rest", "fit", "surf", "monster", "sbs", "click", "casa", "cam", "live"
-}
-
-URL_SHORTENERS = {
-    "bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd",
-    "buff.ly", "adf.ly", "shorturl.at", "cutt.ly", "rebrand.ly", "rb.gy"
-}
-
-def levenshtein_distance(s1: str, s2: str) -> int:
-    """Computes Levenshtein edit distance between two strings."""
-    if len(s1) < len(s2):
-        return levenshtein_distance(s2, s1)
-    if len(s2) == 0:
-        return len(s1)
-    previous_row = range(len(s2) + 1)
-    for i, c1 in enumerate(s1):
-        current_row = [i + 1]
-        for j, c2 in enumerate(s2):
-            insertions = previous_row[j + 1] + 1
-            deletions = current_row[j] + 1
-            substitutions = previous_row[j] + (c1 != c2)
-            current_row.append(min(insertions, deletions, substitutions))
-        previous_row = current_row
-    return previous_row[-1]
-
-def defang_url(url: str) -> str:
-    """Defangs a hostile URL for safe UI display (e.g., https:// -> hxxps://, . -> [.])"""
-    defanged = re.sub(r"^https?", lambda m: m.group(0).replace("http", "hxxp"), url, flags=re.IGNORECASE)
-    return defanged.replace(".", "[.]")
-
 def evaluate_url_security(raw_url: str):
     """
-    Evaluates submitted URL across all 4 pillars and applies deterministic hard caps.
+    Evaluates submitted URL across all 4 modalities via the custom intelligence pipeline.
     Enforces standardized polarity:
       0–39  = MALICIOUS (High Risk)
       40–69 = SUSPICIOUS (Caution)
       70–100 = CLEAN (Safe)
       PKI_TRUST_COMPROMISED <= 35
     """
-    clean_url = raw_url.strip()
-    if not clean_url.startswith("http://") and not clean_url.startswith("https://"):
-        clean_url = "https://" + clean_url
-
-    parsed = urllib.parse.urlparse(clean_url)
-    hostname = parsed.netloc.split(":")[0].lower()
-    path = parsed.path.lower()
-    full_str = f"{hostname}{path}"
-
-    host_parts = hostname.split(".")
-    tld = host_parts[-1] if len(host_parts) > 1 else ""
-    tokens = re.split(r"[-._]", hostname)
-    tokens = [t for t in tokens if t]
-
-    # Heuristic Flagging Checks
-    is_brand_typosquat = False
-    impersonated_brand = ""
-
-    for token in tokens:
-        # Check normalized visual lookalikes
-        normalized = token.replace("0", "o").replace("1", "l").replace("5", "s").replace("vv", "w")
-        for brand in PROTECTED_BRANDS:
-            if token == brand:
-                is_official = (
-                    hostname == f"{brand}.com" or
-                    hostname == f"www.{brand}.com" or
-                    hostname == f"{brand}.org" or
-                    hostname == f"{brand}.io" or
-                    hostname == f"{brand}.net"
-                )
-                if not is_official:
-                    is_brand_typosquat = True
-                    impersonated_brand = brand
-                    break
-            elif normalized == brand and token != brand:
-                is_brand_typosquat = True
-                impersonated_brand = brand
-                break
-            elif len(brand) >= 5:
-                dist = levenshtein_distance(token, brand)
-                if dist == 1 or (dist == 2 and len(token) >= 7):
-                    is_brand_typosquat = True
-                    impersonated_brand = brand
-                    break
-        if is_brand_typosquat:
-            break
-
-    is_punycode = hostname.startswith("xn--") or ".xn--" in hostname
-    is_ip_literal = bool(re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", hostname))
-    is_shortener = hostname in URL_SHORTENERS
-    contains_auth_keyword = any(kw in full_str for kw in DECEPTIVE_KEYWORDS)
-    is_suspicious_tld = tld in SUSPICIOUS_TLDS
-    is_http = parsed.scheme.lower() == "http"
-    is_cert_broken = "badssl" in hostname or "expired" in hostname or "self-signed" in hostname
-
-    # Subdomain depth anomaly (e.g. login.secure.verify.corp.attacker.com)
-    has_excessive_subdomains = len(host_parts) >= 5
-
-    # Deterministic Scoring & Overrides
-    if is_brand_typosquat or is_punycode or (contains_auth_keyword and is_suspicious_tld):
-        backend_verdict = "MALICIOUS"
-        backend_risk = 86
-        ui_trust = 14  # Strict veto <= 18
-        risk_level = "critical"
-        critical_override = True
-        summary = (
-            f"CRITICAL SECURITY THREAT DETECTED: Confirmed credential harvesting pattern detected "
-            f"with active typosquatted brand impersonation ({impersonated_brand.title() if impersonated_brand else 'Protected Identity'}). "
-            f"Deterministic safety veto override triggered (Score capped at 14/100)."
-        )
-        reasons = [
-            f"Active domain brand divergence detected mimicking '{impersonated_brand}'",
-            "Credential intake forms target unverified external exfiltration endpoint",
-            "Domain entropy and lexical variance indicate deceptive typosquatting",
-            "Automated sandbox correlation matches high-confidence phishing kit signature"
-        ]
-    elif is_cert_broken:
-        backend_verdict = "PKI_TRUST_COMPROMISED"
-        backend_risk = 76
-        ui_trust = 24  # Strict veto <= 35
-        risk_level = "critical"
-        critical_override = True
-        summary = (
-            "PKI TRUST FAILURE: X.509 certificate chain invalid, expired, or rejected by major root trust stores. "
-            "Transport security compromised."
-        )
-        reasons = [
-            "Leaf certificate expired or failed OCSP revocation status check",
-            "Intermediate CA trust chain broken across Mozilla NSS and Chrome Root Store",
-            "Missing valid Certificate Transparency (CT) Merkle audit proofs"
-        ]
-    elif is_suspicious_tld or is_ip_literal or is_shortener or (contains_auth_keyword and not is_http):
-        backend_verdict = "SUSPICIOUS"
-        backend_risk = 52
-        ui_trust = 48  # Strict 40–69 range
-        risk_level = "caution"
-        critical_override = False
-        summary = (
-            "SUSPICIOUS REPUTATION DETECTED: Elevated risk signals observed in domain hierarchy, "
-            "shortener obfuscation, or untrusted registration authority. Exercise caution."
-        )
-        reasons = [
-            "Top-Level Domain (TLD) flagged in global spam and abuse registries",
-            "Lexical keyword tokens associated with targeted authentication flows",
-            "Absence of historical enterprise tenure or DNSSEC validation"
-        ]
-    elif is_http:
-        backend_verdict = "SUSPICIOUS"
-        backend_risk = 45
-        ui_trust = 55  # Strict 40–69 range
-        risk_level = "caution"
-        critical_override = False
-        summary = "PLAINTEXT PROTOCOL: Endpoint transmits unencrypted HTTP traffic. Susceptible to transit eavesdropping."
-        reasons = [
-            "Connection negotiates plaintext HTTP without SSL/TLS handshake",
-            "HSTS mandatory transport security header omitted"
-        ]
-    else:
-        backend_verdict = "CLEAN"
-        backend_risk = 6
-        ui_trust = 94  # Strict 70–100 range
-        risk_level = "low"
-        critical_override = False
-        summary = "Multi-model evaluation completed clean. No adverse indicators detected across all four security pillars."
-        reasons = [
-            "Tenure and registry authority verified without brand imitation.",
-            "RFC 5280 certificate chain verified across 5 major global trust stores.",
-            "Defensive HTTP security headers conform to OWASP baseline standards.",
-            "Clean reputation confirmed across federated threat intelligence feeds."
-        ]
-
-    return {
-        "hostname": hostname,
-        "clean_url": clean_url,
-        "backend_verdict": backend_verdict,
-        "risk_score": backend_risk,
-        "trust_score": ui_trust,
-        "risk_level": risk_level,
-        "critical_override": critical_override,
-        "summary": summary,
-        "analyst_reasons": reasons,
-        "is_malicious": backend_verdict == "MALICIOUS",
-        "is_pki_issue": backend_verdict == "PKI_TRUST_COMPROMISED",
-        "impersonated_brand": impersonated_brand,
-    }
+    res = evaluate_multimodal_security(raw_url, threat_feed)
+    return res["sec"]
 
 
 # ============================================================================
@@ -582,23 +400,36 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
                 pass
 
         # Stream real-time 4-pillar progression over the WebSocket connection
-        workers = [
-            ("phishing_detonation", "Pillar 1: DOM & Vision Detonation", "DOM heuristics evaluated, sandbox screenshot captured", 25),
-            ("pki_ct_validation", "Pillar 2: PKI & Cryptographic Verification", "RSA/ECDSA entropy verified, CT logs checked", 50),
-            ("app_sec_auditing", "Pillar 3: WebSec & Infrastructure Audit", "OWASP headers & JA4S TLS fingerprints evaluated", 75),
-            ("cti_graph_correlation", "Pillar 4: CTI Graph Correlation", "STIX 2.1 mapped to threat graph", 100),
-        ]
-
-        for wid, wname, snippet, pct in workers:
-            send_frame("WORKER_STARTED", wid, wname, "running", pct - 15, f"Dispatched {wid} to isolated worker")
-            time.sleep(0.06)
-            send_frame("WORKER_PROGRESS", wid, wname, "running", pct, snippet)
-            time.sleep(0.06)
-            send_frame("WORKER_COMPLETED", wid, wname, "completed", pct, f"{wname} finished successfully")
-            time.sleep(0.04)
+        rep = scans_db.get(scan_id)
+        if rep and "workerPools" in rep:
+            pct_map = {"phishing_detonation": 25, "pki_ct_validation": 50, "app_sec_auditing": 75, "cti_graph_correlation": 100}
+            for wp in rep["workerPools"]:
+                wid = wp["id"]
+                wname = wp["name"]
+                wstatus = wp["status"]
+                pct = pct_map.get(wid, 50)
+                snippet = wp.get("summarySnippet", f"{wname} finished")
+                send_frame("WORKER_STARTED", wid, wname, "running", max(10, pct - 15), f"Dispatched {wid} to isolated worker")
+                time.sleep(0.04)
+                send_frame("WORKER_COMPLETED", wid, wname, wstatus, pct, snippet)
+                time.sleep(0.04)
+        else:
+            workers = [
+                ("phishing_detonation", "Pillar 1: DOM & Vision Detonation", "DOM heuristics evaluated, sandbox screenshot captured", 25),
+                ("pki_ct_validation", "Pillar 2: PKI & Cryptographic Verification", "RSA/ECDSA entropy verified, CT logs checked", 50),
+                ("app_sec_auditing", "Pillar 3: WebSec & Infrastructure Audit", "OWASP headers & JA4S TLS fingerprints evaluated", 75),
+                ("cti_graph_correlation", "Pillar 4: CTI Graph Correlation", "STIX 2.1 mapped to threat graph", 100),
+            ]
+            for wid, wname, snippet, pct in workers:
+                send_frame("WORKER_STARTED", wid, wname, "running", pct - 15, f"Dispatched {wid} to isolated worker")
+                time.sleep(0.04)
+                send_frame("WORKER_PROGRESS", wid, wname, "running", pct, snippet)
+                time.sleep(0.04)
+                send_frame("WORKER_COMPLETED", wid, wname, "completed", pct, f"{wname} finished successfully")
+                time.sleep(0.04)
 
         send_frame("SCAN_COMPLETED", "cti_graph_correlation", "Dual-Lane Orchestrator", "completed", 100, "Verdict synthesized and sealed")
-        time.sleep(0.08)
+        time.sleep(0.05)
 
     def do_OPTIONS(self):
         self.send_response(204)
@@ -844,19 +675,11 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
         # 4. Fast-Path Synchronous Evaluation (<150ms)
         if path in ["/api/scan/fast-path", "/api/v1/scan/fast-path"]:
             start_t = time.time()
-            sec = evaluate_url_security(raw_url)
+            pipeline_res = evaluate_multimodal_security(raw_url, threat_feed, is_fast_path=True)
             elapsed_ms = max(2, int((time.time() - start_t) * 1000))
 
-            res = {
-                "evaluatedInMs": elapsed_ms,
-                "bloomFilterHit": sec["is_malicious"],
-                "bloomSource": "Abuse.ch URLhaus" if sec["is_malicious"] else "None",
-                "googleSafeBrowsingMatch": sec["is_malicious"],
-                "cachedReputation": "MALICIOUS" if sec["is_malicious"] else ("SUSPICIOUS" if sec["backend_verdict"] == "SUSPICIOUS" else "BENIGN"),
-                "mozillaOneCrlRevoked": sec["is_pki_issue"],
-                "preliminaryVerdict": sec["backend_verdict"],
-                "summary": sec["summary"],
-            }
+            res = pipeline_res["fast_path"]
+            res["evaluatedInMs"] = elapsed_ms
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -896,268 +719,11 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
 
         # 6. Deep-Scan Initiation (All 4 Pillars & Real ML Inference Output)
         if path in ["/api/scan", "/api/v1/scan"]:
-            scan_id = "scn_" + uuid.uuid4().hex[:12]
-            sec = evaluate_url_security(raw_url)
-            hostname = sec["hostname"]
-            clean_url = sec["clean_url"]
-            defanged = defang_url(clean_url)
-            resolved_ip = "185.220.101.45" if sec["is_malicious"] else ("104.154.89.105" if sec["is_pki_issue"] else "140.82.121.4")
-
-            # Build Complete 4-Pillar Extended Report matching TypeScript ExtendedScanReport
-            report = {
-                "scanId": scan_id,
-                "submittedUrl": clean_url,
-                "hostname": hostname,
-                "canonicalUrl": clean_url,
-                "checkedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "backendVerdict": sec["backend_verdict"],
-                "backendRiskScore": sec["risk_score"],
-                "uiTrustScore": sec["trust_score"],
-                "criticalOverride": sec["critical_override"],
-                "summary": sec["summary"],
-                "analystReasonCodes": sec["analyst_reasons"],
-                "resolvedIp": resolved_ip,
-                "fastPath": {
-                    "evaluatedInMs": 34,
-                    "bloomFilterHit": sec["is_malicious"],
-                    "bloomSource": "Abuse.ch URLhaus" if sec["is_malicious"] else "None",
-                    "googleSafeBrowsingMatch": sec["is_malicious"],
-                    "cachedReputation": "MALICIOUS" if sec["is_malicious"] else ("SUSPICIOUS" if sec["backend_verdict"] == "SUSPICIOUS" else "BENIGN"),
-                    "mozillaOneCrlRevoked": sec["is_pki_issue"],
-                    "preliminaryVerdict": sec["backend_verdict"],
-                    "summary": f"Fast-path completed with verdict {sec['backend_verdict']}",
-                },
-                "workerPools": [
-                    {"id": "phishing_detonation", "name": "Pillar 1: Phishing & DOM Detonation", "status": "completed", "durationMs": 1420, "summarySnippet": "DOM analyzed in sandboxed microVM."},
-                    {"id": "pki_ct_validation", "name": "Pillar 2: Cryptographic Trust & PKI", "status": "completed", "durationMs": 380, "summarySnippet": "RFC 5280 path verified across stores."},
-                    {"id": "app_sec_auditing", "name": "Pillar 3: App-Level Web Security", "status": "completed", "durationMs": 510, "summarySnippet": "OWASP defensive header baseline checked."},
-                    {"id": "cti_graph_correlation", "name": "Pillar 4: STIX 2.1 Threat Intelligence", "status": "completed", "durationMs": 290, "summarySnippet": "Correlated across threat intelligence graph."},
-                ],
-                "phishingDetonation": {
-                    "detonationSandbox": "Firecracker microVM",
-                    "antiBotCloakingDefeated": True,
-                    "redirectChain": [
-                        {"hop": 1, "url": clean_url, "type": "Direct", "statusCode": 200, "destinationIp": resolved_ip, "asn": "AS13335 CLOUDFLARENET"}
-                    ],
-                    "domHeuristics": {
-                        "passwordInputsCount": 1 if sec["is_malicious"] else 0,
-                        "paymentFieldsCount": 0,
-                        "otpFieldsCount": 0,
-                        "crossOriginSubmissionTarget": "https://api.evil-exfil-drop.com/v1/auth" if sec["is_malicious"] else None,
-                        "browserInTheBrowserDetected": False,
-                        "hiddenIframesCount": 1 if sec["is_malicious"] else 0,
-                        "devToolsBlockerDetected": False
-                    },
-                    "yaraRulesMatched": ["Generic_PhishKit_v3", "Obfuscated_Credential_Intake"] if sec["is_malicious"] else [],
-                    "computerVision": {
-                        "targetedBrand": sec["impersonated_brand"].title() if sec["impersonated_brand"] else None,
-                        "visualSimilarityScore": 92.4 if sec["is_malicious"] else 2.1,
-                        "pHashHex": "f0e8d6c4b2a1f8e3",
-                        "dHashHex": "0f1e2d3c4b5a6978",
-                        "faviconMurmurHash3": "709511739",
-                        "isImpersonation": sec["is_malicious"]
-                    },
-                    "screenshotUrl": f"/artifacts/screenshot-{scan_id}.png",
-                },
-                "pkiIntelligence": {
-                    "keyEntropyVerdict": "VALID",
-                    "fermatFactorizationPassed": True,
-                    "smallPrimeGcdPassed": True,
-                    "curvePointValid": True,
-                    "keyCeremonyAnomalyFlag": sec["is_pki_issue"],
-                    "chainValidationStatus": "REVOKED" if sec["is_pki_issue"] else "VERIFIED",
-                    "trustStoreCompatibility": {
-                        "mozillaNss": not sec["is_pki_issue"],
-                        "chromeRoot": not sec["is_pki_issue"],
-                        "apple": not sec["is_pki_issue"],
-                        "microsoft": not sec["is_pki_issue"],
-                        "oracleJava": not sec["is_pki_issue"]
-                    },
-                    "pathLenConstraintValid": True,
-                    "crossSignedBypassDetected": sec["is_pki_issue"],
-                    "certificateTransparency": {
-                        "sctsDeliveredCount": 3,
-                        "sctSources": ["X.509 Extension", "TLS Extension"],
-                        "merkleInclusionProofStatus": "PROVEN",
-                        "signedTreeHeadTimestamp": "2026-11-08T00:00:00Z",
-                        "unexpectedIssuanceAlert": False
-                    },
-                    "revocationHealth": {
-                        "ocspStatus": "REVOKED" if sec["is_pki_issue"] else "GOOD",
-                        "ocspStapled": True,
-                        "mustStapleCompliant": True,
-                        "crlSignatureValid": not sec["is_pki_issue"],
-                        "crlNextUpdateExpired": False,
-                        "oneCrlIncluded": sec["is_pki_issue"],
-                        "chromeCrlSetIncluded": sec["is_pki_issue"]
-                    },
-                    "dnsCaaPolicy": {
-                        "caaRecordsPresent": True,
-                        "allowedIssuers": ["letsencrypt.org", "digicert.com"],
-                        "actualIssuer": "Let's Encrypt Authority X3",
-                        "policyMismatch": False
-                    },
-                    "chain": [
-                        {
-                            "type": "leaf",
-                            "subjectCommonName": hostname,
-                            "issuerCommonName": "Let's Encrypt Authority X3",
-                            "serialNumber": "03:e4:9a:11:bc:d9:22",
-                            "validFrom": "2026-10-01T00:00:00Z",
-                            "validUntil": "2026-11-01T00:00:00Z" if sec["is_pki_issue"] else "2027-01-01T00:00:00Z",
-                            "daysRemaining": -7 if sec["is_pki_issue"] else 54,
-                            "isExpired": sec["is_pki_issue"],
-                            "signatureAlgorithm": "SHA256withRSA",
-                            "publicKeyAlgorithm": "RSA",
-                            "keySizeBits": 2048,
-                            "sha256Fingerprint": "8a:4f:21:78:90:bc:de:f1:23:45:67:89:ab:cd:ef:01"
-                        },
-                        {
-                            "type": "intermediate",
-                            "subjectCommonName": "Let's Encrypt Authority X3",
-                            "issuerCommonName": "ISRG Root X1",
-                            "serialNumber": "0a:01:41:42:00:00:01",
-                            "validFrom": "2025-01-01T00:00:00Z",
-                            "validUntil": "2027-01-01T00:00:00Z",
-                            "daysRemaining": 365,
-                            "isExpired": False,
-                            "signatureAlgorithm": "SHA256withRSA",
-                            "publicKeyAlgorithm": "RSA",
-                            "keySizeBits": 2048,
-                            "sha256Fingerprint": "25:84:c8:e6:f4:3f:67:50:e0:1b:7e:41:35:72:99:d4"
-                        }
-                    ]
-                },
-                "webSecurityAudit": {
-                    "httpHeaders": {
-                        "csp": {
-                            "present": True,
-                            "directivesCount": 8,
-                            "unsafeInline": False,
-                            "unsafeEval": False,
-                            "wildcardOrigins": False,
-                            "grade": "A"
-                        },
-                        "hsts": {
-                            "present": True,
-                            "maxAgeSeconds": 31536000,
-                            "includeSubdomains": True,
-                            "preloaded": True,
-                            "grade": "EXCELLENT"
-                        },
-                        "xFrameOptions": "DENY",
-                        "xContentTypeOptionsNosniff": True,
-                        "referrerPolicy": "strict-origin-when-cross-origin"
-                    },
-                    "cookieSecurity": {
-                        "totalCookiesCount": 2,
-                        "secureFlagsMissingCount": 0,
-                        "httpOnlyMissingCount": 0,
-                        "sameSiteMissingCount": 0,
-                        "sessionCookiesSafe": True
-                    },
-                    "corsPolicy": {
-                        "wildcardOrigin": False,
-                        "originReflection": False,
-                        "credentialsAllowed": False,
-                        "verdict": "RESTRICTED"
-                    },
-                    "tlsFingerprints": {
-                        "negotiatedProtocol": "TLS 1.3",
-                        "negotiatedCipher": "TLS_AES_256_GCM_SHA384",
-                        "forwardSecrecy": True,
-                        "weakCipherDetected": False,
-                        "ja3sHash": "eb1d943308343800f937d80c1325c613",
-                        "ja4sHash": "t13d1516h2_8daaf6152771_b38696d92714",
-                        "aitmProxySignatureDetected": False
-                    },
-                    "passiveExposure": {
-                        "serverBanner": "cloudflare",
-                        "exposedFilesObserved": [],
-                        "matchedCves": []
-                    }
-                },
-                "threatIntelligence": {
-                    "stixIndicators": [
-                        {
-                            "id": f"indicator--{scan_id}",
-                            "type": "indicator",
-                            "specVersion": "2.1",
-                            "name": f"Indicator: {hostname}",
-                            "description": f"Observed infrastructure for {hostname}",
-                            "indicatorTypes": ["anomalous-activity"] if sec["is_malicious"] else ["benign"],
-                            "pattern": f"[domain-name:value = '{hostname}']",
-                            "patternType": "stix",
-                            "validFrom": "2026-11-08T00:00:00Z",
-                            "tlpMarking": "TLP:AMBER" if sec["is_malicious"] else "TLP:WHITE",
-                            "confidenceScore": 95 if sec["is_malicious"] else 15,
-                            "sourceAttribution": "TrustShield CTI Pipeline v2.4",
-                            "reputationDecay": {
-                                "firstSeen": "2026-11-01T00:00:00Z",
-                                "lastSeen": "2026-11-08T00:00:00Z",
-                                "decayHalfLifeDays": 30,
-                                "currentWeight": 1.0
-                            },
-                            "communitySightingsCount": 4 if sec["is_malicious"] else 0,
-                            "reporterReliabilityScore": 90
-                        }
-                    ],
-                    "graphData": {
-                        "nodes": [
-                            {"id": "node-dom", "type": "domain", "label": hostname, "riskState": "malicious" if sec["is_malicious"] else ("pki_compromised" if sec["is_pki_issue"] else "clean")},
-                            {"id": "node-ip", "type": "ip", "label": resolved_ip, "riskState": "malicious" if sec["is_malicious"] else "clean"},
-                            {"id": "node-asn", "type": "asn", "label": "AS13335 (Cloudflare)", "riskState": "clean"},
-                            {"id": "node-cert", "type": "certificate", "label": "Let's Encrypt Authority X3", "riskState": "pki_compromised" if sec["is_pki_issue"] else "clean"},
-                            {"id": "node-ja4", "type": "ja4", "label": "t13d1516h2_8daaf", "riskState": "clean"}
-                        ],
-                        "edges": [
-                            {"id": "e1", "source": "node-dom", "target": "node-ip", "label": "RESOLVES_TO", "relationshipType": "RESOLVES_TO"},
-                            {"id": "e2", "source": "node-ip", "target": "node-asn", "label": "ANNOUNCED_BY", "relationshipType": "ANNOUNCED_BY"},
-                            {"id": "e3", "source": "node-dom", "target": "node-cert", "label": "SECURED_BY", "relationshipType": "SECURED_BY"},
-                            {"id": "e4", "source": "node-dom", "target": "node-ja4", "label": "FINGERPRINTED_AS", "relationshipType": "FINGERPRINTED_AS"},
-                        ]
-                    },
-                    "mispSyncStatus": "SYNCED"
-                },
-                "forensics": {
-                    "targetUrlDefanged": defanged,
-                    "screenshotFullPageUrl": f"/artifacts/screenshot-{scan_id}.png",
-                    "screenshotTimestamp": "2026-11-08T00:00:00Z",
-                    "domSnapshotDefangedHtml": f"<!-- Defanged DOM Snapshot for {defanged} -->\n<!DOCTYPE html><html><body>Secure Artifact</body></html>"
-                },
-                "findings": [
-                    {
-                        "id": f"fnd_{uuid.uuid4().hex[:8]}",
-                        "title": "Typosquatted Brand Impersonation" if sec["is_malicious"] else ("Expired / Invalid Certificate" if sec["is_pki_issue"] else "Strict Transport Security Enforced"),
-                        "severity": "CRITICAL" if (sec["is_malicious"] or sec["is_pki_issue"]) else "LOW",
-                        "category": "PHISHING" if sec["is_malicious"] else ("PKI" if sec["is_pki_issue"] else "WEB_SEC"),
-                        "description": sec["summary"],
-                        "remediation": "Do not enter passwords or credentials." if sec["is_malicious"] else "Renew TLS certificate.",
-                        "modelAttribution": "Pillar 1: DOM & Vision Detonation" if sec["is_malicious"] else "Pillar 2: PKI Validation"
-                    }
-                ]
-            }
-
-            # Run Custom AI/ML Inference Engine
-            ml_inference = {}
-            if IS_ML_ACTIVE:
-                try:
-                    ml_inference = predict_url(clean_url, report)
-                    report["mlInference"] = ml_inference
-
-                    # If ML detects high-confidence phishing, reinforce finding
-                    if ml_inference.get("prediction") == "PHISHING" and ml_inference.get("phishing_probability", 0) >= 0.65:
-                        report["findings"].insert(0, {
-                            "id": f"fnd_ml_{uuid.uuid4().hex[:8]}",
-                            "title": f"Custom ML Phishing Detonation Alert ({int(ml_inference['phishing_probability']*100)}% Confidence)",
-                            "severity": "CRITICAL",
-                            "category": "PHISHING",
-                            "description": f"TrustShield RandomForest ML engine classified target as PHISHING with {ml_inference['phishing_probability']*100:.1f}% probability based on {ml_inference['top_contributing_features'][0]['explanation']}",
-                            "remediation": "Immediate domain isolation recommended. Do not submit credentials.",
-                            "modelAttribution": f"ML PhishGuard ({ml_inference['model_version']})"
-                        })
-                except Exception as ml_err:
-                    print(f"[!] ML prediction error: {ml_err}")
+            pipeline_res = evaluate_multimodal_security(raw_url, threat_feed, is_fast_path=False)
+            sec = pipeline_res["sec"]
+            report = pipeline_res["report"]
+            ml_inference = pipeline_res["ml_inference"]
+            scan_id = report["scanId"]
 
             # Cache in memory
             scans_db[scan_id] = report
@@ -1165,13 +731,13 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
             # Prepend to scan history
             scan_history.insert(0, {
                 "scanId": scan_id,
-                "hostname": hostname,
-                "submittedUrl": clean_url,
+                "hostname": report["hostname"],
+                "submittedUrl": report["submittedUrl"],
                 "timestamp": report["checkedAt"],
-                "verdict": sec["backend_verdict"],
-                "riskScore": sec["risk_score"],
-                "trustScore": sec["trust_score"],
-                "resolvedIp": resolved_ip
+                "verdict": report["backendVerdict"],
+                "riskScore": report["backendRiskScore"],
+                "trustScore": report["uiTrustScore"],
+                "resolvedIp": report["resolvedIp"],
             })
 
             # Persist to local SQLite database
@@ -1181,11 +747,11 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
             resp = {
                 "scanId": scan_id,
                 "status": "COMPLETED",
-                "canonicalUrl": clean_url,
+                "canonicalUrl": report["canonicalUrl"],
                 "wsUrl": f"/ws/scans/{scan_id}",
                 "checkedAt": report["checkedAt"],
                 "mlInference": ml_inference,
-                "report": report
+                "report": report,
             }
 
             self.send_response(200)
