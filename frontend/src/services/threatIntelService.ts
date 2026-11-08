@@ -22,35 +22,46 @@ export async function fetchLiveThreatsAndMetrics(): Promise<{
 }> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => {
+      try {
+        controller.abort(new Error('Threat telemetry fetch timed out (30s).'));
+      } catch {
+        controller.abort();
+      }
+    }, 30000);
     const res = await fetch(`${API_BASE_URL}/api/threats`, { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (res.ok) {
       const data = await res.json();
       const rawThreats = Array.isArray(data.threats) ? data.threats : [];
-      const threats: ThreatReport[] = rawThreats.map((t: any) => ({
-        id: t.id || `rep_${Math.random().toString(36).substring(2, 9)}`,
-        domain: t.domain || 'unspecified-domain',
-        urlPath: t.urlPath || t.url || '/',
-        category: (t.category || t.threatType || 'phishing') as any,
-        reportedAt: t.reportedAt || t.ingested_at || new Date().toISOString(),
-        status: t.status === 'confirmed' || t.status === 'verified'
-          ? 'verified'
-          : t.status === 'under_investigation'
-          ? 'investigating'
-          : t.status === 'mitigated'
-          ? 'mitigated'
-          : 'unconfirmed',
-        confidenceScore: t.confidenceScore || 95,
-        reporterType: t.provider ? 'partner_feed' : 'automated_sensor',
-        corroborationCount: t.corroborationCount || 1,
-        targetBrand: t.targetBrand || t.targetedBrand || undefined,
-        indicators: t.indicators || t.threatTags || [t.evidenceSummary || 'Adverse indicator detected.'],
-        provider: t.provider,
-        country: t.country,
-        sourceUrl: t.sourceUrl,
-      }));
+      const threats: ThreatReport[] = rawThreats.map((t: any) => {
+        let rawCat = String(t.category || t.threatType || 'phishing').toLowerCase().trim();
+        if (rawCat === 'brand_impersonation') rawCat = 'impersonation';
+        if (rawCat === 'scam_smishing') rawCat = 'scam';
+        return {
+          id: t.id || `rep_${Math.random().toString(36).substring(2, 9)}`,
+          domain: t.domain || 'unspecified-domain',
+          urlPath: t.urlPath || t.url || '/',
+          category: rawCat as any,
+          reportedAt: t.reportedAt || t.ingested_at || new Date().toISOString(),
+          status: t.status === 'confirmed' || t.status === 'verified'
+            ? 'verified'
+            : t.status === 'under_investigation'
+            ? 'investigating'
+            : t.status === 'mitigated'
+            ? 'mitigated'
+            : 'unconfirmed',
+          confidenceScore: t.confidenceScore || 95,
+          reporterType: t.provider ? 'partner_feed' : 'automated_sensor',
+          corroborationCount: t.corroborationCount || 1,
+          targetBrand: t.targetBrand || t.targetedBrand || undefined,
+          indicators: t.indicators || t.threatTags || [t.evidenceSummary || 'Adverse indicator detected.'],
+          provider: t.provider,
+          country: t.country,
+          sourceUrl: t.sourceUrl,
+        };
+      });
 
       const rawMetrics = data.metrics || {};
       const metrics: ThreatFeedMetrics = {
@@ -85,7 +96,13 @@ export async function fetchLiveThreatsAndMetrics(): Promise<{
 export async function fetchThreatProvidersStatus(): Promise<ThreatProviderStatus[]> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => {
+      try {
+        controller.abort(new Error('Providers status fetch timed out (30s).'));
+      } catch {
+        controller.abort();
+      }
+    }, 30000);
     const res = await fetch(`${API_BASE_URL}/api/threats/providers`, { signal: controller.signal });
     clearTimeout(timeoutId);
 
@@ -104,7 +121,13 @@ export async function triggerThreatFeedSync(
 ): Promise<{ success: boolean; sync?: any }> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => {
+      try {
+        controller.abort(new Error('Threat feed sync timed out (60s).'));
+      } catch {
+        controller.abort();
+      }
+    }, 60000);
     const res = await fetch(`${API_BASE_URL}/api/threats/sync`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -136,7 +159,13 @@ export async function submitCommunityThreatReport(
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => {
+      try {
+        controller.abort(new Error('Report submission timed out (30s).'));
+      } catch {
+        controller.abort();
+      }
+    }, 30000);
     const res = await fetch(`${API_BASE_URL}/api/report`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

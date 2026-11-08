@@ -186,7 +186,13 @@ export class ProductionScanService implements IScanService {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const timeoutId = setTimeout(() => {
+      try {
+        controller.abort(new Error('Fast-path evaluation timed out after 15s.'));
+      } catch {
+        controller.abort();
+      }
+    }, 15000);
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/scan/fast-path`, {
@@ -213,6 +219,10 @@ export class ProductionScanService implements IScanService {
       throw new Error(`Fast-path API returned status ${res.status}`);
     } catch (err: any) {
       clearTimeout(timeoutId);
+      const isAbort = err?.name === 'AbortError' || String(err?.message || '').toLowerCase().includes('abort');
+      const reason = isAbort
+        ? 'Fast-path request timed out waiting for backend. Proceeding to full deep scan.'
+        : `Fast-path evaluation unavailable: ${err?.message || 'Connection error'}. Proceeding to full deep scan.`;
       // Return unrated fallback without fabricating safety
       return {
         evaluatedInMs: 0,
@@ -222,7 +232,7 @@ export class ProductionScanService implements IScanService {
         cachedReputation: 'UNRATED',
         mozillaOneCrlRevoked: false,
         preliminaryVerdict: 'SUSPICIOUS',
-        summary: `Fast-path evaluation unavailable: ${err?.message || 'Connection error'}. Proceeding to full deep scan.`,
+        summary: reason,
       };
     }
   }
@@ -281,7 +291,13 @@ export class ProductionScanService implements IScanService {
     let backendReport: ExtendedScanReport | null = null;
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => {
+        try {
+          controller.abort(new Error('Deep scan timed out after 60s. Backend may still be processing or cold-starting.'));
+        } catch {
+          controller.abort();
+        }
+      }, 60000);
 
       const res = await fetch(`${API_BASE_URL}/api/scan`, {
         method: 'POST',
@@ -303,9 +319,11 @@ export class ProductionScanService implements IScanService {
       backendReport = data.report as ExtendedScanReport;
     } catch (err: any) {
       clearInterval(progressInterval);
-      throw new Error(
-        `Failed to reach Trust Shield backend at ${API_BASE_URL}. Ensure server is running: ${err?.message || 'Connection refused'}`
-      );
+      const isAbort = err?.name === 'AbortError' || String(err?.message || '').toLowerCase().includes('abort');
+      const errorMsg = isAbort
+        ? `Connection to Trust Shield backend timed out (60s). The server at ${API_BASE_URL} may be waking up from cold-start or taking longer for deep network inspection. Please try again.`
+        : `Failed to reach Trust Shield backend at ${API_BASE_URL}. Ensure server is running: ${err?.message || 'Connection refused'}`;
+      throw new Error(errorMsg);
     } finally {
       clearInterval(progressInterval);
     }
@@ -379,7 +397,13 @@ export class ProductionScanService implements IScanService {
     if (cached) return cached;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => {
+      try {
+        controller.abort(new Error('Extended report request timed out after 60s.'));
+      } catch {
+        controller.abort();
+      }
+    }, 60000);
 
     const res = await fetch(`${API_BASE_URL}/api/scan`, {
       method: 'POST',

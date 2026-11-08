@@ -41,19 +41,22 @@ class ThreatIntelligenceAggregator:
                 for p in self.providers
             }
 
-            for future in as_completed(future_to_provider, timeout=timeout):
-                p = future_to_provider[future]
-                try:
-                    res = future.result()
-                    results[p.provider_id] = res
-                    if p.is_configured:
-                        configured_count += 1
-                    active_queries_count += 1
+            try:
+                for future in as_completed(future_to_provider, timeout=timeout):
+                    p = future_to_provider[future]
+                    try:
+                        res = future.result()
+                        results[p.provider_id] = res
+                        if p.is_configured:
+                            configured_count += 1
+                        active_queries_count += 1
 
-                    if res.get("isMalicious"):
-                        malicious_hits.append(res)
-                except Exception as exc:
-                    results[p.provider_id] = p.build_result("ERROR", error=str(exc))
+                        if res.get("isMalicious"):
+                            malicious_hits.append(res)
+                    except Exception as exc:
+                        results[p.provider_id] = p.build_result("ERROR", error=str(exc))
+            except TimeoutError:
+                pass
 
         # Fill any missing providers that timed out
         for p in self.providers:

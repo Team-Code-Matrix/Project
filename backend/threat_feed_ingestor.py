@@ -22,6 +22,7 @@ Adheres strictly to the ZERO FABRICATED DATA principle:
 """
 
 import os
+import re
 import time
 import json
 import sqlite3
@@ -34,27 +35,235 @@ import urllib.parse
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple, Callable
 
-# Known targeted brands detection for legitimate brand categorization
-KNOWN_BRANDS = [
-    "paypal", "microsoft", "apple", "google", "amazon", "netflix", "facebook",
-    "instagram", "whatsapp", "chase", "wellsfargo", "bankofamerica", "citi",
-    "dhl", "fedex", "usps", "ups", "adobe", "dropbox", "docuSign", "coinbase",
-    "binance", "metamask", "steam", "roblox", "telegram", "yahoo", "outlook"
-]
+# Comprehensive Brand Mappings for high-fidelity brand extraction & attribution
+BRAND_MAPPINGS: Dict[str, str] = {
+    # Tech & Cloud Giants
+    "microsoft": "Microsoft",
+    "micros0ft": "Microsoft",
+    "office365": "Microsoft Office 365",
+    "o365": "Microsoft Office 365",
+    "outlook": "Microsoft Outlook",
+    "onedrive": "Microsoft OneDrive",
+    "sharepoint": "Microsoft SharePoint",
+    "azure": "Microsoft Azure",
+    "msft": "Microsoft",
+    "google": "Google",
+    "g00gle": "Google",
+    "gmail": "Google Gmail",
+    "gdrive": "Google Drive",
+    "apple": "Apple",
+    "icloud": "Apple iCloud",
+    "appleid": "Apple ID",
+    "amazon": "Amazon",
+    "amaz0n": "Amazon",
+    "aws": "Amazon AWS",
+    "netflix": "Netflix",
+    "netfl1x": "Netflix",
+    "facebook": "Meta / Facebook",
+    "faceb00k": "Meta / Facebook",
+    "meta": "Meta / Facebook",
+    "instagram": "Instagram",
+    "whatsapp": "WhatsApp",
+    "threads": "Threads",
+    "adobe": "Adobe",
+    "dropbox": "Dropbox",
+    "docusign": "DocuSign",
+    "steam": "Steam",
+    "discord": "Discord",
+    "telegram": "Telegram",
+    "yahoo": "Yahoo",
+    "roblox": "Roblox",
+    "twitter": "X / Twitter",
+    "linkedin": "LinkedIn",
+    "ebay": "eBay",
+    "walmart": "Walmart",
+    "spotify": "Spotify",
+
+    # Banking & Financial Institutions
+    "paypal": "PayPal",
+    "paypa1": "PayPal",
+    "chase": "Chase Bank",
+    "wellsfargo": "Wells Fargo",
+    "bankofamerica": "Bank of America",
+    "bofa": "Bank of America",
+    "citi": "Citibank",
+    "citibank": "Citibank",
+    "sbi": "State Bank of India (SBI)",
+    "hdfc": "HDFC Bank",
+    "icici": "ICICI Bank",
+    "barclays": "Barclays",
+    "hsbc": "HSBC",
+    "santander": "Santander",
+    "capitalone": "Capital One",
+    "schwab": "Charles Schwab",
+    "fidelity": "Fidelity",
+    "stripe": "Stripe",
+
+    # Crypto & Web3
+    "binance": "Binance",
+    "coinbase": "Coinbase",
+    "metamask": "MetaMask",
+    "trustwallet": "Trust Wallet",
+    "ledger": "Ledger",
+    "ldgrr": "Ledger",
+    "trezor": "Trezor",
+    "kraken": "Kraken",
+    "phantom": "Phantom Wallet",
+    "kucoin": "KuCoin",
+    "bybit": "Bybit",
+    "tbybit": "Bybit",
+    "uniswap": "Uniswap",
+    "pancakeswap": "PancakeSwap",
+    "opensea": "OpenSea",
+    "okx": "OKX",
+    "solana": "Solana Web3",
+    "ethereum": "Ethereum Web3",
+
+    # Logistics & Delivery
+    "dhl": "DHL Express",
+    "fedex": "FedEx",
+    "usps": "USPS",
+    "ups": "UPS",
+    "royalmail": "Royal Mail",
+    "dpd": "DPD",
+    "post": "Postal Service",
+}
+
+KNOWN_BRANDS = list(BRAND_MAPPINGS.keys())
 
 def extract_target_brand(url_or_domain: str) -> Optional[str]:
-    """Extracts genuine target brand if present in domain or path tokens."""
+    """Extracts genuine target brand if present in domain, path, or query tokens."""
+    if not url_or_domain:
+        return None
     low = url_or_domain.lower()
-    for b in KNOWN_BRANDS:
-        # Check as separated token (e.g. paypal-login, /microsoft/, etc.)
-        if b in low:
-            idx = low.find(b)
-            # Ensure it's not a generic word substring
-            prefix_char = low[idx-1] if idx > 0 else "."
-            suffix_char = low[idx+len(b)] if idx + len(b) < len(low) else "."
-            if not prefix_char.isalnum() or not suffix_char.isalnum():
-                return b.title()
+    clean = re.sub(r"[^a-z0-9]", " ", low)
+    tokens = set(clean.split())
+
+    for alias, brand_name in BRAND_MAPPINGS.items():
+        if alias in tokens:
+            return brand_name
+        if re.search(r'(^|[^a-z0-9])' + re.escape(alias) + r'([^a-z0-9]|$)', low):
+            return brand_name
     return None
+
+# Indicator keywords for multi-class threat categorization
+CRYPTO_KEYWORDS = {
+    "metamask", "phantom", "wallet", "seed", "phrase", "mnemonic", "keystore",
+    "privatekey", "drainer", "airdrop", "claim", "claim-airdrop", "claim-nft",
+    "connect-wallet", "walletconnect", "uniswap", "pancakeswap", "opensea",
+    "solana", "ethereum", "web3", "presale", "crypto", "binance", "coinbase",
+    "ledger", "trezor", "bybit", "kucoin", "trustwallet", "swap", "stake",
+    "token", "ldgrr", "tbybit", "dapp", "usdt", "btc", "eth"
+}
+
+CREDENTIAL_KEYWORDS = {
+    "login", "signin", "sign-in", "log-in", "auth", "authenticate", "password",
+    "passwd", "credential", "session", "cpanel", "webmail", "roundcube",
+    "verify", "verification", "verify-account", "update-account", "security-check",
+    "billing-update", "confirm-identity", "2fa", "mfa", "otp", "reset-password",
+    "sso", "accounts-center", "secure-account", "login-attempt"
+}
+
+SCAM_KEYWORDS = {
+    "package", "parcel", "delivery", "tracking", "postage", "toll", "unpaid",
+    "shipping", "customs", "redelivery", "shipping-fee", "prize", "lottery",
+    "grant", "giveaway", "reward", "survey", "bonus", "giftcard", "winner",
+    "compensation", "rebate", "task-earn", "daily-income", "investment-vip",
+    "forex-profit", "ponzi", "earn-daily"
+}
+
+MALWARE_EXTENSIONS = {
+    ".exe", ".bin", ".sh", ".elf", ".apk", ".msi", ".dll", ".iso", ".dmg",
+    ".vbs", ".bat", ".cmd", ".scr", ".jar", ".zip", ".tar", ".gz", ".7z", ".rar"
+}
+
+MALWARE_TAGS = {
+    "malware", "payload", "c2", "botnet", "trojan", "stealer", "ransomware",
+    "dropper", "redline", "amadey", "agenttesla", "lumma", "asyncrat",
+    "njrat", "remcos", "emotet", "qakbot", "mirai", "mozi", "guloader"
+}
+
+def classify_threat_indicator(
+    indicator: str,
+    tags: Optional[List[str]] = None,
+    provider: Optional[str] = None,
+    initial_brand: Optional[str] = None,
+    initial_category: Optional[str] = None,
+) -> Tuple[str, Optional[str]]:
+    """
+    Classifies an indicator accurately across all 6 core frontend categories:
+    1. 'crypto_drainer'
+    2. 'malware_distribution'
+    3. 'scam' (Delivery / Fee / Lottery scams)
+    4. 'credential_harvesting'
+    5. 'impersonation' (Brand Impersonation / Typosquatting)
+    6. 'phishing' (General Phishing)
+    """
+    # Extract target brand if not already known
+    brand = initial_brand or extract_target_brand(indicator)
+
+    # If an explicit high-fidelity category was already assigned by an authoritative reporter/provider, preserve it
+    if initial_category:
+        init_cat = str(initial_category).lower().strip()
+        if init_cat in ["brand_impersonation", "impersonation"]:
+            return "impersonation", brand
+        if init_cat in ["scam_smishing", "scam"]:
+            return "scam", brand
+        if init_cat in ["credential_harvesting", "crypto_drainer", "malware_distribution"]:
+            return init_cat, brand
+
+    if not indicator:
+        return "phishing", brand
+
+    low = indicator.lower().strip()
+    parsed = urllib.parse.urlparse(low if "://" in low else "https://" + low)
+    host = parsed.netloc.split(":")[0]
+    path = parsed.path
+    query = parsed.query
+    full = f"{host}{path}?{query}"
+
+    tag_list = [str(t).lower() for t in (tags or [])]
+    tag_str = " ".join(tag_list)
+    prov = (provider or "").lower()
+
+    # 1. Crypto Drainer
+    if any(re.search(r'(^|[^a-z0-9])' + re.escape(kw) + r'([^a-z0-9]|$)', full) for kw in CRYPTO_KEYWORDS) or \
+       any(kw in tag_str for kw in ["crypto", "drainer", "wallet", "web3", "nft", "airdrop"]):
+        if not brand:
+            for c_alias in ["metamask", "phantom", "ledger", "trezor", "binance", "coinbase", "bybit", "uniswap"]:
+                if c_alias in full:
+                    brand = BRAND_MAPPINGS.get(c_alias)
+                    break
+        return "crypto_drainer", brand
+
+    # 2. Malware Distribution
+    is_malware_provider = prov in ["urlhaus", "abuseipdb"]
+    has_malware_tag = any(mt in tag_str for mt in MALWARE_TAGS)
+    has_binary_ext = any(path.endswith(ext) or f"{ext}?" in path for ext in MALWARE_EXTENSIONS)
+    if (has_binary_ext or has_malware_tag or (is_malware_provider and not any(kw in full for kw in CREDENTIAL_KEYWORDS))):
+        return "malware_distribution", brand
+
+    # 3. Scam / Smishing
+    if any(re.search(r'(^|[^a-z0-9])' + re.escape(kw) + r'([^a-z0-9]|$)', full) for kw in SCAM_KEYWORDS) or \
+       any(st in tag_str for st in ["scam", "smishing", "delivery", "lottery", "toll"]):
+        if not brand and any(kw in full for kw in ["usps", "dhl", "fedex", "ups"]):
+            for d_alias in ["usps", "dhl", "fedex", "ups"]:
+                if d_alias in full:
+                    brand = BRAND_MAPPINGS.get(d_alias)
+                    break
+        return "scam", brand
+
+    # 4. Credential Harvesting
+    if any(re.search(r'(^|[^a-z0-9])' + re.escape(kw) + r'([^a-z0-9]|$)', full) for kw in CREDENTIAL_KEYWORDS) or \
+       "credential" in tag_str or "harvest" in tag_str or "login" in tag_str:
+        return "credential_harvesting", brand
+
+    # 5. Brand Impersonation
+    if brand:
+        return "impersonation", brand
+
+    # 6. Phishing (Default baseline for phishing feeds)
+    return "phishing", brand
 
 class ThreatFeedIngestor:
     def __init__(self, db_path: str, ws_broadcast_cb: Optional[Callable[[Dict[str, Any]], None]] = None):
@@ -124,6 +333,10 @@ class ThreatFeedIngestor:
         }
 
         self._init_tables()
+        try:
+            self.reclassify_existing_indicators()
+        except Exception as e:
+            print(f"[!] Threat indicator reclassification note: {e}")
 
     def _get_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path)
@@ -246,8 +459,17 @@ class ThreatFeedIngestor:
         if not domain:
             return False
 
-        if not target_brand:
-            target_brand = extract_target_brand(indicator)
+        # Classify dynamically across 6 categories and extract genuine brand
+        classified_cat, classified_brand = classify_threat_indicator(
+            indicator=indicator,
+            tags=threat_tags,
+            provider=provider,
+            initial_brand=target_brand,
+            initial_category=category
+        )
+        category = classified_cat
+        if not target_brand and classified_brand:
+            target_brand = classified_brand
 
         now_iso = datetime.now(timezone.utc).isoformat()
         first_seen_iso = first_seen or now_iso
@@ -285,12 +507,12 @@ class ThreatFeedIngestor:
                     conn.commit()
                     inserted = True
                 except sqlite3.IntegrityError:
-                    # Duplicate indicator for this provider — update last_seen
+                    # Duplicate indicator for this provider — update last_seen, category and brand
                     cursor.execute("""
                         UPDATE threat_indicators
-                        SET last_seen = ?
+                        SET last_seen = ?, category = ?, target_brand = COALESCE(?, target_brand)
                         WHERE indicator = ? AND provider = ?
-                    """, (now_iso, indicator, provider))
+                    """, (now_iso, category, target_brand, indicator, provider))
                     conn.commit()
                     inserted = False
 
@@ -315,6 +537,169 @@ class ThreatFeedIngestor:
                 pass
 
         return inserted
+
+    def lookup_indicator(self, url_or_domain: str) -> Optional[Dict[str, Any]]:
+        """
+        Instant threat intelligence pre-check against local SQLite database.
+        Checks threat_indicators, threat_reports, and recent scans.
+        Returns matched threat record or None.
+        """
+        if not url_or_domain:
+            return None
+
+        target = url_or_domain.strip()
+        parsed = urllib.parse.urlparse(target if "://" in target else "https://" + target)
+        domain = (parsed.netloc or "").split(":")[0].lower()
+        clean_url = target
+        url_no_slash = clean_url.rstrip("/")
+
+        with self._lock:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                # 1. Exact match against threat_indicators
+                cursor.execute("""
+                    SELECT id, indicator, domain, indicator_type, category, provider,
+                           confidence_score, status, target_brand, threat_tags, country, source_url, ingested_at
+                    FROM threat_indicators
+                    WHERE indicator = ? 
+                       OR indicator = ? 
+                       OR domain = ?
+                       OR indicator = ?
+                       OR domain = ?
+                    LIMIT 1
+                """, (clean_url, url_no_slash, domain, domain, clean_url))
+                r = cursor.fetchone()
+                if not r and len(domain) >= 4 and "." in domain:
+                    # Domain substring or like match
+                    cursor.execute("""
+                        SELECT id, indicator, domain, indicator_type, category, provider,
+                               confidence_score, status, target_brand, threat_tags, country, source_url, ingested_at
+                        FROM threat_indicators
+                        WHERE domain = ? OR indicator LIKE ?
+                        LIMIT 1
+                    """, (domain, f"%{domain}%"))
+                    r = cursor.fetchone()
+
+                if r:
+                    tags = json.loads(r["threat_tags"] or "[]") if r["threat_tags"] else []
+                    c_norm = r["category"].lower()
+                    if c_norm == "brand_impersonation":
+                        c_norm = "impersonation"
+                    elif c_norm == "scam_smishing":
+                        c_norm = "scam"
+                    return {
+                        "id": r["id"],
+                        "indicator": r["indicator"],
+                        "domain": r["domain"],
+                        "indicatorType": r["indicator_type"],
+                        "category": c_norm,
+                        "provider": r["provider"],
+                        "confidenceScore": r["confidence_score"] or 95,
+                        "status": r["status"] or "verified",
+                        "targetBrand": r["target_brand"],
+                        "threatTags": tags,
+                        "country": r["country"],
+                        "sourceUrl": r["source_url"],
+                        "source": "threat_indicators",
+                    }
+
+                # 2. Check community threat reports
+                cursor.execute("""
+                    SELECT id, domain, threat_type, severity, description, targeted_brand, status
+                    FROM threat_reports
+                    WHERE domain = ?
+                    LIMIT 1
+                """, (domain,))
+                rep = cursor.fetchone()
+                if rep:
+                    return {
+                        "id": rep["id"],
+                        "indicator": f"https://{domain}/",
+                        "domain": rep["domain"],
+                        "indicatorType": "domain",
+                        "category": rep["threat_type"],
+                        "provider": "community",
+                        "confidenceScore": 88,
+                        "status": rep["status"] or "investigating",
+                        "targetBrand": rep["targeted_brand"],
+                        "threatTags": ["Community Incident Report"],
+                        "country": None,
+                        "sourceUrl": None,
+                        "source": "threat_reports",
+                    }
+
+                # 3. Check recent scans that were flagged MALICIOUS
+                try:
+                    cursor.execute("""
+                        SELECT scan_id, submitted_url, hostname, verdict, trust_score, risk_score
+                        FROM scans
+                        WHERE (submitted_url = ? OR submitted_url = ? OR hostname = ?)
+                          AND verdict = 'MALICIOUS'
+                        ORDER BY created_at DESC
+                        LIMIT 1
+                    """, (clean_url, url_no_slash, domain))
+                    scan_row = cursor.fetchone()
+                    if scan_row:
+                        return {
+                            "id": scan_row["scan_id"],
+                            "indicator": scan_row["submitted_url"],
+                            "domain": scan_row["hostname"],
+                            "indicatorType": "url",
+                            "category": "phishing",
+                            "provider": "historical_scan",
+                            "confidenceScore": 95,
+                            "status": "verified",
+                            "targetBrand": None,
+                            "threatTags": ["Conclusively Flagged Malicious in Scan History"],
+                            "country": None,
+                            "sourceUrl": None,
+                            "source": "scans_history",
+                        }
+                except Exception:
+                    pass
+
+        return None
+
+    def reclassify_existing_indicators(self) -> int:
+        """
+        Reclassifies all existing threat indicators in SQLite to ensure accurate
+        distribution across all 6 frontend categories and populates target_brand.
+        """
+        updated_count = 0
+        with self._lock:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT id, indicator, indicator_type, category, provider, threat_tags, target_brand
+                    FROM threat_indicators
+                """)
+                rows = cursor.fetchall()
+                for r in rows:
+                    rec_id = r["id"]
+                    indicator = r["indicator"]
+                    tags = json.loads(r["threat_tags"] or "[]")
+                    provider = r["provider"]
+                    curr_cat = r["category"]
+                    curr_brand = r["target_brand"]
+
+                    new_cat, new_brand = classify_threat_indicator(
+                        indicator=indicator,
+                        tags=tags,
+                        provider=provider,
+                        initial_brand=curr_brand
+                    )
+
+                    if new_cat != curr_cat or (new_brand and new_brand != curr_brand):
+                        cursor.execute("""
+                            UPDATE threat_indicators
+                            SET category = ?, target_brand = ?
+                            WHERE id = ?
+                        """, (new_cat, new_brand or curr_brand, rec_id))
+                        updated_count += 1
+                conn.commit()
+        if updated_count > 0:
+            print(f"[+] Reclassified {updated_count} existing threat indicator(s) across categories.")
+        return updated_count
 
     def _http_request_with_retry(
         self,
@@ -690,6 +1075,11 @@ class ThreatFeedIngestor:
         results = {}
         for pid in self.providers_meta.keys():
             results[pid] = self.sync_provider(pid)
+        # Automatically reclassify all indicators across categories & brands
+        try:
+            self.reclassify_existing_indicators()
+        except Exception:
+            pass
         return results
 
     def get_providers_status(self) -> List[Dict[str, Any]]:
@@ -734,34 +1124,119 @@ class ThreatFeedIngestor:
                 })
             return out
 
-    def get_threat_feed(self, limit: int = 100, category: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Retrieves genuine ingested threat indicators with source attribution."""
+    def get_threat_feed(
+        self,
+        limit: int = 300,
+        category: Optional[str] = None,
+        search: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves authentic ingested threat indicators with source attribution.
+        Supports filtering by category, searching by domain/brand/keyword,
+        and provides balanced distribution across categories when category is 'all'.
+        """
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            query = """
-                SELECT id, indicator, domain, indicator_type, category, provider,
-                       confidence_score, status, target_brand, threat_tags, country,
-                       source_url, first_seen, last_seen, ingested_at
-                FROM threat_indicators
-            """
-            params: List[Any] = []
+
+            # Map frontend category aliases
+            cat_filter = None
             if category and category != "all":
-                query += " WHERE category = ?"
-                params.append(category)
+                c_low = category.lower().strip()
+                if c_low in ["brand_impersonation", "impersonation"]:
+                    cat_filter = ["impersonation", "brand_impersonation"]
+                elif c_low in ["scam_smishing", "scam"]:
+                    cat_filter = ["scam", "scam_smishing"]
+                else:
+                    cat_filter = [c_low]
 
-            query += " ORDER BY ingested_at DESC LIMIT ?"
-            params.append(limit)
+            if cat_filter:
+                # Specific category query
+                placeholders = ",".join("?" for _ in cat_filter)
+                query = f"""
+                    SELECT id, indicator, domain, indicator_type, category, provider,
+                           confidence_score, status, target_brand, threat_tags, country,
+                           source_url, first_seen, last_seen, ingested_at
+                    FROM threat_indicators
+                    WHERE category IN ({placeholders})
+                """
+                params: List[Any] = list(cat_filter)
+                if search and search.strip():
+                    s_term = f"%{search.strip().lower()}%"
+                    query += " AND (LOWER(domain) LIKE ? OR LOWER(indicator) LIKE ? OR LOWER(target_brand) LIKE ?)"
+                    params.extend([s_term, s_term, s_term])
 
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
+                query += " ORDER BY ingested_at DESC LIMIT ?"
+                params.append(limit)
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+            elif search and search.strip():
+                # Search without category constraint
+                s_term = f"%{search.strip().lower()}%"
+                query = """
+                    SELECT id, indicator, domain, indicator_type, category, provider,
+                           confidence_score, status, target_brand, threat_tags, country,
+                           source_url, first_seen, last_seen, ingested_at
+                    FROM threat_indicators
+                    WHERE (LOWER(domain) LIKE ? OR LOWER(indicator) LIKE ? OR LOWER(target_brand) LIKE ?)
+                    ORDER BY ingested_at DESC LIMIT ?
+                """
+                cursor.execute(query, [s_term, s_term, s_term, limit])
+                rows = cursor.fetchall()
+            else:
+                # Balanced distribution query across all 6 core categories
+                # Ensure every dropdown category in the frontend has real rows
+                all_cats = [
+                    "phishing", "impersonation", "credential_harvesting",
+                    "crypto_drainer", "malware_distribution", "scam"
+                ]
+                per_cat_limit = max(35, limit // len(all_cats))
+                rows = []
+                seen_ids = set()
+                for cat in all_cats:
+                    cursor.execute("""
+                        SELECT id, indicator, domain, indicator_type, category, provider,
+                               confidence_score, status, target_brand, threat_tags, country,
+                               source_url, first_seen, last_seen, ingested_at
+                        FROM threat_indicators
+                        WHERE category = ? OR (category = 'brand_impersonation' AND ? = 'impersonation') OR (category = 'scam_smishing' AND ? = 'scam')
+                        ORDER BY ingested_at DESC LIMIT ?
+                    """, (cat, cat, cat, per_cat_limit))
+                    cat_rows = cursor.fetchall()
+                    for cr in cat_rows:
+                        if cr["id"] not in seen_ids:
+                            seen_ids.add(cr["id"])
+                            rows.append(cr)
+
+                # If still under limit, backfill with remaining newest indicators
+                cursor.execute("""
+                    SELECT id, indicator, domain, indicator_type, category, provider,
+                           confidence_score, status, target_brand, threat_tags, country,
+                           source_url, first_seen, last_seen, ingested_at
+                    FROM threat_indicators
+                    ORDER BY ingested_at DESC LIMIT ?
+                """, (limit,))
+                for r in cursor.fetchall():
+                    if r["id"] not in seen_ids and len(rows) < limit:
+                        seen_ids.add(r["id"])
+                        rows.append(r)
+
+                # Sort combined rows by ingested_at descending
+                rows.sort(key=lambda x: x["ingested_at"] or "", reverse=True)
+
             threats = []
             for r in rows:
+                c_norm = r["category"].lower()
+                if c_norm == "brand_impersonation":
+                    c_norm = "impersonation"
+                elif c_norm == "scam_smishing":
+                    c_norm = "scam"
+
                 threats.append({
                     "id": r["id"],
                     "domain": r["domain"],
                     "url": r["indicator"],
                     "urlPath": r["indicator"] if r["indicator_type"] == "url" else "",
-                    "category": r["category"],
+                    "category": c_norm,
                     "provider": r["provider"],
                     "confidenceScore": r["confidence_score"],
                     "status": r["status"],
@@ -803,7 +1278,11 @@ class ThreatFeedIngestor:
             category_rows = cursor.fetchall()
             category_breakdown = []
             for r in category_rows:
-                cat = r["category"]
+                cat = r["category"].lower()
+                if cat == "brand_impersonation":
+                    cat = "impersonation"
+                elif cat == "scam_smishing":
+                    cat = "scam"
                 cnt = r["cnt"]
                 pct = round((cnt / total_threats) * 100) if total_threats > 0 else 0
                 category_breakdown.append({

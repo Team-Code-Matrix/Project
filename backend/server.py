@@ -692,7 +692,18 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
 
         # 5. Live Threat Feed Telemetry (Queried from SQLite)
         if path in ["/api/threats", "/api/v1/threats"]:
-            feed = threat_ingestor.get_threat_feed(limit=100)
+            parsed_req = urllib.parse.urlparse(self.path)
+            q_params = urllib.parse.parse_qs(parsed_req.query)
+            cat_param = q_params.get("category", [None])[0]
+            search_param = q_params.get("search", [None])[0]
+            limit_val = 300
+            if "limit" in q_params:
+                try:
+                    limit_val = min(1000, max(10, int(q_params["limit"][0])))
+                except ValueError:
+                    limit_val = 300
+
+            feed = threat_ingestor.get_threat_feed(limit=limit_val, category=cat_param, search=search_param)
             metrics = threat_ingestor.get_aggregated_metrics()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -872,6 +883,30 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
         # 4. Fast-Path Synchronous Evaluation (<150ms)
         if path in ["/api/scan/fast-path", "/api/v1/scan/fast-path"]:
             start_t = time.time()
+            clean_u = raw_url.strip()
+
+            # Instant Pre-Check against Real Threat Telemetry DB (threat_indicators, threat_reports, historical scans)
+            known_threat = threat_ingestor.lookup_indicator(clean_u)
+            if known_threat:
+                elapsed_ms = max(2, int((time.time() - start_t) * 1000))
+                brand_info = f" (Targeting: {known_threat['targetBrand']})" if known_threat.get("targetBrand") else ""
+                res = {
+                    "evaluatedInMs": elapsed_ms,
+                    "bloomFilterHit": True,
+                    "bloomSource": known_threat.get("provider", "ThreatFeed").upper(),
+                    "googleSafeBrowsingMatch": known_threat.get("provider", "").lower() in ["google_safebrowsing", "google"],
+                    "cachedReputation": "MALICIOUS",
+                    "mozillaOneCrlRevoked": False,
+                    "preliminaryVerdict": "MALICIOUS",
+                    "summary": f"CRITICAL / KNOWN REPORTED THREAT — Target domain was found in real threat intelligence telemetry ({known_threat['category'].upper()}, Provider: {known_threat['provider'].upper()}){brand_info}."
+                }
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode())
+                return
+
             threats_data = db_get_threats_and_metrics()
             pipeline_res = evaluate_multimodal_security(raw_url, threats_data.get("threats", []), is_fast_path=True)
             elapsed_ms = max(2, int((time.time() - start_t) * 1000))
@@ -908,10 +943,12 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
                 "targetedBrand": t_brand or "Identified Provider",
             }
             db_insert_report(new_report)
-            if domain:
+            target_ind = raw_url if raw_url else domain
+            ind_type = "url" if raw_url else "domain"
+            if target_ind:
                 threat_ingestor.record_indicator(
-                    indicator=domain,
-                    indicator_type="domain",
+                    indicator=target_ind,
+                    indicator_type=ind_type,
                     category=t_type,
                     provider="community",
                     confidence_score=85,
@@ -944,7 +981,23 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
 
         # 6. Deep-Scan Initiation (All 4 Pillars, Real ML & WebSocket Progress)
         if path in ["/api/scan", "/api/v1/scan"]:
+            clean_u = raw_url.strip()
+            known_threat = threat_ingestor.lookup_indicator(clean_u)
             threats_data = db_get_threats_and_metrics()
+            combined_threats = list(threats_data.get("threats", []))
+            if known_threat:
+                combined_threats.insert(0, {
+                    "id": known_threat["id"],
+                    "domain": known_threat["domain"],
+                    "url": known_threat["indicator"],
+                    "threatType": known_threat["category"],
+                    "category": known_threat["category"],
+                    "severity": "critical",
+                    "evidenceSummary": f"Known active threat listing in {known_threat['provider'].upper()}",
+                    "targetedBrand": known_threat.get("targetBrand"),
+                    "provider": known_threat["provider"],
+                    "status": known_threat.get("status", "verified"),
+                })
             
             # Temporary scan ID for WebSocket streaming
             temp_scan_id = "scn_" + uuid.uuid4().hex[:12]
@@ -954,7 +1007,7 @@ class GatewayRequestHandler(BaseHTTPRequestHandler):
 
             pipeline_res = evaluate_multimodal_security(
                 raw_url,
-                threat_feed=threats_data.get("threats", []),
+                threat_feed=combined_threats,
                 is_fast_path=False,
                 progress_callback=on_progress
             )

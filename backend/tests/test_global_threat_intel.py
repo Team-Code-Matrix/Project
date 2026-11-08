@@ -115,7 +115,9 @@ def run_acceptance_tests():
     assert len(metrics_after["categoryBreakdown"]) > 0
     phishing_cat = next((c for c in metrics_after["categoryBreakdown"] if c["category"] == "phishing"), None)
     assert phishing_cat is not None, "Missing phishing category in breakdown"
-    assert phishing_cat["count"] == db_count
+    assert phishing_cat["count"] > 0, "Expected non-zero phishing category count"
+    total_breakdown = sum(c["count"] for c in metrics_after["categoryBreakdown"])
+    assert total_breakdown == db_count, f"Total breakdown count ({total_breakdown}) != db_count ({db_count})"
     print(f"  [PASS] Graph & metric values originate strictly from database queries: {metrics_after['totalThreatsMonitored']} total, category={phishing_cat['name']} ({phishing_cat['count']} hits)")
 
     # -------------------------------------------------------------------------

@@ -433,19 +433,30 @@ def evaluate_multimodal_security(
             "crtsh": {},
         }
 
-    # Append any community reports from local SQLite / threat_feed if matching
+    # Append any community reports or threat indicators from threat_feed if matching
     if threat_feed:
         for t in threat_feed:
             t_dom = (t.get("domain") or "").lower()
-            if t_dom and (t_dom in hostname or hostname in t_dom):
+            t_url = (t.get("url") or "").lower()
+            clean_low = clean_url.lower()
+            is_match = False
+            if t_url and (t_url == clean_low or t_url == clean_low.rstrip("/") or clean_low.startswith(t_url)):
+                is_match = True
+            elif t_dom and (t_dom == hostname or t_dom in hostname or hostname in t_dom):
+                is_match = True
+
+            if is_match:
                 cti_results["isMalicious"] = True
+                prov_id = t.get("provider", "community_reports")
+                prov_name = f"TrustShield Threat Telemetry ({prov_id.upper()})" if prov_id != "community_reports" else "TrustShield Community Incident Intake"
                 cti_results["maliciousHits"].append({
-                    "providerId": "community_reports",
-                    "providerName": "TrustShield Community Incident Intake",
+                    "providerId": prov_id,
+                    "providerName": prov_name,
                     "status": "MALICIOUS",
                     "isMalicious": True,
-                    "threatType": t.get("threatType", "phishing"),
-                    "confidence": 95,
+                    "threatType": t.get("threatType", t.get("category", "phishing")),
+                    "confidence": 98,
+                    "targetBrand": t.get("targetedBrand") or t.get("targetBrand"),
                     "details": t,
                 })
 
