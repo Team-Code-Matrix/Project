@@ -85,7 +85,7 @@ controls or professional incident response.
 ## 04. Demo links and screenshots
 
 -   **Live demo:** [https://trust-shield-zeta.vercel.app/](https://trust-shield-zeta.vercel.app/)
--   **Demo video:** Add the public demo-video URL here before submission.
+-   **Demo video:** [https://youtu.be/mRUIYM6Gzok](https://youtu.be/mRUIYM6Gzok)
 -   **Repository:** [https://github.com/Team-Code-Matrix/Trust-Shield](https://github.com/Team-Code-Matrix/Trust-Shield)
 
 ### Screenshots
