@@ -433,7 +433,7 @@ the team. Do not claim original authorship of third-party assets.
 
 AI-assisted development tools were used during the engineering of Trust Shield:
 -   **ChatGPT (OpenAI)** --- used for initial project ideation, threat modeling, security architecture planning, and documentation drafting.
--   **Google Gemini** --- used for code pairing, algorithm design, full-stack synchronization, debugging, and unit test generation.
+-   **Google Gemini** --- used for code pairing, debugging, and unit test generation.
 
 The **Random Forest model** (`backend/ml/models/trustshield_phishing_model.joblib`) is a custom-trained machine-learning model trained locally with `scikit-learn` on 15 deterministic lexical and domain features. It executes local probability inference (`predict_proba`) and operates independently of external LLM APIs.
 
@@ -482,8 +482,8 @@ name used by the organizers.
 -   **Team Members:**
     -   **Arnab Ghorai** (Leader) --- [GitHub](https://github.com/AG349) • [LinkedIn](https://www.linkedin.com/in/arnab-ghorai-ag349)
     -   **Bikram Das** (Member 1) --- [GitHub](https://github.com/yyo298646-hub) • [LinkedIn](https://www.linkedin.com/in/bikram-das-sapstudent)
-    -   **Ishika Mahto** (Member 2)
-    -   **Srijit Deshmukh** (Member 3)
+    -   **Ishika Mahto** (Member 2) --- [GitHub](https://github.com/ishikamahto8) • [LinkedIn](https://www.linkedin.com/in/ishika-mahto-93bb7036a)
+    -   **Srijit Deshmukh** (Member 3) --- [GitHub](https://github.com/Srijit-Deshmukh) • [LinkedIn](https://www.linkedin.com/in/srijit-deshmukh)
 -   **Contact:**
     -   [arnabghorai349@gmail.com](mailto:arnabghorai349@gmail.com)
     -   [yyo298646@gmail.com](mailto:yyo298646@gmail.com)
