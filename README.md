@@ -492,7 +492,6 @@ name used by the organizers.
 
 ## License
 
-No license has been specified in this repository documentation. Add a
-`LICENSE` file and name the selected license before making the
-repository available for reuse. Do not assume that public visibility
-automatically grants permission to reuse the code.
+This project is licensed under the **GNU General Public License v3.0**. 
+
+You are free to copy, modify, and distribute this software, provided that all modifications remain open-source under the same GPL-3.0 terms. For more details, please see the full [LICENSE](LICENSE) file in the repository root.
